@@ -15,9 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from .views import get_home
 
 app_name = 'dcac'
 urlpatterns = [
+    path('', get_home),
     path('admin/', admin.site.urls),
     path('dcac/', include('dcac.urls')),
     path(r'', include('ucamwebauth.urls'))

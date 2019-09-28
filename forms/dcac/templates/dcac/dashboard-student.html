@@ -1,0 +1,90 @@
+{% extends 'dcac/base-student.html' %}
+
+{% block content %}
+
+<head>
+    <title>Dashboard | DCAC Reimbursement</title>
+</head>
+
+<script>
+    $(document).ready(function () {
+
+        $(".clickable-row").click(function () {
+            window.location = $(this).data("href");
+        });
+
+    });
+</script>
+
+<div class="container-fluid d-none d-md-block" style="background: #990066">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="jumbotron mt-2" style="background: white">
+                    <div class="row">
+                        <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+                            <h3>Your Recent Requests</h3>
+                        </div>
+                        {% if can_make_new_request %}
+                        <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+                            <a href="/dcac/form/acg" class="btn btn-primary float-right"><i class="fas fa-plus mr-1"></i>
+                                New Request
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <table class="table table-bordered table-striped table-hover mt-4">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Date</th>
+                                    <th scope="col" class="d-none d-sm-table-cell">Society</th>
+                                    <th scope="col" class="d-none d-sm-table-cell">Amount</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                                </thead>
+
+                                <tbody>
+                                {% for request in requests %}
+                                <tr class="clickable-row" data-href="/dcac/request/{{ request.form_id }}"
+                                    style="cursor: pointer;">
+                                    <td>{{ request.date }}</td>
+                                    <td class="d-none d-sm-table-cell">{{ request.organization }}</td>
+                                    <td>£{{ request.amount }}</td>
+                                    <td>{% if request.bursary_paid %}Paid{% else %}In Progress{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="container mt-4">
+
+    <div class="row">
+        <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+            <h3>Hey, {{ student.first_name }}!</h3>
+            <p>Welcome to the DCAC Reimbursement system. </p>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+            <div class="list-group">
+                <a href="/dcac/requests" class="list-group-item"><span>My Requests</span></a>
+                <a href="/dcac/organizations" class="list-group-item"><span>My Organisations</span></a>
+                <a href="/dcac/knowledge-base" class="list-group-item"><span>Knowledge Base</span></a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

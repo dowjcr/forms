@@ -17,7 +17,20 @@ class Student(models.Model):
     surname = models.CharField('Surname', max_length=50)
 
     def __str__(self):
-        return self.first_name + " " + self.surname
+        return str(self.first_name) + " " + str(self.surname)
+
+
+# ADMIN USER
+# Stores admin user information. Note that user_id
+# corresponds to CRSid.
+
+class AdminUser(models.Model):
+    user_id = models.CharField('CRSid', primary_key=True, max_length=10)
+    first_name = models.CharField('First Name', max_length=50)
+    surname = models.CharField('Surname', max_length=50)
+
+    def __str__(self):
+        return str(self.first_name) + " " + str(self.surname)
 
 
 # ORGANIZATION
@@ -31,7 +44,20 @@ class Organization(models.Model):
     description = models.CharField(max_length=500)
 
     def __str__(self):
-        return name
+        return self.name
+
+
+# ORGANIZATION ADMINISTRATOR
+# Represents a student who is able to submit reimbursement
+# requests for a given organisation.
+
+class OrganizationAdministrator(models.Model):
+    entry_id = models.AutoField(primary_key=True)
+    student = models.ForeignKey(Student, on_delete=models.SET_DEFAULT, default=None)
+    organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
+
+    def __str__(self):
+        return str(self.student) + " admin for " + str(self.organization)
 
 
 # BUDGET YEAR
@@ -42,7 +68,7 @@ class AcademicYear(models.Model):
     name = models.CharField(max_length=10)
 
     def __str__(self):
-        return name
+        return self.name
 
 
 # BUDGET ENTRY
@@ -55,7 +81,7 @@ class BudgetEntry(models.Model):
     amount = models.FloatField()
 
     def __str__(self):
-        return self.organization.__str__() + ", Year " + self.year.__str__()
+        return str(self.organization) + ", Year " + str(self.year)
 
 
 # ACG REIMBURSEMENT FORM
@@ -63,20 +89,23 @@ class BudgetEntry(models.Model):
 
 class ACGReimbursementForm(models.Model):
     form_id = models.AutoField(primary_key=True)
+    submitter = models.CharField(max_length=10)
     organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
     year = models.ForeignKey(AcademicYear, on_delete=models.SET_DEFAULT, default=None)
     date = models.DateField()
+    amount = models.CharField(max_length=20)
+    rejected = models.BooleanField(default=False)
     name_on_account = models.CharField(max_length=100)
     account_number = models.CharField(max_length=20)
     sort_code = models.CharField(max_length=20)
     jcr_treasurer_approved = models.BooleanField(default=False)
-    jcr_treasurer_comments = models.CharField(max_length=500)
+    jcr_treasurer_comments = models.CharField(max_length=500, blank=True)
     senior_treasurer_approved = models.BooleanField(default=False)
-    senior_treasurer_comments = models.CharField(max_length=500)
+    senior_treasurer_comments = models.CharField(max_length=500, blank=True)
     bursary_paid = models.BooleanField(default=False)
 
     def __str__(self):
-        return "Request " + str(self.form_id) + ", " + self.organization.__str__()
+        return "Request " + str(self.form_id) + ", " + str(self.organization)
 
 
 # ACG REIMBURSEMENT FORM ITEM ENTRY
@@ -88,9 +117,10 @@ class ACGReimbursementFormItemEntry(models.Model):
     form = models.ForeignKey(ACGReimbursementForm, on_delete=models.SET_DEFAULT, default=None)
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=500)
+    amount = models.CharField(max_length=20)
 
     def __str__(self):
-        return "Form " + str(self.form.form_id) + ", " + self.title
+        return "Form " + str(self.form.form_id) + ", " + str(self.title)
 
 
 # ACG REIMBURSEMENT FORM RECEIPT ENTRY
