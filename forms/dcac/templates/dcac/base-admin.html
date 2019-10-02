@@ -61,10 +61,9 @@
     <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
         <ul class="navbar-nav">
             <li class="nav-item dropdown">
-                <a class="nav-link d-none d-lg-block" href="#" id="navbarDropdown" role="button"
-                   data-toggle="dropdown"
+                <a class="nav-link d-none d-lg-block" href="/dcac/admin/profile" id="navbarDropdown" role="button"
                    aria-haspopup="true" aria-expanded="false">
-                    {{ student }}
+                    {{ user }}
                 </a>
             <li class="nav-item">
                 <a class="nav-link d-lg-none d-xl-none" href="/dcac/admin">Admin Home</a>
@@ -73,6 +72,9 @@
                 <a class="nav-link d-lg-none d-xl-none" href="/dcac/form/acg">New Request</a>
             </li>
             <div class="dropdown-divider-burgundy"></div>
+            <li class="nav-item">
+                <a class="nav-link d-lg-none d-xl-none" href="/dcac/admin/profile">{{ user }}</a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link d-lg-none d-xl-none" href="/accounts/logout">Logout</a>
             </li>

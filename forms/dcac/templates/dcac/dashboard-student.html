@@ -51,9 +51,9 @@
                                 {% for request in requests %}
                                 <tr class="clickable-row" data-href="/dcac/request/{{ request.form_id }}"
                                     style="cursor: pointer;">
-                                    <td>{{ request.date }}</td>
+                                    <td>{{ request.date|date:"d/m/Y" }}</td>
                                     <td class="d-none d-sm-table-cell">{{ request.organization }}</td>
-                                    <td>£{{ request.amount }}</td>
+                                    <td>£{{ request.amount|floatformat:2 }}</td>
                                     <td>{% if request.bursary_paid %}Paid{% else %}In Progress{% endif %}</td>
                                 </tr>
                                 {% endfor %}
@@ -79,8 +79,7 @@
         <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
             <div class="list-group">
                 <a href="/dcac/requests" class="list-group-item"><span>My Requests</span></a>
-                <a href="/dcac/organizations" class="list-group-item"><span>My Organisations</span></a>
-                <a href="/dcac/knowledge-base" class="list-group-item"><span>Knowledge Base</span></a>
+                <a href="https://www.jcr.dow.cam.ac.uk/treasury" target="blank" class="list-group-item"><span>Treasury Information</span></a>
             </div>
         </div>
     </div>

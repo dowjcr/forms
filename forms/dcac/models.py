@@ -28,6 +28,7 @@ class AdminUser(models.Model):
     user_id = models.CharField('CRSid', primary_key=True, max_length=10)
     first_name = models.CharField('First Name', max_length=50)
     surname = models.CharField('Surname', max_length=50)
+    role = models.IntegerField('Role')
 
     def __str__(self):
         return str(self.first_name) + " " + str(self.surname)
@@ -128,3 +129,5 @@ class ACGReimbursementFormItemEntry(models.Model):
 
 class ACGReimbursementFormReceiptEntry(models.Model):
     entry_id = models.AutoField(primary_key=True)
+    form = models.ForeignKey(ACGReimbursementForm, on_delete=models.SET_DEFAULT, default=None, null=True)
+    file = models.FileField()

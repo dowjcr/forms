@@ -35,9 +35,14 @@
             }
         });
 
+        $('#submitReceiptButton').click(function () {
+            createFileUpload();
+        });
+
     });
 
     var items = [];
+    var receipts = [];
 
     function generateTableRowFromItem(item, index) {
         return "<tr><td><p>" + item.title + "<br><span class='small'>" + item.description + "</span></p></td>"
@@ -45,18 +50,33 @@
             + "<td><button class=\'btn btn-primary btn-sm\' onclick=\'removeItem(" + index + ")\'><i class=\"fas fa-times mr-1\"></i> Remove</button></td>";
     }
 
+    function generateTableRowFromReceipt(receipt, index) {
+        return "<tr><td><p>" + receipt.description + "<br><span class='small'>" + receipt.fileSize + " KB</span></p></td>"
+            + "<td><button class=\'btn btn-primary btn-sm\' onclick=\'removeReceipt(" + index + ")\'><i class=\"fas fa-times mr-1\"></i> Remove</button></td>";
+    }
+
     function removeItem(index) {
         items.splice(index, 1);
         showItems();
     }
 
+    function removeReceipt(index) {
+        receipts.splice(index, 1);
+        showReceipts();
+    }
+
     function createAjaxResponse() {
+        let receiptIds = [];
+        receipts.forEach(function (receipt) {
+            receiptIds.push(receipt.id);
+        });
         $.ajax({
-            url: '/dcac/form/acg',
+            url: '/dcac/form/acg/submit',
             type: 'POST',
             data: {
                 'organization': $('#organization').val(),
                 'items': JSON.stringify(items),
+                'receipts': JSON.stringify(receiptIds),
                 'sort_code': $('#sortCode').val(),
                 'account_number': $('#accountNumber').val(),
                 'name_on_account': $('#accountName').val()
@@ -66,6 +86,30 @@
             success: function (response) {
                 handleResponse(response.formId);
             }
+        });
+    }
+
+    function createFileUpload() {
+        let form = document.getElementById('receipt');
+        let formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        formData.append("receipt", form.files[0]);
+        $.ajax({
+            url: '/dcac/form/acg',
+            type: 'POST',
+            data: formData,
+            success: function (response) {
+                let receipt = {
+                    id: response.receipt_id,
+                    description: (form.files[0]).name,
+                    fileSize: Math.round((form.files[0]).size/1000)
+                };
+                receipts.push(receipt);
+                showReceipts();
+            },
+            cache: false,
+            contentType: false,
+            processData: false
         });
     }
 
@@ -122,6 +166,14 @@
         document.getElementById('totalAmountInSummary').innerHTML = total;
     }
 
+    function showReceipts() {
+        var receiptsHtml = "";
+        receipts.forEach(function (item, index) {
+            receiptsHtml += generateTableRowFromReceipt(item, index);
+        });
+        document.getElementById('receipts').innerHTML = receiptsHtml;
+    }
+
 </script>
 
 <div class="container-fluid d-none d-md-block" style="background: #990066">
@@ -134,7 +186,8 @@
                     <div class="row mb-2" id="titleDiv">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                             <h2 align="center">ACG Reimbursement Form</h2>
-                            <p align="center">The ACG is used to cover all expenditures during the year that the club/society
+                            <p align="center">The ACG is used to cover all expenditures during the year that the
+                                club/society
                                 incurs as part of its
                                 usual running costs. In order to receive these funds, please fill out the below form
                                 detailing
@@ -195,16 +248,7 @@
                     <h4><i class="fas fa-file-invoice-dollar mr-2"></i> Items</h4>
                     <p class="mt-3">Please add each item individually.</p>
 
-                    <table class="table table-light mt-3">
-                        <thead>
-                        <tr>
-                            <th class="col-md-8 col-sm-4">Item</th>
-                            <th class="col-md-2 col-sm-4">Amount</th>
-                            <th class="col-md-2 col-sm-4"></th>
-                        </tr>
-                        </thead>
-                        <tbody id="items">
-                        </tbody>
+                    <table class="table table-light" id="items">
                     </table>
 
                     <button type="button" class="btn btn-primary mt-2" data-toggle="modal" data-target="#addItemModal">
@@ -216,6 +260,10 @@
                     <h4><i class="fas fa-receipt mr-2"></i> Receipts</h4>
                     <p class="mt-3">Please ensure you attach receipts to cover all items you've
                         added above.</p>
+
+                    <table class="table table-light" id="receipts">
+                    </table>
+
                     <button type="button" class="btn btn-primary mt-2" data-toggle="modal"
                             data-target="#addReceiptModal">
                         <i class="fas fa-plus mr-1"></i> Add Receipt
@@ -315,7 +363,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">£</span>
                             </div>
-                            <input type="number" step="0.01" min="0.01" class="form-control" id="itemAmount" value=""
+                            <input type="number" step="1" min="0" class="form-control" id="itemAmount" value="0.00"
                                    required>
                         </div>
 
@@ -324,11 +372,9 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
-                            class="fas fa-times mr-1"></i> Cancel
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
                     </button>
-                    <button type="button" id="addItemButton" class="btn btn-primary" data-dismiss="modal"><i
-                            class="fas fa-plus mr-1"></i> Add Item
+                    <button type="button" id="addItemButton" class="btn btn-primary" data-dismiss="modal">Submit
                     </button>
                 </div>
             </div>
@@ -344,19 +390,20 @@
                         <span>&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <form>
-                        <input type="file" class="form-control-file" id="addReceiptFileUpload">
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
-                            class="fas fa-times mr-1"></i> Cancel
-                    </button>
-                    <button type="button" id="addReceiptButton" class="btn btn-primary" data-dismiss="modal"><i
-                            class="fas fa-plus mr-1"></i> Add Receipt
-                    </button>
-                </div>
+                <form>
+                    <div class="modal-body">
+                        <p>
+                            Attach files one at a time. Max file size: 5MB.
+                        </p>
+
+                        <input type="file" class="form-control-file" id="receipt">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                        </button>
+                        <button id="submitReceiptButton" class="btn btn-primary" data-dismiss="modal">Submit</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

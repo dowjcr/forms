@@ -9,6 +9,7 @@ admin.site.register(AcademicYear)
 admin.site.register(OrganizationAdministrator)
 admin.site.register(ACGReimbursementFormItemEntry)
 admin.site.register(AdminUser)
+admin.site.register(ACGReimbursementFormReceiptEntry)
 
 admin.site.site_header = "DCAC Reimbursement"
 admin.site.site_title = "DCAC Reimbursement"

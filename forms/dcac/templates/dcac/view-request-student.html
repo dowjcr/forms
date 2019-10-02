@@ -128,13 +128,13 @@
                     <td>Items Claimed</td>
                     <td>
                         {% for item in items %}
-                        {{ item.title }} (£{{ item.amount }})<br>
+                        {{ item.title }} (£{{ item.amount|floatformat:2 }})<br>
                         {% endfor %}
                     </td>
                 </tr>
                 <tr>
                     <td>Total</td>
-                    <td>£{{ request.amount }}</td>
+                    <td>£{{ request.amount|floatformat:2 }}</td>
                 </tr>
             </table>
         </div>
