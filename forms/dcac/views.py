@@ -4,6 +4,13 @@ from django.shortcuts import render, get_object_or_404, render_to_response
 from django.http import HttpResponseRedirect, HttpResponse
 from datetime import datetime
 from .models import *
+import logging
+
+LOG_FILE = 'dcac.log'
+logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger(__name__)
 
 
 # LANDING PAGE
