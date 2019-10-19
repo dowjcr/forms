@@ -134,6 +134,18 @@ def acg_form_submit(request):
         return HttpResponse(json.dumps({'formId': form.form_id}), content_type="application/json")
 
 
+# ADMIN DASHBOARD
+# Show dashboard with items for user to action.
+
+def dashboard_admin(request):
+    user = AdminUser.objects.get(user_id=request.user.username)
+    if user.role == 1:      # Junior Treasurer
+        requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=False).order_by('-form_id')
+    else:
+        requests = []
+    return render(request, 'dcac/dashboard-admin.html', {'user': user,
+                                                         'requests': requests})
+
 
 # ADMIN VIEW REQUEST
 # For admin to view details of request.
@@ -155,3 +167,14 @@ def view_request_admin(request, form_id):
 def profile_admin(request):
     user = AdminUser.objects.get(user_id=request.user.username)
     return render(request, 'dcac/profile-admin.html', {'user': user})
+
+
+# ERROR
+# Returns error page, with message dependent on code.
+
+def error(request, code):
+    messages = {
+        403: "Access Denied",
+        404: "Page not found",
+    }
+    return render(request, 'roomballot/error.html', {'message': messages[code]})

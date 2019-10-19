@@ -7,7 +7,8 @@ Author Cameron O'Connor
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from re import compile
-from .models import Student, AdminUser, ProxyUser
+from .models import Student, AdminUser
+from .views import error
 
 
 # AUTH REQUIRED
@@ -35,23 +36,11 @@ class AuthRequiredMiddleware(object):
         try:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in ADMIN_URLS):
-                student = Student.objects.get(user_id=request.user.username)
-                if not student.name_set:
-                    return set_first_name(request)
+                Student.objects.get(user_id=request.user.username)
         except Student.DoesNotExist:
             try:
-                PROXY_URLS = [compile('roomballot/staircase'), compile('roomballot/proxy'), compile('roomballot/room'),
-                              compile('roomballot/info/pricing')]
-                ProxyUser.objects.get(user_id=request.user.username)
-                if any(m.match(request.path_info.lstrip('/')) for m in PROXY_URLS):
-                    return response
-                else:
-                    return HttpResponseRedirect('/roomballot/proxy')
-            except ProxyUser.DoesNotExist:
-                # Redirects to admin page if only admin user.
-                try:
-                    AdminUser.objects.get(user_id=request.user.username)
-                    return HttpResponseRedirect('/roomballot/admin')
-                except AdminUser.DoesNotExist:
-                    return error(request, 906)
+                AdminUser.objects.get(user_id=request.user.username)
+                return HttpResponseRedirect('/dcac/admin')
+            except AdminUser.DoesNotExist:
+                return error(request, 403)
         return response
