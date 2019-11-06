@@ -140,7 +140,11 @@ def acg_form_submit(request):
 def dashboard_admin(request):
     user = AdminUser.objects.get(user_id=request.user.username)
     if user.role == 1:      # Junior Treasurer
-        requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=False).order_by('-form_id')
+        requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=False).order_by('form_id')
+    elif user.role == 2:    # Senior Treasurer
+        requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=True).order_by('form_id')
+    elif user.role == 3:    # Bursary
+        requests = ACGReimbursementForm.objects.filter(jcr_treasurer_approved=True, senior_treasurer_approved=True).order_by('form_id')
     else:
         requests = []
     return render(request, 'dcac/dashboard-admin.html', {'user': user,
@@ -153,6 +157,29 @@ def dashboard_admin(request):
 def view_request_admin(request, form_id):
     user = AdminUser.objects.get(user_id=request.user.username)
     acg_request = get_object_or_404(ACGReimbursementForm, pk=form_id)
+    if request.method == 'POST':
+        # Clicked 'approve'.
+        comments = request.POST.get('comments')
+        if request.POST.get('code') == '1':
+            if user.role == 1:
+                acg_request.jcr_treasurer_approved = True
+                acg_request.jcr_treasurer_comments = comments
+            elif user.role == 2:
+                acg_request.senior_treasurer_approved = True
+                acg_request.senior_treasurer_comments = comments
+            acg_request.save()
+        elif request.POST.get('code') == '2':
+            acg_request.rejected = True
+            if user.role == 1:
+                acg_request.jcr_treasurer_approved = False
+                acg_request.jcr_treasurer_comments = comments
+            elif user.role == 2:
+                acg_request.senior_treasurer_approved = False
+                acg_request.senior_treasurer_comments = comments
+            acg_request.save()
+
+        return HttpResponse(json.dumps({'responseCode': 1}), content_type="application/json")
+
     items = ACGReimbursementFormItemEntry.objects.filter(form=acg_request)
     receipts = ACGReimbursementFormReceiptEntry.objects.filter(form=acg_request)
     return render(request, 'dcac/view-request-admin.html', {'user': user,

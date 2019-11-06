@@ -25,10 +25,16 @@ class Student(models.Model):
 # corresponds to CRSid.
 
 class AdminUser(models.Model):
+    ROLE_CHOICES = (
+        (1, 'JCR Treasurer'),
+        (2, 'Senior Treasurer'),
+        (3, 'Bursary'),
+    )
+
     user_id = models.CharField('CRSid', primary_key=True, max_length=10)
     first_name = models.CharField('First Name', max_length=50)
     surname = models.CharField('Surname', max_length=50)
-    role = models.IntegerField('Role')
+    role = models.IntegerField('Role', choices=ROLE_CHOICES)
 
     def __str__(self):
         return str(self.first_name) + " " + str(self.surname)

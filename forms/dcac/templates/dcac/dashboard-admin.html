@@ -16,7 +16,7 @@
     });
 </script>
 
-<div class="container-fluid d-none d-md-block" style="background: #990066">
+<div class="container-fluid" style="background: #990066">
 
     <div class="container">
 
@@ -26,6 +26,9 @@
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                             <h2 align="center">Welcome, {{ user.first_name }}!</h2>
+                            <p style="text-transform: uppercase; font-size: 0.8em; color: grey" align="center">
+                            Admin Portal
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -46,9 +49,9 @@
                 <thead>
                 <tr>
                     <th scope="col" class="d-none d-sm-table-cell">ID</th>
-                    <th scope="col">Date</th>
-                    <th scope="col" class="d-none d-sm-table-cell">Society</th>
-                    <th scope="col" class="d-none d-sm-table-cell">Amount</th>
+                    <th scope="col" class="d-none d-sm-table-cell">Date</th>
+                    <th scope="col">Society</th>
+                    <th scope="col">Amount</th>
                 </tr>
                 </thead>
 
@@ -56,9 +59,9 @@
                 {% for request in requests %}
                 <tr class="clickable-row" data-href="/dcac/admin/request/{{ request.form_id }}"
                     style="cursor: pointer;">
-                    <td>{{ request.form_id }}</td>
-                    <td>{{ request.date|date:"d/m/Y" }}</td>
-                    <td class="d-none d-sm-table-cell">{{ request.organization }}</td>
+                    <td class="d-none d-sm-table-cell">{{ request.form_id }}</td>
+                    <td class="d-none d-sm-table-cell">{{ request.date|date:"d/m/Y" }}</td>
+                    <td>{{ request.organization }}</td>
                     <td>£{{ request.amount|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
@@ -68,6 +71,13 @@
             <p>You're all done! There are no requests for you to action right now.</p>
             {% endif %}
 
+        </div>
+
+        <div class="col-lg-3 col-md-9 col-sm-12 col-xs-12">
+            <div class="list-group">
+                <a href="/dcac/requests" class="list-group-item"><span>All Historical Requests</span></a>
+                <a href="https://www.jcr.dow.cam.ac.uk/treasury" target="blank" class="list-group-item"><span>Treasury Information</span></a>
+            </div>
         </div>
 
 

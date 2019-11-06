@@ -54,7 +54,7 @@
                                     <td>{{ request.date|date:"d/m/Y" }}</td>
                                     <td class="d-none d-sm-table-cell">{{ request.organization }}</td>
                                     <td>£{{ request.amount|floatformat:2 }}</td>
-                                    <td>{% if request.bursary_paid %}Paid{% else %}In Progress{% endif %}</td>
+                                    <td>{% if request.bursary_paid %}Paid{% elif request.rejected %}Rejected{% else %}In Progress{% endif %}</td>
                                 </tr>
                                 {% endfor %}
                                 </tbody>
