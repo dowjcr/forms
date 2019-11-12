@@ -48,7 +48,7 @@
     });
 </script>
 
-<div class="container-fluid" style="background: #990066">
+<div class="container-fluid" style="background: #A39161">
 
     <div class="container">
 
@@ -186,8 +186,8 @@
             <h4>Receipts</h4>
             <p class="mt-3">
                 {% for receipt in receipts %}
-                <a target="blank" href="/media/{{ receipt.file }}"><i class="fas fa-paperclip mr-2"></i>{{ receipt.file
-                    }}</a><br><br>
+                <a target="blank" href="/media/{{ receipt.file }}"><i class="fas fa-paperclip mr-2"></i>
+                    {{ receipt.file }}</a><br><br>
                 {% endfor %}
             </p>
         </div>
