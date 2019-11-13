@@ -2910,7 +2910,7 @@ fieldset:disabled a.btn {
 
 .btn-link {
     font-weight: 400;
-    color: #960066;
+    color: #A39161;
     background-color: transparent;
 }
 
@@ -3151,7 +3151,7 @@ input[type="button"].btn-block {
     height: 0;
     margin: 0.5rem 0;
     overflow: hidden;
-    border-top: 1px solid #bf78a8;
+    border-top: 1px solid #e9ecef;
 }
 
 .dropdown-item {
@@ -3176,7 +3176,7 @@ input[type="button"].btn-block {
 .dropdown-item.active, .dropdown-item:active {
     color: #fff;
     text-decoration: none;
-    background-color: #960066;
+    background-color: #A39161;
 }
 
 .dropdown-item.disabled, .dropdown-item:disabled {
@@ -4663,7 +4663,7 @@ input[type="button"].btn-block {
     padding: 0.5rem 0.75rem;
     margin-left: -1px;
     line-height: 1.25;
-    color: #960066;
+    color: #A39161;
     background-color: #fff;
     border: 1px solid #dee2e6;
 }
@@ -9015,7 +9015,7 @@ td a {
 }
 
 a {
-    color: #960066;
+    color: #A39161;
 }
 
 a:hover {
@@ -9067,7 +9067,7 @@ a:hover {
 
 .footer {
     min-height: 50px;
-    background-color: #960066;
+    background-color: #A39161;
     position: absolute;
     left: 0;
     right: 0;
