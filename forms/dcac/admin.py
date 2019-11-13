@@ -5,8 +5,6 @@ from .models import *
 admin.site.register(Student)
 admin.site.register(ACGReimbursementForm)
 admin.site.register(Organization)
-admin.site.register(AcademicYear)
-admin.site.register(OrganizationAdministrator)
 admin.site.register(ACGReimbursementFormItemEntry)
 admin.site.register(AdminUser)
 admin.site.register(ACGReimbursementFormReceiptEntry)

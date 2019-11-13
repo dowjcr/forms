@@ -3,7 +3,7 @@
 {% block content %}
 
 <head>
-    <title>Dashboard | DCAC Reimbursement</title>
+    <title>Previous Requests | DCAC Reimbursement</title>
 </head>
 
 <script>
@@ -16,14 +16,41 @@
     });
 </script>
 
+<div class="container-fluid d-none d-md-block" style="background: #A39161">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="jumbotron mt-2" style="background: white">
+                    <div class="row mb-2" id="titleDiv">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <h2 align="center">Previous Requests</h2>
+                            <p align="center">Below are all the requests you have made previously. Click on a request
+                            for further detail.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
 <div class="container mt-4">
+
+    <div class="row mb-1 d-md-none">
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <h2>Previous Requests</h2>
+            <p>Below are all the requests you have made previously. Tap on a request for further detail.</p>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <a href="/dcac/dashboard" class="btn btn-primary"><i class="fas fa-chevron-left mr-1"></i> Dashboard</a>
-        </div>
-        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <table class="table table-bordered table-striped table-hover mt-4">
+            <table class="table table-bordered table-striped table-hover mt-2">
                 <thead>
                 <tr>
                     <th scope="col">Date</th>

@@ -54,43 +54,6 @@ class Organization(models.Model):
         return self.name
 
 
-# ORGANIZATION ADMINISTRATOR
-# Represents a student who is able to submit reimbursement
-# requests for a given organisation.
-
-class OrganizationAdministrator(models.Model):
-    entry_id = models.AutoField(primary_key=True)
-    student = models.ForeignKey(Student, on_delete=models.SET_DEFAULT, default=None)
-    organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
-
-    def __str__(self):
-        return str(self.student) + " admin for " + str(self.organization)
-
-
-# BUDGET YEAR
-# Represents an academic year for which a budget
-# is valid.
-
-class AcademicYear(models.Model):
-    name = models.CharField(max_length=10)
-
-    def __str__(self):
-        return self.name
-
-
-# BUDGET ENTRY
-# Represents a budget entry for an organization
-# and budget year.
-
-class BudgetEntry(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
-    year = models.ForeignKey(AcademicYear, on_delete=models.SET_DEFAULT, default=None)
-    amount = models.FloatField()
-
-    def __str__(self):
-        return str(self.organization) + ", Year " + str(self.year)
-
-
 # ACG REIMBURSEMENT FORM
 # Record of submitted form.
 
@@ -98,7 +61,6 @@ class ACGReimbursementForm(models.Model):
     form_id = models.AutoField(primary_key=True)
     submitter = models.CharField(max_length=10)
     organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
-    year = models.ForeignKey(AcademicYear, on_delete=models.SET_DEFAULT, default=None)
     date = models.DateField()
     amount = models.CharField(max_length=20)
     rejected = models.BooleanField(default=False)
@@ -107,9 +69,14 @@ class ACGReimbursementForm(models.Model):
     sort_code = models.CharField(max_length=20)
     jcr_treasurer_approved = models.BooleanField(default=False)
     jcr_treasurer_comments = models.CharField(max_length=500, blank=True)
+    jcr_treasurer_name = models.CharField(max_length=100)
+    jcr_treasurer_date = models.DateField(null=True)
     senior_treasurer_approved = models.BooleanField(default=False)
     senior_treasurer_comments = models.CharField(max_length=500, blank=True)
+    senior_treasurer_name = models.CharField(max_length=100)
+    senior_treasurer_date = models.DateField(null=True)
     bursary_paid = models.BooleanField(default=False)
+    bursary_date = models.DateField(null=True)
 
     def __str__(self):
         return "Request " + str(self.form_id) + ", " + str(self.organization)

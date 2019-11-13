@@ -94,7 +94,7 @@
     </div>
 </div>
 
-<div class="container mt-4">
+<div class="container mt-4 mb-4">
     <div class="row">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 mb-3">
             <h4>Status</h4>
@@ -120,6 +120,8 @@
                 </div>
                 <div class="card-body">
                     <p class="card-text">{{ request.jcr_treasurer_comments }}<br>
+                        <small><i>{{ request.jcr_treasurer_name }}, {{ request.jcr_treasurer_date|date:"d/m/Y" }}</i></small>
+                    </p>
                 </div>
             </div>
             {% endif %}
@@ -136,6 +138,8 @@
                 </div>
                 <div class="card-body">
                     <p class="card-text">{{ request.senior_treasurer_comments }}<br>
+                        <small><i>{{ request.senior_treasurer_name }}, {{ request.senior_treasurer_date|date:"d/m/Y" }}</i></small>
+                    </p>
                 </div>
             </div>
             {% endif %}
@@ -158,10 +162,6 @@
                 <tr>
                     <td>Organisation</td>
                     <td>{{ request.organization }}</td>
-                </tr>
-                <tr>
-                    <td>Academic Year</td>
-                    <td>{{ request.year }}</td>
                 </tr>
                 <tr>
                     <td>Items Claimed</td>

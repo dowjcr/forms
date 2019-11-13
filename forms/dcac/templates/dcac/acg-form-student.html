@@ -23,7 +23,7 @@
 
             var item = {
                 title: title.val(),
-                amount: amount.val(),
+                amount: parseFloat(amount.val()).toFixed(2),
                 description: description.val()
             };
             items.push(item);
@@ -95,6 +95,10 @@
 
     function createFileUpload() {
         let form = document.getElementById('receipt');
+        if (Math.round((form.files[0]).size / 1000 / 1000) > 5) {
+            alert("File too large, try again.");
+            return;
+        }
         let formData = new FormData();
         formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
         formData.append("receipt", form.files[0]);
@@ -106,7 +110,7 @@
                 let receipt = {
                     id: response.receipt_id,
                     description: (form.files[0]).name,
-                    fileSize: Math.round((form.files[0]).size/1000)
+                    fileSize: Math.round((form.files[0]).size / 1000)
                 };
                 receipts.push(receipt);
                 showReceipts();
@@ -167,7 +171,7 @@
             total += parseFloat(item.amount);
         });
         document.getElementById('items').innerHTML = itemsHtml;
-        document.getElementById('totalAmountInSummary').innerHTML = total;
+        document.getElementById('totalAmountInSummary').innerHTML = total.toFixed(2);
     }
 
     function showReceipts() {
@@ -342,8 +346,12 @@
             <div class="list-group">
                 <p class="list-group-item">Please ensure that any request made under the ACG conforms to the regulations
                     as set out on the JCR website.</p>
-                <a target=_blank href="https://www.jcr.dow.cam.ac.uk/treasury" class="list-group-item"><span>ACG Information <i
-                        class="fas fa-angle-right ml-1"></i></span></a>
+                <a target="_blank" href="https://www.jcr.dow.cam.ac.uk/treasury"
+                   class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>ACG Information</span>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+
             </div>
         </div>
     </div>

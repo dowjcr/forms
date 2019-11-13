@@ -27,13 +27,11 @@
                         <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
                             <h3>Your Recent Requests</h3>
                         </div>
-                        {% if can_make_new_request %}
                         <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
                             <a href="/dcac/form/acg" class="btn btn-primary float-right"><i class="fas fa-plus mr-1"></i>
                                 New Request
                             </a>
                         </div>
-                        {% endif %}
                     </div>
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -78,8 +76,18 @@
         </div>
         <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
             <div class="list-group">
-                <a href="/dcac/requests" class="list-group-item"><span>My Requests</span></a>
-                <a href="https://www.jcr.dow.cam.ac.uk/treasury" target="blank" class="list-group-item"><span>Treasury Information</span></a>
+                <a href="/dcac/form/acg" class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>New Request</span>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="/dcac/requests" class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Previous Requests</span>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="https://www.jcr.dow.cam.ac.uk/treasury" target="blank" class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Treasury Information</span>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
             </div>
         </div>
     </div>

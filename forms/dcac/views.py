@@ -30,16 +30,10 @@ def landing(request):
 
 def dashboard(request):
     student = Student.objects.get(user_id=request.user.username)
-    organizations = []
-    organization_administrators = OrganizationAdministrator.objects.filter(student=student)
-    for organization_administrator in organization_administrators:
-        organizations.append(organization_administrator.organization)
 
     requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')[:3]
 
-    return render(request, 'dcac/dashboard-student.html', {'organizations': organizations,
-                                                           'can_make_new_request': len(organizations) > 0,
-                                                           'requests': requests,
+    return render(request, 'dcac/dashboard-student.html', {'requests': requests,
                                                            'student': student})
 
 
@@ -48,11 +42,6 @@ def dashboard(request):
 
 def all_requests(request):
     student = Student.objects.get(user_id=request.user.username)
-    organizations = []
-    organization_administrators = OrganizationAdministrator.objects.filter(student=student)
-    for organization_administrator in organization_administrators:
-        organizations.append(organization_administrator.organization)
-
     requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')
     return render(request, 'dcac/all-requests-student.html', {'student': student,
                                                               'requests': requests})
@@ -81,12 +70,8 @@ def acg_form(request):
         file_entry.save()
         return HttpResponse(json.dumps({'receipt_id': file_entry.entry_id}), content_type="application/json")
     else:
-        organizations = []
-        organizationAdministrators = OrganizationAdministrator.objects.filter(student=student)
-        for organizationAdministrator in organizationAdministrators:
-            organizations.append(organizationAdministrator.organization)
         return render(request, 'dcac/acg-form-student.html', {'student': student,
-                                                              'organizations': organizations})
+                                                              'organizations': Organization.objects.order_by('name')})
 
 
 # ACG FORM SUBMIT
@@ -111,7 +96,6 @@ def acg_form_submit(request):
         form.name_on_account = name_on_account
         form.submitter = student.user_id
 
-        form.year = AcademicYear.objects.get(name="2019/20")
         form.save()
 
         for item in items:
@@ -164,18 +148,26 @@ def view_request_admin(request, form_id):
             if user.role == 1:
                 acg_request.jcr_treasurer_approved = True
                 acg_request.jcr_treasurer_comments = comments
+                acg_request.jcr_treasurer_date = datetime.now()
+                acg_request.jcr_treasurer_name = str(user)
             elif user.role == 2:
                 acg_request.senior_treasurer_approved = True
                 acg_request.senior_treasurer_comments = comments
+                acg_request.senior_treasurer_date = datetime.now()
+                acg_request.senior_treasurer_name = str(user)
             acg_request.save()
         elif request.POST.get('code') == '2':
             acg_request.rejected = True
             if user.role == 1:
                 acg_request.jcr_treasurer_approved = False
                 acg_request.jcr_treasurer_comments = comments
+                acg_request.jcr_treasurer_date = datetime.now()
+                acg_request.jcr_treasurer_name = str(user)
             elif user.role == 2:
                 acg_request.senior_treasurer_approved = False
                 acg_request.senior_treasurer_comments = comments
+                acg_request.senior_treasurer_date = datetime.now()
+                acg_request.senior_treasurer_name = str(user)
             acg_request.save()
 
         return HttpResponse(json.dumps({'responseCode': 1}), content_type="application/json")
