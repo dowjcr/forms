@@ -35,6 +35,7 @@
 
         $('#finishButton').click(function () {
             if (validateForm()) {
+                showLoadingModal();
                 createAjaxResponse();
             }
         });
@@ -47,6 +48,10 @@
 
     var items = [];
     var receipts = [];
+
+    function showLoadingModal() {
+        $('#loadingModal').modal({backdrop: 'static', keyboard: false})
+    }
 
     function generateTableRowFromItem(item, index) {
         return "<tr><td><p>" + item.title + "<br><span class='small'>" + item.description + "</span></p></td>"
@@ -417,6 +422,12 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="loadingModal">
+        <div class="modal-dialog modal-dialog-centered text-center" role="document">
+            <span class="fa fa-spinner fa-spin fa-3x w-100"></span>
         </div>
     </div>
 

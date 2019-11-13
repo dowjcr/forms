@@ -3,10 +3,13 @@ import json
 from django.shortcuts import render, get_object_or_404, render_to_response
 from django.http import HttpResponseRedirect, HttpResponse
 from datetime import datetime
+from simplecrypt import encrypt, decrypt
 from .models import *
+from django.conf import settings
 import logging
 
 LOG_FILE = 'dcac.log'
+ENCRYPTION_KEY = settings.ENCRYPTION_KEY
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
                     format='%(asctime)s %(levelname)-8s %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
@@ -91,8 +94,8 @@ def acg_form_submit(request):
         form = ACGReimbursementForm()
         form.organization = organization
         form.date = datetime.now()
-        form.sort_code = sort_code
-        form.account_number = account_number
+        form.sort_code = encrypt(ENCRYPTION_KEY, sort_code)
+        form.account_number = encrypt(ENCRYPTION_KEY, account_number)
         form.name_on_account = name_on_account
         form.submitter = student.user_id
 
@@ -126,7 +129,7 @@ def dashboard_admin(request):
     if user.role == 1:      # Junior Treasurer
         requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=False).order_by('form_id')
     elif user.role == 2:    # Senior Treasurer
-        requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=True).order_by('form_id')
+        requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False).order_by('form_id')
     elif user.role == 3:    # Bursary
         requests = ACGReimbursementForm.objects.filter(jcr_treasurer_approved=True, senior_treasurer_approved=True).order_by('form_id')
     else:
@@ -174,6 +177,9 @@ def view_request_admin(request, form_id):
 
     items = ACGReimbursementFormItemEntry.objects.filter(form=acg_request)
     receipts = ACGReimbursementFormReceiptEntry.objects.filter(form=acg_request)
+    if user.role == 3:
+        acg_request.sort_code = str(decrypt(ENCRYPTION_KEY, acg_request.sort_code)).replace("b", '').replace("'", '')
+        acg_request.account_number = str(decrypt(ENCRYPTION_KEY, acg_request.account_number)).replace("b", '').replace("'", '')
     return render(request, 'dcac/view-request-admin.html', {'user': user,
                                                             'request': acg_request,
                                                             'items': items,
