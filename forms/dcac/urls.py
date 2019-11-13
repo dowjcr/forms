@@ -17,6 +17,7 @@ urlpatterns = [
     path('form/acg/submit', views.acg_form_submit, name='acg-submit'),
 
     path('admin', views.dashboard_admin, name='dashboard-admin'),
+    path('admin/requests', views.all_requests_admin, name='all-requests-admin'),
     path('admin/request/<int:form_id>', views.view_request_admin, name='view-request-admin'),
-    path('admin/profile', views.profile_admin, name='profile-admin')
+    path('admin/profile', views.profile_admin, name='profile-admin'),
 ]

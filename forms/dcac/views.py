@@ -186,6 +186,15 @@ def view_request_admin(request, form_id):
                                                             'receipts': receipts})
 
 
+# ALL REQUESTS ADMIN
+# Shows all previous requests.
+
+def all_requests_admin(request):
+    user = AdminUser.objects.get(user_id=request.user.username)
+    requests = ACGReimbursementForm.objects.order_by('-form_id')
+    return render(request, 'dcac/all-requests-admin.html', {'user': user,
+                                                            'requests': requests})
+
 # ADMIN PROFILE
 # Allows admin to view/change their role.
 
