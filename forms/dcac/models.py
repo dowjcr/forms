@@ -47,7 +47,6 @@ class AdminUser(models.Model):
 class Organization(models.Model):
     organization_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
-    president = models.ForeignKey(Student, on_delete=models.SET_DEFAULT, default=None)
     description = models.CharField(max_length=500)
 
     def __str__(self):
