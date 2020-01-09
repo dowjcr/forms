@@ -1,6 +1,7 @@
 import json
 
 from django.shortcuts import render, get_object_or_404, render_to_response
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from datetime import datetime
 from simplecrypt import encrypt, decrypt
@@ -31,6 +32,7 @@ def landing(request):
 # Shows summary of requests and clubs for which this
 # user is an owner/administrator.
 
+@login_required(login_url='/accounts/login/')
 def dashboard(request):
     student = Student.objects.get(user_id=request.user.username)
 
@@ -43,6 +45,7 @@ def dashboard(request):
 # ALL REQUESTS
 # Allow student to view all requests they have made.
 
+@login_required(login_url='/accounts/login/')
 def all_requests(request):
     student = Student.objects.get(user_id=request.user.username)
     requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')
@@ -53,6 +56,7 @@ def all_requests(request):
 # VIEW REQUEST
 # For student to view details of previous request.
 
+@login_required(login_url='/accounts/login/')
 def view_request(request, form_id):
     student = Student.objects.get(user_id=request.user.username)
     acg_request = get_object_or_404(ACGReimbursementForm, pk=form_id)
@@ -65,6 +69,7 @@ def view_request(request, form_id):
 # ACG FORM
 # Allows student to fill out ACG reimbursement form.
 
+@login_required(login_url='/accounts/login/')
 def acg_form(request):
     student = Student.objects.get(user_id=request.user.username)
     if request.method == 'POST':
@@ -80,6 +85,7 @@ def acg_form(request):
 # ACG FORM SUBMIT
 # Allows submission of completed form.
 
+@login_required(login_url='/accounts/login/')
 def acg_form_submit(request):
     student = Student.objects.get(user_id=request.user.username)
     if request.method == 'POST':
@@ -124,6 +130,7 @@ def acg_form_submit(request):
 # ADMIN DASHBOARD
 # Show dashboard with items for user to action.
 
+@login_required(login_url='/accounts/login/')
 def dashboard_admin(request):
     user = AdminUser.objects.get(user_id=request.user.username)
     if user.role == 1:      # Junior Treasurer
@@ -141,6 +148,7 @@ def dashboard_admin(request):
 # ADMIN VIEW REQUEST
 # For admin to view details of request.
 
+@login_required(login_url='/accounts/login/')
 def view_request_admin(request, form_id):
     user = AdminUser.objects.get(user_id=request.user.username)
     acg_request = get_object_or_404(ACGReimbursementForm, pk=form_id)
@@ -189,15 +197,18 @@ def view_request_admin(request, form_id):
 # ALL REQUESTS ADMIN
 # Shows all previous requests.
 
+@login_required(login_url='/accounts/login/')
 def all_requests_admin(request):
     user = AdminUser.objects.get(user_id=request.user.username)
     requests = ACGReimbursementForm.objects.order_by('-form_id')
     return render(request, 'dcac/all-requests-admin.html', {'user': user,
                                                             'requests': requests})
 
+
 # ADMIN PROFILE
 # Allows admin to view/change their role.
 
+@login_required(login_url='/accounts/login/')
 def profile_admin(request):
     user = AdminUser.objects.get(user_id=request.user.username)
     return render(request, 'dcac/profile-admin.html', {'user': user})
