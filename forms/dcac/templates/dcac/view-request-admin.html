@@ -19,15 +19,17 @@
         function createAjaxResponse(code) {
             let comments;
             if (code === 1) {
-                comments = $('#approveComments');
+                comments = $('#approveComments').val();
+            } else if (code === 2) {
+                comments = $('#rejectComments').val();
             } else {
-                comments = $('#rejectComments');
+                comments = "Paid"
             }
             $.ajax({
                 type: 'POST',
                 data: {
                     'code': code,
-                    'comments': comments.val()
+                    'comments': comments
                 },
                 dataType: 'json',
                 csrfmiddlewaretoken: '{{ csrf_token }}',
@@ -43,6 +45,10 @@
 
         $('#rejectButton').click(function () {
             createAjaxResponse(2)
+        });
+
+        $('#transferredButton').click(function () {
+            createAjaxResponse(3)
         });
 
     });
@@ -107,7 +113,7 @@
         </div>
     </div>
 
-    {% elif user.role == 3 and request.jcr_treasurer_approved and request.senior_treasurer_approved %}
+    {% elif user.role == 3 and request.jcr_treasurer_approved and request.senior_treasurer_approved and not request.bursary_paid %}
     <div class="row mb-3">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <div class="alert alert-success">
@@ -117,6 +123,8 @@
                     Account Number: {{ request.account_number }}<br>
                     Name on Account: {{ request.name_on_account }}
                 </p>
+                <button class="btn btn-success mt-2" id="transferredButton"><i class="fas fa-check mr-1"></i> Transferred
+                </button>
             </div>
         </div>
     </div>
