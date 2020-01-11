@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from datetime import datetime
 from simplecrypt import encrypt, decrypt
 from .models import *
+from .email import *
 from django.conf import settings
 import logging
 
@@ -124,6 +125,8 @@ def acg_form_submit(request):
         form.amount = total
         form.save()
 
+        notify_junior_treasurer(form)
+
         return HttpResponse(json.dumps({'formId': form.form_id}), content_type="application/json")
 
 
@@ -161,6 +164,7 @@ def view_request_admin(request, form_id):
                 acg_request.jcr_treasurer_comments = comments
                 acg_request.jcr_treasurer_date = datetime.now()
                 acg_request.jcr_treasurer_name = str(user)
+                notify_senior_treasurer(acg_request)
             elif user.role == 2:
                 acg_request.senior_treasurer_approved = True
                 acg_request.senior_treasurer_comments = comments
