@@ -12,6 +12,18 @@ import logging
 FROM_EMAIL = "DCAC <no-reply@downingjcr.co.uk>"
 
 
+# NOTIFY BURSARY
+# Invoked when form has been approved by senior treasurer.
+
+def notify_bursary(form):
+    subject = "New Reimbursement Request"
+    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=3)]
+    html_message = render_to_string('dcac/emails/notify-treasurer.html', {'form': form})
+    message = "A new reimbursement form has been approved and is ready to be paid. Please go to the DCAC " \
+              "Reimbursement site. "
+    send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
+
+
 # NOTIFY SENIOR TREASURER
 # Invoked when form has been approved by junior treasurer.
 

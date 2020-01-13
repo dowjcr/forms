@@ -184,12 +184,12 @@
                 </thead>
 
                 <tbody>
+                {% for item in items %}
                 <tr>
-                    {% for item in items %}
                     <td><p>{{ item.title }}<br><span class='small'>{{ item.description }}</span></p></td>
                     <td>£{{ item.amount|floatformat:2 }}</td>
-                    {% endfor %}
                 </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>

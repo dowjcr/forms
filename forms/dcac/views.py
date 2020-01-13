@@ -170,6 +170,7 @@ def view_request_admin(request, form_id):
                 acg_request.senior_treasurer_comments = comments
                 acg_request.senior_treasurer_date = datetime.now()
                 acg_request.senior_treasurer_name = str(user)
+                notify_bursary(acg_request)
             acg_request.save()
         elif request.POST.get('code') == '2':
             acg_request.rejected = True
