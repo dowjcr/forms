@@ -141,7 +141,7 @@ def dashboard_admin(request):
     elif user.role == 2:    # Senior Treasurer
         requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False).order_by('form_id')
     elif user.role == 3:    # Bursary
-        requests = ACGReimbursementForm.objects.filter(jcr_treasurer_approved=True, senior_treasurer_approved=True).order_by('form_id')
+        requests = ACGReimbursementForm.objects.filter(jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False).order_by('form_id')
     else:
         requests = []
     return render(request, 'dcac/dashboard-admin.html', {'user': user,
