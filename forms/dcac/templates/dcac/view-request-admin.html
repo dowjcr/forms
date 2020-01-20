@@ -147,7 +147,7 @@
                 <div class="card-body">
                     <p class="card-text">
                         {% if request.jcr_treasurer_comments %}
-                        {{ request.jcr_treasurer_comments|linebreaks }}
+                        {{ request.jcr_treasurer_comments }}
                         {% else %}
                         No comments given.
                         {% endif %}<br>
@@ -170,7 +170,7 @@
                 <div class="card-body">
                     <p class="card-text">
                         {% if request.senior_treasurer_comments %}
-                        {{ request.senior_treasurer_comments|linebreaks }}
+                        {{ request.senior_treasurer_comments }}
                         {% else %}
                         No comments given.
                         {% endif %}<br>
