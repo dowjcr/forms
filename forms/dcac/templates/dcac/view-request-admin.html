@@ -147,7 +147,7 @@
                 <div class="card-body">
                     <p class="card-text">
                         {% if request.jcr_treasurer_comments %}
-                        {{ request.jcr_treasurer_comments }}
+                        {{ request.jcr_treasurer_comments|linebreaks }}
                         {% else %}
                         No comments given.
                         {% endif %}<br>
@@ -170,7 +170,7 @@
                 <div class="card-body">
                     <p class="card-text">
                         {% if request.senior_treasurer_comments %}
-                        {{ request.senior_treasurer_comments }}
+                        {{ request.senior_treasurer_comments|linebreaks }}
                         {% else %}
                         No comments given.
                         {% endif %}<br>
@@ -210,7 +210,7 @@
                 <tbody>
                 {% for item in items %}
                 <tr>
-                    <td><p>{{ item.title }}<br><span class='small'>{{ item.description }}</span></p></td>
+                    <td><p>{{ item.title }}<br><span class='small'>{{ item.description|linebreaks }}</span></p></td>
                     <td>£{{ item.amount|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
