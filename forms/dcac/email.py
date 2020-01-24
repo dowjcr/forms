@@ -44,3 +44,27 @@ def notify_junior_treasurer(form):
     html_message = render_to_string('dcac/emails/notify-treasurer.html', {'form': form})
     message = "A new reimbursement form has been submitted for your approval. Please go to the DCAC Reimbursement site."
     send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
+
+
+# NOTIFY REJECTED
+# Invoked when form is rejected by a treasurer.
+
+def notify_rejected(form):
+    subject = "Reimbursement Request Rejected"
+    recipient_list = [form.submitter + "@cam.ac.uk"]
+    html_message = render_to_string('dcac/emails/rejected.html', {'form': form})
+    message = "Unfortunately your recent DCAC reimbursement request has been rejected. Please go to the DCAC " \
+              "Reimbursement site. "
+    send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
+
+
+# NOTIFY PAID
+# Invoked when form is paid by the Bursary.
+
+def notify_paid(form):
+    subject = "Reimbursement Request Completed"
+    recipient_list = [form.submitter + "@cam.ac.uk"]
+    html_message = render_to_string('dcac/emails/paid.html', {'form': form})
+    message = "Your DCAC Reimbursement request has been paid by the Bursary. Please note it may take a few working " \
+              "days for the payment to clear. "
+    send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)

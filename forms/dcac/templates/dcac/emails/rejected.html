@@ -1,0 +1,11 @@
+{% extends 'dcac/emails/template.html' %}
+
+{% block content %}
+Hi,<br><br>
+
+Unfortunately your recent DCAC reimbursement request has been rejected. Please visit the DCAC Reimbursement system
+to view the Treasurer's comments.<br><br>
+
+<a href="https://forms.downingjcr.co.uk/dcac/request/{{ form.form_id }}">View Request</a>
+
+{% endblock %}

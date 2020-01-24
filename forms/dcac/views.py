@@ -185,6 +185,7 @@ def view_request_admin(request, form_id):
                 acg_request.senior_treasurer_date = datetime.now()
                 acg_request.senior_treasurer_name = str(user)
             acg_request.save()
+            notify_rejected(acg_request)
         elif request.POST.get('code') == '3':
             acg_request.bursary_paid = True
             acg_request.bursary_date = datetime.now()
@@ -192,7 +193,7 @@ def view_request_admin(request, form_id):
             acg_request.sort_code = None
             acg_request.name_on_account = None
             acg_request.save()
-
+            notify_paid(acg_request)
         return HttpResponse(json.dumps({'responseCode': 1}), content_type="application/json")
 
     items = ACGReimbursementFormItemEntry.objects.filter(form=acg_request)
