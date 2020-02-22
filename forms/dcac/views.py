@@ -174,6 +174,9 @@ def view_request_admin(request, form_id):
             acg_request.save()
         elif request.POST.get('code') == '2':
             acg_request.rejected = True
+            acg_request.sort_code = None
+            acg_request.account_number = None
+            acg_request.name_on_account = None
             if user.role == 1:
                 acg_request.jcr_treasurer_approved = False
                 acg_request.jcr_treasurer_comments = comments
