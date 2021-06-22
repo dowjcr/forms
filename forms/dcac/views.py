@@ -35,7 +35,10 @@ def landing(request):
 
 @login_required(login_url='/accounts/login/')
 def dashboard(request):
-    student = Student.objects.get(user_id=request.user.username)
+    try:
+        student = Student.objects.get(user_id=request.user.username)
+    except Student.DoesNotExist:
+        return error(request, 403)
 
     requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')[:3]
 
@@ -235,7 +238,7 @@ def profile_admin(request):
 
 def error(request, code):
     messages = {
-        403: "Access Denied",
+        403: "Access Denied. If you think that you should have access to this page, speak to the Internet Officer (internet@jcr.dow.cam.ac.uk).",
         404: "Page not found",
     }
-    return render(request, 'roomballot/error.html', {'message': messages[code]})
+    return render(request, 'dcac/error.html', {'message': messages[code]})
