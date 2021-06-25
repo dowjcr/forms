@@ -6,6 +6,8 @@ Author Cameron O'Connor
 
 from django.db import models
 
+from .constants import *
+
 
 # STUDENT
 # Stores user information. Note that user_id
@@ -25,16 +27,10 @@ class Student(models.Model):
 # corresponds to CRSid.
 
 class AdminUser(models.Model):
-    ROLE_CHOICES = (
-        (1, 'JCR Treasurer'),
-        (2, 'Senior Treasurer'),
-        (3, 'Bursary'),
-    )
-
     user_id = models.CharField('CRSid', primary_key=True, max_length=10)
     first_name = models.CharField('First Name', max_length=50)
     surname = models.CharField('Surname', max_length=50)
-    role = models.IntegerField('Role', choices=ROLE_CHOICES)
+    role = models.IntegerField('Role', choices=AdminRoles.CHOICES)
 
     def __str__(self):
         return str(self.first_name) + " " + str(self.surname)
@@ -62,18 +58,23 @@ class ACGReimbursementForm(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
     date = models.DateField()
     amount = models.CharField(max_length=20)
+    # request_type = models.IntegerField(choices=RequestTypes.CHOICES, default=RequestTypes.STANDARD)
+    reimbursement_type = models.IntegerField(choices=RequestTypes.CHOICES, default=RequestTypes.STANDARD)
     rejected = models.BooleanField(default=False)
     name_on_account = models.CharField(max_length=100, null=True)
     account_number = models.BinaryField(max_length=1000, null=True)
     sort_code = models.BinaryField(max_length=1000, null=True)
+
     jcr_treasurer_approved = models.BooleanField(default=False)
     jcr_treasurer_comments = models.CharField(max_length=500, blank=True)
     jcr_treasurer_name = models.CharField(max_length=100)
     jcr_treasurer_date = models.DateField(null=True)
+
     senior_treasurer_approved = models.BooleanField(default=False)
     senior_treasurer_comments = models.CharField(max_length=500, blank=True)
     senior_treasurer_name = models.CharField(max_length=100)
     senior_treasurer_date = models.DateField(null=True)
+
     bursary_paid = models.BooleanField(default=False)
     bursary_date = models.DateField(null=True)
 

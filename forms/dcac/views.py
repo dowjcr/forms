@@ -7,8 +7,10 @@ from datetime import datetime
 from simplecrypt import encrypt, decrypt
 from .models import *
 from .email import *
+from .constants import *
 from django.conf import settings
 import logging
+
 
 LOG_FILE = 'dcac.log'
 ENCRYPTION_KEY = settings.ENCRYPTION_KEY
@@ -139,11 +141,11 @@ def acg_form_submit(request):
 @login_required(login_url='/accounts/login/')
 def dashboard_admin(request):
     user = AdminUser.objects.get(user_id=request.user.username)
-    if user.role == 1:      # Junior Treasurer
+    if user.role == AdminRoles.JCRTREASURER:
         requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=False).order_by('form_id')
-    elif user.role == 2:    # Senior Treasurer
+    elif user.role == AdminRoles.SENIORTREASURER:
         requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False).order_by('form_id')
-    elif user.role == 3:    # Bursary
+    elif user.role == AdminRoles.BURSARY:
         requests = ACGReimbursementForm.objects.filter(jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False).order_by('form_id')
     else:
         requests = []
@@ -161,21 +163,21 @@ def view_request_admin(request, form_id):
     if request.method == 'POST':
         # Clicked 'approve'.
         comments = request.POST.get('comments')
-        if request.POST.get('code') == '1':
-            if user.role == 1:
+        if request.POST.get('code') == ResponseCodes.APPROVED:
+            if user.role == AdminRoles.JCRTREASURER:
                 acg_request.jcr_treasurer_approved = True
                 acg_request.jcr_treasurer_comments = comments
                 acg_request.jcr_treasurer_date = datetime.now()
                 acg_request.jcr_treasurer_name = str(user)
                 notify_senior_treasurer(acg_request)
-            elif user.role == 2:
+            elif user.role == AdminRoles.SENIORTREASURER:
                 acg_request.senior_treasurer_approved = True
                 acg_request.senior_treasurer_comments = comments
                 acg_request.senior_treasurer_date = datetime.now()
                 acg_request.senior_treasurer_name = str(user)
                 notify_bursary(acg_request)
             acg_request.save()
-        elif request.POST.get('code') == '2':
+        elif request.POST.get('code') == ResponseCodes.REJECTED:
             acg_request.rejected = True
             acg_request.sort_code = None
             acg_request.account_number = None
@@ -192,7 +194,7 @@ def view_request_admin(request, form_id):
                 acg_request.senior_treasurer_name = str(user)
             acg_request.save()
             notify_rejected(acg_request)
-        elif request.POST.get('code') == '3':
+        elif request.POST.get('code') == ResponseCodes.PAID:
             acg_request.bursary_paid = True
             acg_request.bursary_date = datetime.now()
             acg_request.account_number = None
