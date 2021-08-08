@@ -98,7 +98,8 @@
         </div>
     </div>
 
-    {% elif user.role == 2 and not request.rejected and request.jcr_treasurer_approved and not request.senior_treasurer_approved %}
+    {% elif user.role == 2 or user.role == 4 %}
+    {% if not request.rejected and request.jcr_treasurer_approved and not request.senior_treasurer_approved %}
     <div class="row mb-3">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <div class="alert" role="alert" id="alert3" align="center">
@@ -112,6 +113,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     {% elif user.role == 3 and request.jcr_treasurer_approved and request.senior_treasurer_approved and not request.bursary_paid %}
     <div class="row mb-3">

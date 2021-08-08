@@ -14,7 +14,11 @@ urlpatterns = [
     path('requests', views.all_requests, name='all-requests'),
     path('request/<int:form_id>', views.view_request, name='view-request'),
     path('form/acg', views.acg_form, name='acg'),
+    path('form/acg-standard', views.acg_form, name='acg-standard'),
+    path('form/acg-internal', views.acg_form, name='acg-internal'),
+    path('form/acg-large', views.acg_form, name='acg-large'),
     path('form/acg/submit', views.acg_form_submit, name='acg-submit'),
+    path('request-types', views.dashboard, name='request-types'),
 
     path('admin', views.dashboard_admin, name='dashboard-admin'),
     path('admin/requests', views.all_requests_admin, name='all-requests-admin'),

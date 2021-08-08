@@ -9,6 +9,8 @@ from django.template.loader import render_to_string
 from .models import AdminUser
 import logging
 
+from .constants import *
+
 FROM_EMAIL = "DCAC <no-reply@downingjcr.co.uk>"
 
 
@@ -17,19 +19,31 @@ FROM_EMAIL = "DCAC <no-reply@downingjcr.co.uk>"
 
 def notify_bursary(form):
     subject = "New Reimbursement Request"
-    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=3)]
+    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.BURSARY)]
     html_message = render_to_string('dcac/emails/notify-treasurer.html', {'form': form})
     message = "A new reimbursement form has been approved and is ready to be paid. Please go to the DCAC " \
               "Reimbursement site. "
     send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
 
 
+# NOTiFY SENIOR BURSAR
+# Invoked when form has been approved by junior treasurer, and must be approved by senior bursar
+
+def notify_senior_bursar(form):
+    subject = "New Reimbursement Request"
+    recipient_list = ["tjb94@cam.ac.uk"] #TODO: add senior bursar email
+    #recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.SENIORBURSAR)]
+    html_message = render_to_string('dcac/emails/notify-treasurer.html', {'form': form})
+    message = "A new reimbursement form has been submitted for your approval. Please go to the DCAC Reimbursement site."
+    send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
+    
+
 # NOTIFY SENIOR TREASURER
 # Invoked when form has been approved by junior treasurer.
 
 def notify_senior_treasurer(form):
     subject = "New Reimbursement Request"
-    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=2)]
+    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.SENIORTREASURER)]
     html_message = render_to_string('dcac/emails/notify-treasurer.html', {'form': form})
     message = "A new reimbursement form has been submitted for your approval. Please go to the DCAC Reimbursement site."
     send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
@@ -40,7 +54,7 @@ def notify_senior_treasurer(form):
 
 def notify_junior_treasurer(form):
     subject = "New Reimbursement Request"
-    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=1)]
+    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.JCRTREASURER)]
     html_message = render_to_string('dcac/emails/notify-treasurer.html', {'form': form})
     message = "A new reimbursement form has been submitted for your approval. Please go to the DCAC Reimbursement site."
     send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)

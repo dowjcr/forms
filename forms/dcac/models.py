@@ -58,7 +58,6 @@ class ACGReimbursementForm(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
     date = models.DateField()
     amount = models.CharField(max_length=20)
-    # request_type = models.IntegerField(choices=RequestTypes.CHOICES, default=RequestTypes.STANDARD)
     reimbursement_type = models.IntegerField(choices=RequestTypes.CHOICES, default=RequestTypes.STANDARD)
     rejected = models.BooleanField(default=False)
     name_on_account = models.CharField(max_length=100, null=True)

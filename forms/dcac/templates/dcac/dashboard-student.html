@@ -28,9 +28,20 @@
                             <h3>Your Recent Requests</h3>
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
-                            <a href="/dcac/form/acg" class="btn btn-primary float-right"><i class="fas fa-plus mr-1"></i>
-                                New Request
-                            </a>
+                            <div class="dropdown show">
+                                <a href="#" class="btn btn-primary dropdown-toggle float-right" type="button" id="dropdownMenuButton" data-toggle="dropdown">
+                                    <i class="fas fa-plus mr-1"></i>
+                                    New Request
+                                </a>
+                                
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="/dcac/form/acg-standard">Standard Request</a>
+                                    <a class="dropdown-item" href="/dcac/form/acg-internal">Internal Transfer</a>
+                                    <a class="dropdown-item" href="/dcac/form/acg-large">Large Requests</a>
+                                    <a class="dropdown-item" href="/dcac/request-types"><i class="fas fa-question-circle"></i> What's this?</a>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                     <div class="row">
@@ -42,6 +53,7 @@
                                     <th scope="col" class="d-none d-sm-table-cell">Organisation</th>
                                     <th scope="col" class="d-none d-sm-table-cell">Amount</th>
                                     <th scope="col">Status</th>
+                                    <th scope="col">Type</th>
                                 </tr>
                                 </thead>
 
@@ -53,6 +65,7 @@
                                     <td class="d-none d-sm-table-cell">{{ request.organization }}</td>
                                     <td>£{{ request.amount|floatformat:2 }}</td>
                                     <td>{% if request.bursary_paid %}Paid{% elif request.rejected %}Rejected{% else %}In Progress{% endif %}</td>
+                                    <td>{% if request.reimbursement_type == 2 %}Internal{% elif request.reimbursement_type == 3 %}Large{% else %}Standard{% endif %}</td>
                                 </tr>
                                 {% endfor %}
                                 </tbody>

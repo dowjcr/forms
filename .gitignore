@@ -1,0 +1,6 @@
+.idea
+.vscode
+*.log
+__pycache__
+migrations
+settings.py

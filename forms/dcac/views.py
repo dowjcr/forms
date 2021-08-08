@@ -140,13 +140,23 @@ def acg_form_submit(request):
 
 @login_required(login_url='/accounts/login/')
 def dashboard_admin(request):
-    user = AdminUser.objects.get(user_id=request.user.username)
+    try:
+        user = AdminUser.objects.get(user_id=request.user.username)
+    except AdminUser.DoesNotExist:
+        return error(request, 403)
+
     if user.role == AdminRoles.JCRTREASURER:
         requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=False).order_by('form_id')
     elif user.role == AdminRoles.SENIORTREASURER:
-        requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False).order_by('form_id')
+        requests = ACGReimbursementForm.objects.filter(
+            rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False
+        ).exclude(reimbursement_type=RequestTypes.LARGE).order_by('form_id')
     elif user.role == AdminRoles.BURSARY:
         requests = ACGReimbursementForm.objects.filter(jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False).order_by('form_id')
+    elif user.role == AdminRoles.SENIORBURSAR:
+        requests = ACGReimbursementForm.objects.filter(
+            rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False
+        ).filter(reimbursement_type=RequestTypes.LARGE).order_by('form_id')
     else:
         requests = []
     return render(request, 'dcac/dashboard-admin.html', {'user': user,
@@ -170,7 +180,7 @@ def view_request_admin(request, form_id):
                 acg_request.jcr_treasurer_date = datetime.now()
                 acg_request.jcr_treasurer_name = str(user)
                 notify_senior_treasurer(acg_request)
-            elif user.role == AdminRoles.SENIORTREASURER:
+            elif user.role == AdminRoles.SENIORTREASURER or user.role == AdminRoles.SENIORBURSAR:
                 acg_request.senior_treasurer_approved = True
                 acg_request.senior_treasurer_comments = comments
                 acg_request.senior_treasurer_date = datetime.now()
@@ -182,12 +192,12 @@ def view_request_admin(request, form_id):
             acg_request.sort_code = None
             acg_request.account_number = None
             acg_request.name_on_account = None
-            if user.role == 1:
+            if user.role == AdminRoles.JCRTREASURER:
                 acg_request.jcr_treasurer_approved = False
                 acg_request.jcr_treasurer_comments = comments
                 acg_request.jcr_treasurer_date = datetime.now()
                 acg_request.jcr_treasurer_name = str(user)
-            elif user.role == 2:
+            elif user.role == AdminRoles.SENIORTREASURER or user.role == AdminRoles.SENIORBURSAR:
                 acg_request.senior_treasurer_approved = False
                 acg_request.senior_treasurer_comments = comments
                 acg_request.senior_treasurer_date = datetime.now()
@@ -206,7 +216,7 @@ def view_request_admin(request, form_id):
 
     items = ACGReimbursementFormItemEntry.objects.filter(form=acg_request)
     receipts = ACGReimbursementFormReceiptEntry.objects.filter(form=acg_request)
-    if user.role == 3 and not acg_request.bursary_paid:
+    if user.role == AdminRoles.BURSARY and not acg_request.bursary_paid:
         acg_request.sort_code = str(decrypt(ENCRYPTION_KEY, acg_request.sort_code)).replace("b", '').replace("'", '')
         acg_request.account_number = str(decrypt(ENCRYPTION_KEY, acg_request.account_number)).replace("b", '').replace("'", '')
     return render(request, 'dcac/view-request-admin.html', {'user': user,
