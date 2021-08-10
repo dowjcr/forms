@@ -1,11 +1,13 @@
 import json
 
-from django.shortcuts import render, get_object_or_404, render_to_response
+from django.shortcuts import redirect, render, get_object_or_404, render_to_response
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
+from django.core.exceptions import PermissionDenied
 from datetime import datetime
 from simplecrypt import encrypt, decrypt
 from .models import *
+from .forms import *
 from .email import *
 from .constants import *
 from django.conf import settings
@@ -37,10 +39,7 @@ def landing(request):
 
 @login_required(login_url='/accounts/login/')
 def dashboard(request):
-    try:
-        student = Student.objects.get(user_id=request.user.username)
-    except Student.DoesNotExist:
-        return error(request, 403)
+    student = user_or_403(request, Student)
 
     requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')[:3]
 
@@ -53,7 +52,7 @@ def dashboard(request):
 
 @login_required(login_url='/accounts/login/')
 def all_requests(request):
-    student = Student.objects.get(user_id=request.user.username)
+    student = user_or_403(request, Student)
     requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')
     return render(request, 'dcac/all-requests-student.html', {'student': student,
                                                               'requests': requests})
@@ -64,7 +63,7 @@ def all_requests(request):
 
 @login_required(login_url='/accounts/login/')
 def view_request(request, form_id):
-    student = Student.objects.get(user_id=request.user.username)
+    student = user_or_403(request, Student)
     acg_request = get_object_or_404(ACGReimbursementForm, pk=form_id)
     items = ACGReimbursementFormItemEntry.objects.filter(form_id=acg_request)
     return render(request, 'dcac/view-request-student.html', {'student': student,
@@ -77,14 +76,14 @@ def view_request(request, form_id):
 
 @login_required(login_url='/accounts/login/')
 def acg_form(request):
-    student = Student.objects.get(user_id=request.user.username)
+    student = user_or_403(request, Student)
     if request.method == 'POST':
         file_entry = ACGReimbursementFormReceiptEntry()
         file_entry.file = request.FILES['receipt']
         file_entry.save()
         return HttpResponse(json.dumps({'receipt_id': file_entry.entry_id}), content_type="application/json")
     else:
-        return render(request, 'dcac/acg-form-student.html', {'student': student,
+        return render(request, 'dcac/acg-form-test-student.html', {'student': student,
                                                               'organizations': Organization.objects.order_by('name')})
 
 
@@ -93,7 +92,7 @@ def acg_form(request):
 
 @login_required(login_url='/accounts/login/')
 def acg_form_submit(request):
-    student = Student.objects.get(user_id=request.user.username)
+    student = user_or_403(request, Student)
     if request.method == 'POST':
         organization = Organization.objects.get(organization_id=request.POST.get('organization'))
         items = json.loads(request.POST.get('items'))
@@ -135,15 +134,73 @@ def acg_form_submit(request):
         return HttpResponse(json.dumps({'formId': form.form_id}), content_type="application/json")
 
 
+# TODO: remove repeat function definition
+
+@login_required(login_url='/accounts/login/')
+def acg_form(request):
+    student = user_or_403(request, Student)
+    if request.method == 'POST':
+        file_entry = ACGReimbursementFormReceiptEntry()
+        file_entry.file = request.FILES['receipt']
+        file_entry.save()
+        return HttpResponse(json.dumps({'receipt_id': file_entry.entry_id}), content_type="application/json")
+    else:
+        reimbursement_form = ACGReimbursementFormClass()
+        item_form = ACGReimbursementFormItemEntryClass()
+        receipt_form = UploadReceiptForm()
+        return render(request, 'dcac/acg-form-test-student.html', {'student': student,
+                                                              'form': reimbursement_form,
+                                                              'item_form': item_form,
+                                                              'receipt_form': receipt_form})
+
+
+@login_required(login_url='/accounts/login/')
+def acg_form_submit(request):
+    student = user_or_403(request, Student)
+    if request.method == 'POST':
+        form = ACGReimbursementFormClass(request.POST)
+
+        if form.is_valid():
+            reimbursement = form.save(commit=False)
+
+            print(request.POST.get('items'))
+            print(request.POST.get('receipts'))
+
+            items = json.loads(request.POST.get('items'))
+            receipts = json.loads(request.POST.get('receipts'))
+            print(items)
+
+            reimbursement.date = datetime.now()
+            print(1)
+            reimbursement.sort_code = encrypt(ENCRYPTION_KEY, form.cleaned_data['raw_sort_code'])
+            print(2)
+            reimbursement.account_number = encrypt(ENCRYPTION_KEY, form.cleaned_data['raw_account_number'])
+            print(3)
+            reimbursement.submitter = student.user_id
+            # reimbursement.form_id
+            print('responded')
+            return redirect("/dcac/request/208")
+            # return HttpResponse(json.dumps({'formId': 208}), content_type="application/json")
+
+
+        item_form = ACGReimbursementFormItemEntryClass()
+        receipt_form = UploadReceiptForm()
+
+
+        
+
+        return render(request, 'dcac/acg-form-test-student.html', {'student': student,
+                                                              'form': form,
+                                                              'item_form': item_form,
+                                                              'receipt_form': receipt_form})
+
+
 # ADMIN DASHBOARD
 # Show dashboard with items for user to action.
 
 @login_required(login_url='/accounts/login/')
 def dashboard_admin(request):
-    try:
-        user = AdminUser.objects.get(user_id=request.user.username)
-    except AdminUser.DoesNotExist:
-        return error(request, 403)
+    user = user_or_403(request, AdminUser)
 
     if user.role == AdminRoles.JCRTREASURER:
         requests = ACGReimbursementForm.objects.filter(rejected=False, jcr_treasurer_approved=False).order_by('form_id')
@@ -168,7 +225,7 @@ def dashboard_admin(request):
 
 @login_required(login_url='/accounts/login/')
 def view_request_admin(request, form_id):
-    user = AdminUser.objects.get(user_id=request.user.username)
+    user = user_or_403(request, AdminUser)
     acg_request = get_object_or_404(ACGReimbursementForm, pk=form_id)
     if request.method == 'POST':
         # Clicked 'approve'.
@@ -230,7 +287,7 @@ def view_request_admin(request, form_id):
 
 @login_required(login_url='/accounts/login/')
 def all_requests_admin(request):
-    user = AdminUser.objects.get(user_id=request.user.username)
+    user = user_or_403(request, AdminUser)
     requests = ACGReimbursementForm.objects.order_by('-form_id')
     return render(request, 'dcac/all-requests-admin.html', {'user': user,
                                                             'requests': requests})
@@ -241,7 +298,7 @@ def all_requests_admin(request):
 
 @login_required(login_url='/accounts/login/')
 def profile_admin(request):
-    user = AdminUser.objects.get(user_id=request.user.username)
+    user = user_or_403(request, AdminUser)
     return render(request, 'dcac/profile-admin.html', {'user': user})
 
 
@@ -254,3 +311,10 @@ def error(request, code):
         404: "Page not found",
     }
     return render(request, 'dcac/error.html', {'message': messages[code]})
+
+
+def user_or_403(request, model):
+    try:
+        return model.objects.get(user_id=request.user.username)
+    except:
+        raise PermissionDenied

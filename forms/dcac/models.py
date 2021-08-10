@@ -41,6 +41,8 @@ class AdminUser(models.Model):
 # eligible for reimbursement.
 
 class Organization(models.Model):
+    class Meta:
+        ordering = ['name']
     organization_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
