@@ -75,7 +75,7 @@ def view_request(request, form_id):
 # Allows student to fill out ACG reimbursement form.
 
 @login_required(login_url='/accounts/login/')
-def acg_form(request):
+def acg_form(request, request_type):
     student = user_or_403(request, Student)
     if request.method == 'POST':
         file_entry = ACGReimbursementFormReceiptEntry()
@@ -83,9 +83,17 @@ def acg_form(request):
         file_entry.save()
         return HttpResponse(json.dumps({'receipt_id': file_entry.entry_id}), content_type="application/json")
     else:
-        return render(request, 'dcac/acg-form-test-student.html', {'student': student,
-                                                              'organizations': Organization.objects.order_by('name')})
-
+        cls, reimbursement_type = ACG_FORMS[request_type]
+        reimbursement_form = cls()
+        item_form = ACGReimbursementFormItemEntryClass()
+        receipt_form = UploadReceiptForm()
+        
+        return render(request, 'dcac/acg-form-student.html', {'student': student,
+                                                              'form': reimbursement_form,
+                                                              'item_form': item_form,
+                                                              'receipt_form': receipt_form,
+                                                              'reimbursement_type': reimbursement_type,
+                                                              'reimbursement_type_name': request_type})
 
 # ACG FORM SUBMIT
 # Allows submission of completed form.
@@ -94,105 +102,48 @@ def acg_form(request):
 def acg_form_submit(request):
     student = user_or_403(request, Student)
     if request.method == 'POST':
-        organization = Organization.objects.get(organization_id=request.POST.get('organization'))
-        items = json.loads(request.POST.get('items'))
-        receipts = json.loads(request.POST.get('receipts'))
-        sort_code = request.POST.get('sort_code')
-        account_number = request.POST.get('account_number')
-        name_on_account = request.POST.get('name_on_account')
-        total = 0
-
-        form = ACGReimbursementForm()
-        form.organization = organization
-        form.date = datetime.now()
-        form.sort_code = encrypt(ENCRYPTION_KEY, sort_code)
-        form.account_number = encrypt(ENCRYPTION_KEY, account_number)
-        form.name_on_account = name_on_account
-        form.submitter = student.user_id
-
-        form.save()
-
-        for item in items:
-            total += float(item['amount'])
-            entry = ACGReimbursementFormItemEntry()
-            entry.form = form
-            entry.title = item['title']
-            entry.description = item['description']
-            entry.amount = item['amount']
-            entry.save()
-
-        for receipt in receipts:
-            entry = ACGReimbursementFormReceiptEntry.objects.get(entry_id=receipt)
-            entry.form = form
-            entry.save()
-
-        form.amount = total
-        form.save()
-
-        notify_junior_treasurer(form)
-
-        return HttpResponse(json.dumps({'formId': form.form_id}), content_type="application/json")
-
-
-# TODO: remove repeat function definition
-
-@login_required(login_url='/accounts/login/')
-def acg_form(request):
-    student = user_or_403(request, Student)
-    if request.method == 'POST':
-        file_entry = ACGReimbursementFormReceiptEntry()
-        file_entry.file = request.FILES['receipt']
-        file_entry.save()
-        return HttpResponse(json.dumps({'receipt_id': file_entry.entry_id}), content_type="application/json")
-    else:
-        reimbursement_form = ACGReimbursementFormClass()
-        item_form = ACGReimbursementFormItemEntryClass()
-        receipt_form = UploadReceiptForm()
-        return render(request, 'dcac/acg-form-test-student.html', {'student': student,
-                                                              'form': reimbursement_form,
-                                                              'item_form': item_form,
-                                                              'receipt_form': receipt_form})
-
-
-@login_required(login_url='/accounts/login/')
-def acg_form_submit(request):
-    student = user_or_403(request, Student)
-    if request.method == 'POST':
-        form = ACGReimbursementFormClass(request.POST)
+        reimbursement_type_name = request.POST.get('reimbursement_type_name')
+        form_cls = ACG_FORMS[reimbursement_type_name][0]
+        form = form_cls(request.POST)
 
         if form.is_valid():
             reimbursement = form.save(commit=False)
 
-            print(request.POST.get('items'))
-            print(request.POST.get('receipts'))
-
             items = json.loads(request.POST.get('items'))
             receipts = json.loads(request.POST.get('receipts'))
-            print(items)
 
             reimbursement.date = datetime.now()
-            print(1)
-            reimbursement.sort_code = encrypt(ENCRYPTION_KEY, form.cleaned_data['raw_sort_code'])
-            print(2)
-            reimbursement.account_number = encrypt(ENCRYPTION_KEY, form.cleaned_data['raw_account_number'])
-            print(3)
+            if 'raw_sort_code' in form.cleaned_data:
+                reimbursement.sort_code = encrypt(ENCRYPTION_KEY, form.cleaned_data['raw_sort_code'])
+                reimbursement.account_number = encrypt(ENCRYPTION_KEY, form.cleaned_data['raw_account_number'])
             reimbursement.submitter = student.user_id
-            # reimbursement.form_id
-            print('responded')
-            return redirect("/dcac/request/208")
-            # return HttpResponse(json.dumps({'formId': 208}), content_type="application/json")
 
+            total = 0
+            reimbursement.save()
 
-        item_form = ACGReimbursementFormItemEntryClass()
-        receipt_form = UploadReceiptForm()
+            for item in items:
+                total += float(item['amount'])
+                entry = ACGReimbursementFormItemEntry()
+                entry.form = reimbursement
+                entry.title = item['title']
+                entry.description = item['description']
+                entry.amount = item['amount']
+                entry.save()
 
+            for receipt in receipts:
+                entry = ACGReimbursementFormReceiptEntry.objects.get(entry_id=receipt)
+                entry.form = reimbursement
+                entry.save()
 
-        
+            reimbursement.amount = total
+            reimbursement.save()
 
-        return render(request, 'dcac/acg-form-test-student.html', {'student': student,
-                                                              'form': form,
-                                                              'item_form': item_form,
-                                                              'receipt_form': receipt_form})
+            notify_junior_treasurer(reimbursement)
+
+            return redirect(f"/dcac/request/{reimbursement.form_id}")
+
+    else:
+        return redirect("/dcac/form/acg-standard")
 
 
 # ADMIN DASHBOARD
