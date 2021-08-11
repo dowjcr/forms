@@ -8,7 +8,6 @@ from django.conf import settings
 from django.http import HttpResponseRedirect
 from re import compile
 from .models import Student, AdminUser
-from .views import error
 
 
 # AUTH REQUIRED
@@ -42,5 +41,5 @@ class AuthRequiredMiddleware(object):
                 AdminUser.objects.get(user_id=request.user.username)
                 return HttpResponseRedirect('/dcac/admin')
             except AdminUser.DoesNotExist:
-                return error(request, 403)
+                raise PermissionError
         return response

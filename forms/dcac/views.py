@@ -253,17 +253,6 @@ def profile_admin(request):
     return render(request, 'dcac/profile-admin.html', {'user': user})
 
 
-# ERROR
-# Returns error page, with message dependent on code.
-
-def error(request, code):
-    messages = {
-        403: "Access Denied. If you think that you should have access to this page, speak to the Internet Officer (internet@jcr.dow.cam.ac.uk).",
-        404: "Page not found",
-    }
-    return render(request, 'dcac/error.html', {'message': messages[code]})
-
-
 def user_or_403(request, model):
     try:
         return model.objects.get(user_id=request.user.username)
