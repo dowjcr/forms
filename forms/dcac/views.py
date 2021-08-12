@@ -92,8 +92,7 @@ def acg_form(request, request_type):
                                                               'form': reimbursement_form,
                                                               'item_form': item_form,
                                                               'receipt_form': receipt_form,
-                                                              'reimbursement_type': reimbursement_type,
-                                                              'reimbursement_type_name': request_type})
+                                                              'reimbursement_type': reimbursement_type})
 
 # ACG FORM SUBMIT
 # Allows submission of completed form.
@@ -102,8 +101,9 @@ def acg_form(request, request_type):
 def acg_form_submit(request):
     student = user_or_403(request, Student)
     if request.method == 'POST':
-        reimbursement_type_name = request.POST.get('reimbursement_type_name')
-        form_cls = ACG_FORMS[reimbursement_type_name][0]
+        reimbursement_type = int(request.POST.get('reimbursement_type'))
+        reimbursement_type_name = dict(RequestTypes.CHOICES)[reimbursement_type]
+        form_cls = ACG_FORMS[reimbursement_type_name.lower()][0]
         form = form_cls(request.POST)
 
         if form.is_valid():

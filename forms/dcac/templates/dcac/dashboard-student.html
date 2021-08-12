@@ -38,7 +38,7 @@
                                     <a class="dropdown-item" href="/dcac/form/acg-standard">Standard Request</a>
                                     <a class="dropdown-item" href="/dcac/form/acg-internal">Internal Transfer</a>
                                     <a class="dropdown-item" href="/dcac/form/acg-large">Large Requests</a>
-                                    <a class="dropdown-item" href="/dcac/request-types"><i class="fas fa-question-circle"></i> What's this?</a>
+                                    <a class="dropdown-item" data-toggle="modal" data-target="#requestTypes" style="cursor: pointer;"><i class="fas fa-question-circle"></i> What's this?</a>
                                 </div>
 
                             </div>
@@ -46,30 +46,7 @@
                     </div>
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <table class="table table-bordered table-striped table-hover mt-4">
-                                <thead>
-                                <tr>
-                                    <th scope="col">Date</th>
-                                    <th scope="col" class="d-none d-sm-table-cell">Organisation</th>
-                                    <th scope="col" class="d-none d-sm-table-cell">Amount</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Type</th>
-                                </tr>
-                                </thead>
-
-                                <tbody>
-                                {% for request in requests %}
-                                <tr class="clickable-row" data-href="/dcac/request/{{ request.form_id }}"
-                                    style="cursor: pointer;">
-                                    <td>{{ request.date|date:"d/m/Y" }}</td>
-                                    <td class="d-none d-sm-table-cell">{{ request.organization }}</td>
-                                    <td>£{{ request.amount|floatformat:2 }}</td>
-                                    <td>{% if request.bursary_paid %}Paid{% elif request.rejected %}Rejected{% else %}In Progress{% endif %}</td>
-                                    <td>{% if request.reimbursement_type == 2 %}Internal{% elif request.reimbursement_type == 3 %}Large{% else %}Standard{% endif %}</td>
-                                </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
+                            {% include 'dcac/request-table.html' with view='student' %}
                         </div>
                     </div>
                 </div>
@@ -106,5 +83,30 @@
     </div>
 
 </div>
+
+
+<div class="modal fade" id="requestTypes" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Types</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    There are three different types of request:
+                    <ul>
+                        <li><b>Standard Request:</b> your bog-standard request</li>
+                        <li><b>Internal Transfer:</b> money going between different departments within Downing</li>
+                        <li><b>Large Transfer:</b> for anything over £50 total</li>
+                    </ul>
+                </p>  
+            </div>
+        </div>
+    </div>
+</div>
+
 
 {% endblock %}

@@ -1,11 +1,16 @@
 {% extends 'dcac/base-student.html' %}
 
 {% load widget_tweaks %}
+{% load custom_filters %}
 
 {% block content %}
 
 <head>
     <title>ACG Reimbursement Form | DCAC Reimbursement</title>
+    <style>
+        .form-control {scroll-margin: 10em;}
+        .custom-select {scroll-margin: 10em;}
+    </style>
 </head>
 
 <script>
@@ -35,11 +40,17 @@
             showItems();
         });
 
-        $('#finishButton').click(function () {
-            
-        });
 
-        $('#id_acgForm').submit(showLoadingModal);
+        // Perform additional validation (e.g. at least one item has been added)
+        $('#id_acgForm').submit(function( event ) {
+            if (validateForm()) {
+                showLoadingModal();
+                return;
+            }
+            
+            // if not valid, don't submit the form
+            event.preventDefault();
+        });
 
         $('#submitReceiptButton').click(function () {
             createFileUpload();
@@ -48,7 +59,7 @@
         // Edit elements to improve formatting (default options/placeholders)
         $('#{{ form.organization.id_for_label }}').children(":first").html("Choose...").val("");
         
-        $('#{{ form.name_on_account.id_for_label }}').attr('placeholder', 'Mr Joe Bloggs')
+        $('#{{ form.name_on_account.id_for_label }}').attr('placeholder', 'Mr Joe Bloggs');
 
     });
 
@@ -172,7 +183,7 @@
                 <div class="jumbotron mt-2" style="background: white">
                     <div class="row mb-2" id="titleDiv">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <h2 align="center">ACG Reimbursement Form - {{ reimbursement_type_name|title }}</h2>
+                            <h2 align="center">ACG Reimbursement Form - {{ reimbursement_type|str_reimbursement_type }}</h2>
                             <p align="center">The ACG is used to cover all expenditures during the year that the
                                 club/society
                                 incurs as part of its
@@ -196,7 +207,7 @@
 
     <div class="row mb-2 d-md-none">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <h3>ACG Reimbursement Form - {{ reimbursement_type_name|title }}</h3>
+            <h3>ACG Reimbursement Form - {{ reimbursement_type|str_reimbursement_type }}</h3>
             <p>The ACG is used to cover all expenditures during the year that the club/society incurs as part of its
                 usual running costs. In order to receive these funds, please fill out the below form detailing
                 any expenses which have been incurred by the club/society, in accordance with ACG spending
@@ -207,8 +218,6 @@
     <input type="hidden" value="[]" id="itemsJson" name="items">
     <input type="hidden" value="[]" id="receiptsJson" name="receipts">
     <input type="hidden" value="{{ reimbursement_type }}" id="reimbursementType" name="reimbursement_type">
-    <input type="hidden" value="{{ reimbursement_type_name }}" id="reimbursementTypeName" name="reimbursement_type_name">
-
 
     {% csrf_token %}
     <div class="row mb-4" style="visibility: hidden; display: none" id="validationDiv">
@@ -220,7 +229,6 @@
 
                 </ul>
             </div>
-            {{ form.errors }}
         </div>
     </div>
 

@@ -22,9 +22,9 @@ class RequestTypes:
     LARGE = 3
 
     CHOICES = (
-        (STANDARD, 'Standard Request'),
-        (INTERNAL, 'Internal Transfer'),
-        (LARGE, 'Large Requests')
+        (STANDARD, 'Standard'),
+        (INTERNAL, 'Internal'),
+        (LARGE, 'Large')
     )
 
 

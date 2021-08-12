@@ -1,5 +1,7 @@
 {% extends 'dcac/base-admin.html' %}
 
+{% load custom_filters %}
+
 {% block content %}
 
 <head>
@@ -251,6 +253,10 @@
                 <tr>
                     <td>Total</td>
                     <td>£{{ request.amount|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td>Request Type</td>
+                    <td>{{ request.reimbursement_type|str_reimbursement_type }}</td>
                 </tr>
             </table>
         </div>
