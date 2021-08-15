@@ -17,7 +17,7 @@ urlpatterns = [
     path('form/acg', RedirectView.as_view(url='acg-standard'), name='acg'),
     path('form/acg-<str:request_type>', views.acg_form, name='acg-form'),
     path('form/acg/submit', views.acg_form_submit, name='acg-submit'),
-    # path('request-types', views.dashboard, name='request-types'),
+
 
     path('admin', views.dashboard_admin, name='dashboard-admin'),
     path('admin/requests', views.all_requests_admin, name='all-requests-admin'),

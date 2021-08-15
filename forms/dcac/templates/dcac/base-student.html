@@ -72,6 +72,7 @@
                     <a class="dropdown-item" href="/dcac/form/acg">New Standard Request</a>
                     <a class="dropdown-item" href="/dcac/form/acg-internal">New Internal Transfer</a>
                     <a class="dropdown-item" href="/dcac/form/acg-large" >New Large Request</a>
+                    <a class="dropdown-item" data-toggle="modal" data-target="#requestTypes" style="cursor: pointer;" ><i class="fas fa-question-circle"></i> Request Types</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="/accounts/logout">Logout</a>
                 </div>
@@ -83,13 +84,16 @@
             </li>
             <div class="dropdown-divider-burgundy"></div>
             <li class="nav-item">
-                <a class="nav-link d-lg-none d-xl-none" href="/dcac/form/acg">New Standard Request</a>
+                <a class="nav-link d-lg-none d-xl-none" href="/dcac/form/acg-standard">New Standard Request</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link d-lg-none d-xl-none" href="/dcac/form/acg">New Internal Transfer</a>
+                <a class="nav-link d-lg-none d-xl-none" href="/dcac/form/acg-internal">New Internal Transfer</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link d-lg-none d-xl-none" href="/dcac/form/acg">New Large Request</a>
+                <a class="nav-link d-lg-none d-xl-none" href="/dcac/form/acg-large">New Large Request</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-lg-none d-xl-none" data-toggle="modal" data-target="#requestTypes" style="cursor: pointer;"><i class="fas fa-question-circle"></i> Request Types</a>
             </li>
             <div class="dropdown-divider-burgundy"></div>
             <li class="nav-item">
@@ -103,6 +107,8 @@
 
 {% block content %}
 {% endblock %}
+
+{% include "dcac/includes/request-types-modal.html" %}
 
 <div class="d-md-none" style="height: 50px;"></div>
 

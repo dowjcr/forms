@@ -31,8 +31,7 @@ def notify_bursary(form):
 
 def notify_senior_bursar(form):
     subject = "New Reimbursement Request"
-    recipient_list = ["tjb94@cam.ac.uk"] #TODO: add senior bursar email
-    #recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.SENIORBURSAR)]
+    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.SENIORBURSAR)]
     html_message = render_to_string('dcac/emails/notify-treasurer.html', {'form': form})
     message = "A new reimbursement form has been submitted for your approval. Please go to the DCAC Reimbursement site."
     send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)

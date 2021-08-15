@@ -29,8 +29,18 @@ class RequestTypes:
 
 
 class ResponseCodes:
-    """
-    `request.POST.get('code')`"""
+    """"""
     APPROVED = '1'
     REJECTED = '2'
     PAID = '3'
+
+
+class FundSources:
+    """"""
+    ACG = 1
+    DEPRECIATION = 2
+
+    CHOICES = (
+        (ACG, 'Annual Consumable Grant'),
+        (DEPRECIATION, 'Depreciation Fund')
+    )

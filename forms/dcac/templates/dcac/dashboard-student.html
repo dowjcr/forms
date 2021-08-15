@@ -46,7 +46,7 @@
                     </div>
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            {% include 'dcac/request-table.html' with view='student' %}
+                            {% include 'dcac/includes/request-table.html' with view='student' %}
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
         </div>
         <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
             <div class="list-group">
-                <a href="/dcac/form/acg" class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="/dcac/form/acg-standard" class="list-group-item d-flex justify-content-between align-items-center">
                     <span>New Request</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>
@@ -84,29 +84,6 @@
 
 </div>
 
-
-<div class="modal fade" id="requestTypes" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Request Types</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>
-                    There are three different types of request:
-                    <ul>
-                        <li><b>Standard Request:</b> your bog-standard request</li>
-                        <li><b>Internal Transfer:</b> money going between different departments within Downing</li>
-                        <li><b>Large Transfer:</b> for anything over £50 total</li>
-                    </ul>
-                </p>  
-            </div>
-        </div>
-    </div>
-</div>
 
 
 {% endblock %}

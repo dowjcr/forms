@@ -100,8 +100,7 @@
         </div>
     </div>
 
-    {% elif user.role == 2 or user.role == 4 %}
-    {% if not request.rejected and request.jcr_treasurer_approved and not request.senior_treasurer_approved %}
+    {% elif user.role == 2 and not request.rejected and request.jcr_treasurer_approved and not request.senior_treasurer_approved %}
     <div class="row mb-3">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <div class="alert" role="alert" id="alert3" align="center">
@@ -115,19 +114,35 @@
             </div>
         </div>
     </div>
-    {% endif %}
 
     {% elif user.role == 3 and request.jcr_treasurer_approved and request.senior_treasurer_approved and not request.bursary_paid %}
     <div class="row mb-3">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <div class="alert alert-success">
                 <p><b>Awaiting Payment</b><br>
+                    {% if request.reimbursement_type == 1 %}
                     Please transfer £{{ request.amount|floatformat:2 }} to the following account:<br><br>
                     Sort Code: {{ request.sort_code }}<br>
                     Account Number: {{ request.account_number }}<br>
                     Name on Account: {{ request.name_on_account }}
+                    {% elif request.reimbursement_type == 2 %}
+                    Please transfer £{{ request.amount|floatformat:2 }} to the department(s) in the item description.
+                    {% endif %}
                 </p>
                 <button class="btn btn-success mt-2" id="transferredButton"><i class="fas fa-check mr-1"></i> Transferred
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% elif user.role == 4 and request.jcr_treasurer_approved and request.senior_treasurer_approved and not request.bursary_paid %}
+    <div class="row mb-3">
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="alert alert-success">
+                <p><b>Awaiting Payment</b><br>
+                    Please purchase the items described below, for a total of £{{ request.amount|floatformat:2 }} 
+                </p>
+                <button class="btn btn-success mt-2" id="transferredButton"><i class="fas fa-check mr-1"></i> Purchased
                 </button>
             </div>
         </div>
@@ -214,7 +229,7 @@
                 <tbody>
                 {% for item in items %}
                 <tr>
-                    <td><p>{{ item.title }}<br><span class='small'>{{ item.description|linebreaks }}</span></p></td>
+                    <td><p>{{ item.title }}<br><em>{{ item.fund_source|str_fund_source }}</em><br><span class='small'>{{ item.description|linebreaks }}</span></p></td>
                     <td>£{{ item.amount|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}

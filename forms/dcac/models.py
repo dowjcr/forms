@@ -93,6 +93,8 @@ class ACGReimbursementFormItemEntry(models.Model):
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=500)
     amount = models.CharField(max_length=20)
+    fund_source = models.IntegerField(choices=FundSources.CHOICES, default=FundSources.ACG)
+
 
     def __str__(self):
         return "Form " + str(self.form.form_id) + ", " + str(self.title)

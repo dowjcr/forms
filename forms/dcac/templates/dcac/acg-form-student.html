@@ -23,22 +23,39 @@
             data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
         });
 
-        $('#addItemButton').click(function () {
+        // Validation done by form  before saving it
+        $('#id_addItemForm').submit(function (event) {
+            event.preventDefault()
+
             let title = $('#{{ item_form.title.id_for_label }}');
             let amount = $('#{{ item_form.amount.id_for_label }}');
             let description = $('#{{ item_form.description.id_for_label }}');
 
+            let department = $('#department').val()
+            if (department) {
+                department = "[" + department + "] "
+            } else {
+                department = ""
+            }
+
+            let fund_source = $('input[name="fund_source"]:checked');
+
             var item = {
                 title: title.val(),
                 amount: parseFloat(amount.val()).toFixed(2),
-                description: description.val()
+                description: department + description.val(),
+                fund_source: fund_source.val()
             };
+
             items.push(item);
             title.val('');
-            amount.val('');
+            amount.val('0.00');
             description.val('');
             showItems();
-        });
+
+            $('#addItemModal').modal('hide')
+            
+        })
 
 
         // Perform additional validation (e.g. at least one item has been added)
@@ -174,46 +191,38 @@
 </script>
 
 
-<div class="container-fluid d-none d-md-block" style="background: #A39161">
-
+<div class="container-fluid d-md-block" style="background: #A39161">
     <div class="container">
-
         <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <div class="jumbotron mt-2" style="background: white">
                     <div class="row mb-2" id="titleDiv">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
+
                             <h2 align="center">ACG Reimbursement Form - {{ reimbursement_type|str_reimbursement_type }}</h2>
-                            <p align="center">The ACG is used to cover all expenditures during the year that the
-                                club/society
-                                incurs as part of its
-                                usual running costs. In order to receive these funds, please fill out the below form
-                                detailing
-                                any expenses which have been incurred by the club/society, in accordance with ACG
-                                spending
-                                regulations.</p>
+                            <p align="center">The ACG is used to cover all expenditures during the year that the club/society incurs as part of its usual running costs. In order to receive these funds, please fill out the below form detailing any expenses which have been incurred by the club/society, in accordance with ACG spending regulations.
+                            </p>
+                               
+                            <div class="btn-group d-flex justify-content-center">
+                                <a href="/dcac/form/acg-standard" class="btn btn-primary mt-2 {% if reimbursement_type == 1 %}disabled{% endif %}">Standard</a>
+                                <a href="/dcac/form/acg-internal" class="btn btn-primary mt-2 {% if reimbursement_type == 2 %}disabled{% endif %}">Internal</a>
+                                <a href="/dcac/form/acg-large" class="btn btn-primary mt-2 {% if reimbursement_type == 3 %}disabled{% endif %}">Large</a>
+                                <a class="btn btn-primary mt-2" data-toggle="modal" data-target="#requestTypes" style="cursor: pointer;color:white;"><i class="fas fa-question-circle"></i></a>
+                            </div>
+
+                            {% if reimbursement_type == 3 %}
+                            <p align="center" class="mt-3">Note that these requests will likely take longer to process - please only use this for when it is really necessary.</p>
+                            {% endif %}
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
-
-
     </div>
 </div>
 
 <div class="container mt-4">
-
-    <div class="row mb-2 d-md-none">
-        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <h3>ACG Reimbursement Form - {{ reimbursement_type|str_reimbursement_type }}</h3>
-            <p>The ACG is used to cover all expenditures during the year that the club/society incurs as part of its
-                usual running costs. In order to receive these funds, please fill out the below form detailing
-                any expenses which have been incurred by the club/society, in accordance with ACG spending
-                regulations.</p>
-        </div>
-    </div>
 <form id="id_acgForm" action="/dcac/form/acg/submit" method="POST">
     <input type="hidden" value="[]" id="itemsJson" name="items">
     <input type="hidden" value="[]" id="receiptsJson" name="receipts">
@@ -241,9 +250,23 @@
                     {{ form.organization|add_class:"custom-select d-block" }}
                 </div>
 
+                {% if reimbursement_type == 2 %}
+                <div class="jumbotron">
+                    <h4><i class="fas fa-exchange-alt"></i> Department</h4>
+                    <p class="mt-3">Please enter the name of the department that you would like to transfer to.</p>
+                    <input class="form-control" type=text id="department" required>
+                </div>
+                {% endif %}
+
                 <div class="jumbotron">
                     <h4><i class="fas fa-file-invoice-dollar mr-2"></i> Items</h4>
-                    <p class="mt-3">Please add each item individually.</p>
+                    <p class="mt-3">Please add each item individually.
+
+                        {% if reimbursement_type == 3 %} 
+                            <br><br>Please provide <b>all the necessary information</b> so that college is able to purchase the item from this description.
+                        {% endif %}
+
+                    </p>
 
                     <table class="table table-light" id="items">
                     </table>
@@ -252,7 +275,8 @@
                         <i class="fas fa-plus mr-1"></i> Add Item
                     </button>
                 </div>
-
+                
+                {% if reimbursement_type != 3 %}
                 <div class="jumbotron">
                     <h4><i class="fas fa-receipt mr-2"></i> Receipts</h4>
                     <p class="mt-3">Please ensure you attach receipts to cover all items you've
@@ -266,6 +290,7 @@
                         <i class="fas fa-plus mr-1"></i> Add Receipt
                     </button>
                 </div>
+                {% endif %}
                 
                 {% if form.name_on_account %}
                 <div class="jumbotron">
@@ -339,6 +364,8 @@
         </div>
     </div>
 
+    <form id="id_addItemForm">
+
     <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -361,18 +388,26 @@
                             {{ item_form.amount|add_class:"form-control"}}
                         </div>
 
+                        <p class="mt-3">Fund Source <a target="_blank" href="https://www.jcr.dow.cam.ac.uk/treasury">(explanation)</a>:</p>
+                        <div class="form-check">
+                            {% for radio in item_form.fund_source %}
+                                {{radio}}<br>
+                            {% endfor %}
+                        </div> 
+
                         {{ item_form.description|add_label_class:"mt-3"}}
                         {{ item_form.description|add_class:"form-control" }}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
                     </button>
-                    <button type="button" id="addItemButton" class="btn btn-primary" data-dismiss="modal">Submit
+                    <button type="submit" id="addItemButton" class="btn btn-primary">Submit
                     </button>
                 </div>
             </div>
         </div>
     </div>
+    </form>
 
     <div class="modal fade" id="addReceiptModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">

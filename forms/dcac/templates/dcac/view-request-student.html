@@ -189,7 +189,7 @@
                     <td>Items Claimed</td>
                     <td>
                         {% for item in items %}
-                        {{ item.title }} (£{{ item.amount|floatformat:2 }})<br>
+                        {{ item.title }} (£{{ item.amount|floatformat:2 }}, <em>{{ item.fund_source|str_fund_source }}</em>)<br>
                         {% endfor %}
                     </td>
                 </tr>
