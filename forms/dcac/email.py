@@ -26,12 +26,12 @@ def notify_bursary(form):
     send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
 
 
-# NOTiFY SENIOR BURSAR
-# Invoked when form has been approved by junior treasurer, and must be approved by senior bursar
+# NOTiFY ASSISTANT BURSAR
+# Invoked when form has been approved by senior treasurer, and must be approved by assistant bursar
 
-def notify_senior_bursar(form):
+def notify_assistant_bursar(form):
     subject = "New Reimbursement Request"
-    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.SENIORBURSAR)]
+    recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.ASSISTANTBURSAR)]
     html_message = render_to_string('dcac/emails/notify-treasurer.html', {'form': form})
     message = "A new reimbursement form has been submitted for your approval. Please go to the DCAC Reimbursement site."
     send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)

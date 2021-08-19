@@ -5,13 +5,13 @@ class AdminRoles:
     JCRTREASURER = 1
     SENIORTREASURER = 2
     BURSARY = 3
-    SENIORBURSAR = 4
+    ASSISTANTBURSAR = 4
 
     CHOICES = (
         (JCRTREASURER, 'JCR Treasurer'),
         (SENIORTREASURER, 'Senior Treasurer'),
         (BURSARY, 'Bursary'),
-        (SENIORBURSAR, 'Senior Bursar')
+        (ASSISTANTBURSAR, 'Assistant Bursar')
     )
 
 

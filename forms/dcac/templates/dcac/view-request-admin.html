@@ -115,7 +115,8 @@
         </div>
     </div>
 
-    {% elif user.role == 3 and request.jcr_treasurer_approved and request.senior_treasurer_approved and not request.bursary_paid %}
+    {% elif user.role == 3 or user.role == 4 %}
+    {% if request.jcr_treasurer_approved and request.senior_treasurer_approved and not request.bursary_paid %}
     <div class="row mb-3">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <div class="alert alert-success">
@@ -127,26 +128,22 @@
                     Name on Account: {{ request.name_on_account }}
                     {% elif request.reimbursement_type == 2 %}
                     Please transfer £{{ request.amount|floatformat:2 }} to the department(s) in the item description.
+                    {% elif request.reimbursement_type == 3 %}
+                    Please purchase the items described below, for a total of £{{ request.amount|floatformat:2 }} 
                     {% endif %}
                 </p>
-                <button class="btn btn-success mt-2" id="transferredButton"><i class="fas fa-check mr-1"></i> Transferred
+                <button class="btn btn-success mt-2" id="transferredButton"><i class="fas fa-check mr-1"></i>
+                    {% if request.reimbursement_type == 3 %}
+                    Purchased
+                    {% else %}
+                    Transferred
+                    {% endif %}
                 </button>
             </div>
         </div>
     </div>
 
-    {% elif user.role == 4 and request.jcr_treasurer_approved and request.senior_treasurer_approved and not request.bursary_paid %}
-    <div class="row mb-3">
-        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <div class="alert alert-success">
-                <p><b>Awaiting Payment</b><br>
-                    Please purchase the items described below, for a total of £{{ request.amount|floatformat:2 }} 
-                </p>
-                <button class="btn btn-success mt-2" id="transferredButton"><i class="fas fa-check mr-1"></i> Purchased
-                </button>
-            </div>
-        </div>
-    </div>
+    {% endif %}
 
     {% endif %}
 

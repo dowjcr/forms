@@ -165,8 +165,8 @@ def dashboard_admin(request):
     elif user.role == AdminRoles.BURSARY:
         requests = ACGReimbursementForm.objects.filter(
             jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False
-        ).exclude(reimbursement_type=RequestTypes.LARGE).order_by('form_id')
-    elif user.role == AdminRoles.SENIORBURSAR:
+        ).order_by('form_id')
+    elif user.role == AdminRoles.ASSISTANTBURSAR:
         requests = ACGReimbursementForm.objects.filter(
             jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False
         ).filter(reimbursement_type=RequestTypes.LARGE).order_by('form_id')
@@ -199,10 +199,11 @@ def view_request_admin(request, form_id):
                 acg_request.senior_treasurer_date = datetime.now()
                 acg_request.senior_treasurer_name = str(user)
 
+                # notify bursar for all requests; only notify assistant bursar for large requests
                 if acg_request.reimbursement_type == RequestTypes.LARGE:
-                    notify_senior_bursar(acg_request)
-                else:                
-                    notify_bursary(acg_request)
+                    notify_assistant_bursar(acg_request)
+                
+                notify_bursary(acg_request)
             acg_request.save()
         # Clicked 'rejected'
         elif request.POST.get('code') == ResponseCodes.REJECTED:
@@ -235,7 +236,7 @@ def view_request_admin(request, form_id):
     items = ACGReimbursementFormItemEntry.objects.filter(form=acg_request)
     receipts = ACGReimbursementFormReceiptEntry.objects.filter(form=acg_request)
 
-    if user.role in (AdminRoles.BURSARY, AdminRoles.SENIORBURSAR) and not acg_request.bursary_paid and acg_request.sort_code is not None:
+    if user.role in (AdminRoles.BURSARY, AdminRoles.ASSISTANTBURSAR) and not acg_request.bursary_paid and acg_request.sort_code is not None:
         acg_request.sort_code = str(decrypt(ENCRYPTION_KEY, acg_request.sort_code)).replace("b", '').replace("'", '')
         acg_request.account_number = str(decrypt(ENCRYPTION_KEY, acg_request.account_number)).replace("b", '').replace("'", '')
     return render(request, 'dcac/view-request-admin.html', {'user': user,
