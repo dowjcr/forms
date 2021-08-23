@@ -1,0 +1,334 @@
+{% extends 'dcac/base-student.html' %}
+
+{% load widget_tweaks %}
+{% load custom_filters %}
+
+{% block content %}
+
+<head>
+    <title>Budget Form | DCAC Reimbursement</title>
+    <style>
+        html {scroll-behavior: smooth;}
+        .form-control {scroll-margin: 10em;}
+        .custom-select {scroll-margin: 10em;}
+    </style>
+</head>
+
+<script>
+
+    window.CSRF_TOKEN = "{{ csrf_token }}";
+
+    $(document).ready(function () {
+
+        $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
+        });
+
+        // Validation done by form  before saving it
+        $('#id_addItemForm').submit(function (event) {
+            event.preventDefault()
+
+            let title = $('#{{ item_form.title.id_for_label }}');
+            let amount = $('#{{ item_form.amount.id_for_label }}');
+            let description = $('#{{ item_form.description.id_for_label }}');
+
+            let fund_source = $('input[name="fund_source"]:checked');
+
+            var item = {
+                title: title.val(),
+                amount: parseFloat(amount.val()).toFixed(2),
+                description: department + description.val(),
+                fund_source: fund_source.val()
+            };
+
+            items.push(item);
+            title.val('');
+            amount.val('0.00');
+            description.val('');
+            showItems();
+
+            $('#addItemModal').modal('hide')
+            
+        })
+
+
+        // Perform additional validation (e.g. at least one item has been added)
+        $('#id_acgForm').submit(function( event ) {
+            if (validateForm()) {
+                showLoadingModal();
+                return;
+            }
+            
+            // if not valid, don't submit the form
+            event.preventDefault();
+        });
+
+        // Display correct "Add Item" prompt for selected button
+        $('#addItemGeneral').click( function (event) {
+            curBudgetType = 1;
+            $('#addItemModalTitle').html('T');
+            $('#addItemModal').modal('show')
+        })
+
+        // Edit elements to improve formatting (default options/placeholders)
+        $('#{{ form.organization.id_for_label }}').children(":first").html("Choose...").val("");
+    });
+
+    var items = [];
+    var curBudgetType = 1;
+
+    $('#addItemCuppers').click( function () {
+            curBudgetType = 1;
+            $('#addItemModalTitle').html('T');
+            alert('Butto2n')
+    })
+
+    function showLoadingModal() {
+        $('#loadingModal').modal({backdrop: 'static', keyboard: false})
+    }
+
+    function generateTableRowFromItem(item, index) {
+        return "<tr><td><p>" + item.title + "<br><span class='small'>" + item.description + "</span></p></td>"
+            + "<td>£" + item.amount + "</td>"
+            + "<td><button class=\'btn btn-primary btn-sm\' onclick=\'removeItem(" + index + ")\'><i class=\"fas fa-times mr-1\"></i> Remove</button></td>";
+    }
+
+
+    function removeItem(index) {
+        items.splice(index, 1);
+        showItems();
+    }
+
+
+    function validateForm() {
+        let validated = true;
+        let message = "";
+
+        
+        if (items.length === 0) {
+            validated = false;
+            message += "<li>Please add at least one item.</li>"
+        }
+
+
+        if (!validated) {
+            $('html, body').animate({
+                scrollTop: $("#titleDiv").offset().top
+            }, 1000);
+            document.getElementById('errors').innerHTML = message;
+            $('#validationDiv').css("visibility", "visible").css("display", "block");
+        } else {
+            $('#validationDiv').css("visibility", "hidden").css("display", "none");
+        }
+        
+        return validated;
+    }
+
+
+    function showItems() {
+        var itemsHtml = "";
+        var total = 0;
+        items.forEach(function (item, index) {
+            itemsHtml += generateTableRowFromItem(item, index);
+            total += parseFloat(item.amount);
+        });
+        document.getElementById('items').innerHTML = itemsHtml;
+        document.getElementById('totalAmountInSummary').innerHTML = total.toFixed(2);
+        $('#itemsJson').val(JSON.stringify(items));
+    }
+
+
+</script>
+
+<div class="container-fluid d-md-block" style="background: #A39161">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div class="jumbotron mt-2" style="background: white">
+                    <div class="row" id="titleDiv">
+                        <div class="col">
+
+
+                            <h2 align="center">DCAC Budget Form</h2>
+                            <p align="center"></p>
+          
+                
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <form id="id_budgetForm" action="/dcac/form/budget/submit" method="POST">
+        <input type="hidden" value="[]" id="itemsJson" name="items">
+    
+        {% csrf_token %}
+        <div class="row mb-4" style="visibility: hidden; display: none" id="validationDiv">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="alert alert-danger">
+                    <b>Whoops! There are some problems with this form.</b><br>
+                    Please correct them before proceeding.<br>
+                    <ul id="errors" class="mt-2">
+    
+                    </ul>
+                </div>
+            </div>
+        </div>
+    
+        <div class="row mb-5">
+            <div class="col-lg-9 col-md-12 col-sm-12 col-xs-12">
+                    <div class="jumbotron">
+                        <h4><i class="fas fa-football-ball mr-2"></i> Organisation</h4>
+                        <p class="mt-3">
+                            If the organisation you need isn't listed here, please contact the Treasurer.</p>
+                        {{ form.organization|add_class:"custom-select d-block" }}
+                    </div>
+    
+                    <!-- Add Items -->
+                    <div class="jumbotron">
+                        <h4><i class="fas fa-piggy-bank mr-2"></i> General Funding</h4>
+                        <p class="mt-3">Please detail ALL expenses to be incurred in normal operation during the coming year and why (if not obvious) they are necessary. (from Annual Consumable Grant)</p>
+    
+                        <table class="table table-light" id="items"></table>
+    
+                        <button type="button" class="btn btn-primary mt-2" id="addItemGeneral">
+                            <i class="fas fa-plus mr-1"></i> Add Item
+                        </button>
+                    </div>
+
+                    <div class="jumbotron">
+                        <h4><i class="fas fa-trophy mr-2"></i> Cuppers Allowance</h4>
+                        <p class="mt-3">If you are a team that will enter a cuppers competition, you will need additional funding depending on how many cuppers matches you need to play. Please detail all of the possible additional cuppers costs here. (from Annual Consumable Grant)</p>
+    
+                        <table class="table table-light" id="items"></table>
+    
+                        <button type="button" class="btn btn-primary mt-2" data-toggle="modal" data-target="#addItemModal" id="addItemCuppers">
+                            <i class="fas fa-plus mr-1"></i> Add Item
+                        </button>
+                    </div>
+
+                    <div class="jumbotron">
+                        <h4><i class="fas fa-file-invoice-dollar mr-2"></i> Exceptional Costs</h4>
+                        <p class="mt-3">Detail any exceptional (non-recurring) expenses you expect to incur during the forthcoming financial year (including kit/equipment) and why you want this additional level of funding. (from Depreciation Fund)</p>
+    
+                        <table class="table table-light" id="items"></table>
+    
+                        <button type="button" class="btn btn-primary mt-2" data-toggle="modal" data-target="#addItemModal" id="addItemExceptional">
+                            <i class="fas fa-plus mr-1"></i> Add Item
+                        </button>
+                    </div>
+                    
+                    
+                    <div class="jumbotron">
+                        <h4><i class="fas fa-wallet mr-2"></i> Bank Details</h4>
+                        <p class="mt-3">Payment may only be made by bank transfer. Your bank details are encrypted and stored in a database on the JCR server, which is hosted by Downing College. For more information about how we process your data, please refer to our data protection policy, accessible on the JCR website.</p>
+                        <div class="row mt-4">
+                            <div class="col-md-6 mb-3">
+                                {{ form.raw_sort_code.label_tag }}
+                                {{ form.raw_sort_code|add_class:"form-control" }}
+                                {{ form.raw_sort_code.errors|add_class:"invalid-feedback"}}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.raw_account_number.label_tag }}
+                                {{ form.raw_account_number|add_class:"form-control" }}
+                                {{ form.raw_account_number.errors|add_class:"invalid-feedback" }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-1">
+                                {{ form.name_of_bank.label_tag }}
+                                {{ form.name_of_bank|add_class:"form-control" }}
+                                {{ form.name_of_bank.errors|add_class:"invalid-feedback" }}
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="jumbotron">
+                        <h4><i class="fas fa-map-signs mr-2"></i> Summary</h4>
+                        <p>Total: £<span id="totalAmountInSummary">0.00</span></p>
+    
+                        <div class="d-lg-none">
+                            <p>Please ensure that any request made under the ACG conforms to the regulations as set out on the JCR website. In particular, please be advised that alcohol and other non-essential spending may not be funded via this route.</p>
+                            <a target=_blank href="https://www.jcr.dow.cam.ac.uk/treasury"
+                               class="btn btn-light"><span>ACG Information <i
+                                    class="fas fa-angle-right ml-1"></i></span></a>
+                        </div>
+    
+                        <p class="mt-3">After you hit 'finish' below, you won't be able to make any changes to this request. </p>
+    
+                    </div>
+    
+                    <button type="submit" class="btn btn-primary btn-block" data-toggle="modal" id="finishButton">
+                        Finish <i class="fas fa-arrow-right ml-1"></i>
+                    </button>
+    
+            </div>
+        
+        
+            <div class="col-lg-3 col-md-12 col-sm-12 col-xs-12 d-none d-lg-block">
+                <div class="list-group">
+                    <p class="list-group-item">Please ensure that any request made under the ACG conforms to the regulations
+                        as set out on the JCR website. <br>In particular, please be advised
+                                that alcohol and other non-essential spending may not be funded via this route.</p>
+                    <a target="_blank" href="https://www.jcr.dow.cam.ac.uk/treasury"
+                       class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>ACG Information</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+    
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<form id="id_addItemForm">
+
+    <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addItemModalTitle">Add Item</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                        {{ item_form.title|add_label_class:"mt-3" }}
+                        {{ item_form.title|add_class:"form-control" }}
+                        
+                        {{ item_form.amount|add_label_class:"mt-3"}}
+                        
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">£</span>
+                            </div>
+                            {{ item_form.amount|add_class:"form-control"}}
+                        </div>
+
+                        {{ item_form.description|add_label_class:"mt-3"}}
+                        {{ item_form.description|add_class:"form-control" }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                    </button>
+                    <button type="submit" id="addItemButton" class="btn btn-primary">Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="loadingModal">
+    <div class="modal-dialog modal-dialog-centered text-center" role="document">
+        <span class="fa fa-spinner fa-spin fa-3x w-100"></span>
+    </div>
+</div>
+
+
+{% endblock %}
