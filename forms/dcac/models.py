@@ -107,3 +107,36 @@ class ACGReimbursementFormReceiptEntry(models.Model):
     entry_id = models.AutoField(primary_key=True)
     form = models.ForeignKey(ACGReimbursementForm, on_delete=models.SET_DEFAULT, default=None, null=True)
     file = models.FileField()
+
+
+
+# BUDGET FORM ENTRY
+
+class Budget(models.Model):
+    organization = models.OneToOneField(Organization, on_delete=models.CASCADE, primary_key=True)
+    submitter = models.CharField(max_length=10)
+
+    president = models.CharField('President', max_length=100)
+    president_crsid = models.CharField('President CRSid', max_length=10)
+    treasurer = models.CharField('Treasurer', max_length=100)
+    treasurer_crsid = models.CharField('Treasurer CRSid', max_length=10)
+
+    has_bank_account = models.BooleanField()
+    account_number = models.BinaryField('Account Number', max_length=1000, null=True)
+    sort_code = models.BinaryField('Sort Code', max_length=1000, null=True)
+    name_of_bank = models.CharField('Name of Bank', max_length=100, null=True)
+    balance = models.BinaryField('Rough Balance', max_length=1000, null=True)
+    
+
+
+# BUDGET ITEM
+# A single item on a budget
+
+class BudgetItem(models.Model):
+    entry_id = models.AutoField(primary_key=True)
+    budget = models.ForeignKey(Budget, on_delete=models.SET_DEFAULT, default=None)
+    
+    title = models.CharField(max_length=100)
+    description = models.CharField(max_length=500)
+    amount = models.CharField(max_length=20)
+    budget_type = models.IntegerField(choices=BudgetType.CHOICES)

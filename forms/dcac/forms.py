@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import widgets
 from django.forms.widgets import NumberInput, RadioSelect, Textarea, TextInput
-from .models import ACGReimbursementForm, ACGReimbursementFormItemEntry, ACGReimbursementFormReceiptEntry
+from .models import ACGReimbursementForm, ACGReimbursementFormItemEntry, ACGReimbursementFormReceiptEntry, Budget, BudgetItem
 from .constants import *
 
 class UploadReceiptForm(forms.ModelForm):
@@ -31,18 +31,18 @@ class ACGReimbursementFormItemEntryClass(forms.ModelForm):
 class ACGReimbursementFormClass(forms.ModelForm):
     raw_sort_code = forms.CharField(label='Sort Code', min_length=6, max_length=6, widget=TextInput(attrs={'placeholder': '123456'}))
     raw_account_number = forms.CharField(label='Account Number', min_length=8, max_length=8, widget=TextInput(attrs={'placeholder': '12345678'}))
+    name_on_account = forms.CharField(label='Account Holder', max_length=100, widget=TextInput(attrs={'placeholder': 'Mr Joe Bloggs'}))
         
     class Meta:
         model = ACGReimbursementForm
         fields = [
             'organization',
-            'name_on_account',
             'reimbursement_type',
         ]
 
         labels = {
-            'name_on_account': 'Account Holder'
         }
+
 
 
 class ACGStandardForm(ACGReimbursementFormClass):
@@ -73,3 +73,33 @@ ACG_FORMS = {
     'large':    (ACGLargeForm, RequestTypes.LARGE),
 }
 
+# BUDGET FORM
+
+class BudgetForm(forms.ModelForm):
+    """"""
+    raw_sort_code = forms.CharField(label='Sort Code', min_length=6, max_length=6, widget=TextInput(attrs={'placeholder': '123456'}))
+    raw_account_number = forms.CharField(label='Account Number', min_length=8, max_length=8, widget=TextInput(attrs={'placeholder': '12345678'}))
+
+    class Meta:
+        model = Budget
+        fields = [
+            'organization',
+            'president',
+            'president_crsid',
+            'treasurer',
+            'treasurer_crsid',
+        ]
+
+
+
+class BudgetItemForm(forms.ModelForm):
+    """"""
+    title = forms.CharField()
+    amount = forms.CharField(widget=NumberInput(attrs={'step': "1", "min": "0", "value": "0.00"}))
+    description = forms.CharField(label='Description & Reasoning', widget=Textarea(attrs={'rows': 5}))
+
+    class Meta:
+        model = BudgetItem
+        fields = [
+            'budget_type',
+        ]

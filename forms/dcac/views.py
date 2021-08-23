@@ -147,6 +147,29 @@ def acg_form_submit(request):
         return redirect("/dcac/form/acg-standard")
 
 
+# BUDGET FORM
+
+@login_required(login_url='/accounts/login/')
+def budget_form(request):
+    student = user_or_403(request, Student)
+    budget_form = BudgetForm()
+    item_form = BudgetItemForm()
+    return render(request, 'dcac/budget-form-student.html', {'student': student,
+                                                            'form': budget_form,
+                                                            'item_form': item_form})
+
+
+# BUDGET FORM SUBMIT
+# Allows submission of completed form.
+
+@login_required(login_url='/accounts/login/')
+def budget_form_submit(request):
+    #TODO: if budget form already exists for this organization...
+
+    return render(request, 'dcac/budget-form-student.html')
+
+
+# --- ADMIN VIEWS ---
 # ADMIN DASHBOARD
 # Show dashboard with items for user to action.
 

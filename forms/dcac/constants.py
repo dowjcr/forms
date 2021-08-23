@@ -44,3 +44,16 @@ class FundSources:
         (ACG, 'Annual Consumable Grant'),
         (DEPRECIATION, 'Depreciation Fund')
     )
+
+
+class BudgetType:
+    """"""
+    GENERAL = 1
+    CUPPERS = 2
+    EXCEPTIONAL = 3
+
+    CHOICES = (
+        (GENERAL, 'General Funding'),
+        (CUPPERS, 'Cuppers Allowance'),
+        (EXCEPTIONAL, 'Exceptional Costs')
+    )
