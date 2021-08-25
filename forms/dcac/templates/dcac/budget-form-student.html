@@ -32,16 +32,15 @@
             let amount = $('#{{ item_form.amount.id_for_label }}');
             let description = $('#{{ item_form.description.id_for_label }}');
 
-            let fund_source = $('input[name="fund_source"]:checked');
 
             var item = {
                 title: title.val(),
                 amount: parseFloat(amount.val()).toFixed(2),
-                description: department + description.val(),
-                fund_source: fund_source.val()
+                description: description.val(),
+                budget_type: curBudgetType
             };
 
-            items.push(item);
+            items[curBudgetTypeTitle].push(item);
             title.val('');
             amount.val('0.00');
             description.val('');
@@ -53,7 +52,7 @@
 
 
         // Perform additional validation (e.g. at least one item has been added)
-        $('#id_acgForm').submit(function( event ) {
+        $('#id_budgetForm').submit(function( event ) {
             if (validateForm()) {
                 showLoadingModal();
                 return;
@@ -63,78 +62,114 @@
             event.preventDefault();
         });
 
+
         // Display correct "Add Item" prompt for selected button
-        $('#addItemGeneral').click( function (event) {
-            curBudgetType = 1;
-            $('#addItemModalTitle').html('T');
-            $('#addItemModal').modal('show')
-        })
+        $('#addItemGeneral').click(changeBudgetItemType('General', 1))
+        $('#addItemCuppers').click(changeBudgetItemType('Cuppers', 2))
+        $('#addItemExceptional').click(changeBudgetItemType('Exceptional', 3))
+        $('input[name="has_bank_account"]').change(updateBankDetailVisibility)
 
         // Edit elements to improve formatting (default options/placeholders)
-        $('#{{ form.organization.id_for_label }}').children(":first").html("Choose...").val("");
+        let organization = $('#{{ form.organization.id_for_label }}');
+        organization.children(":first").html("Choose...").val("");
+        organization.change(validateOrganization);
+        updateBankDetailVisibility()
     });
 
-    var items = [];
+    var items = {General: [], Cuppers: [], Exceptional: []};
     var curBudgetType = 1;
+    var curBudgetTypeTitle = ""
 
-    $('#addItemCuppers').click( function () {
-            curBudgetType = 1;
-            $('#addItemModalTitle').html('T');
-            alert('Butto2n')
-    })
+    function changeBudgetItemType(newTitle, newType) {
+        return function () {
+            curBudgetType = newType
+            curBudgetTypeTitle = newTitle
+            $('#addItemModalTitle').html('Add Item - ' + newTitle);
+            $('#addItemModal').modal('show')
+        }
+    }
 
     function showLoadingModal() {
         $('#loadingModal').modal({backdrop: 'static', keyboard: false})
     }
 
-    function generateTableRowFromItem(item, index) {
+    function generateTableRowFromItem(item, budgetType, index) {
         return "<tr><td><p>" + item.title + "<br><span class='small'>" + item.description + "</span></p></td>"
             + "<td>£" + item.amount + "</td>"
-            + "<td><button class=\'btn btn-primary btn-sm\' onclick=\'removeItem(" + index + ")\'><i class=\"fas fa-times mr-1\"></i> Remove</button></td>";
+            + "<td><button class=\'btn btn-primary btn-sm\' onclick=\'removeItem(\"" + budgetType + "\", " + index + ")\'><i class=\"fas fa-times mr-1\"></i> Remove</button></td>";
     }
 
 
-    function removeItem(index) {
-        items.splice(index, 1);
+    function removeItem(budgetType, index) {
+        items[budgetType].splice(index, 1);
         showItems();
     }
 
+    function validateOrganization() {
+        let organization = $('#{{ form.organization.id_for_label }}').find(':selected').text()
+        let submittedOrganizations = JSON.parse("{{ submittedOrganizations | escapejs }}");
+
+        if (submittedOrganizations[organization]) {
+            message = "<li>A budget has already been submitted for this organization. If you are the president, treasurer, or submitter, you can view the budget <a href='/dcac/budgets'>here</a>. Otherwise, if you think that the budget has been submitted in error, please contact treasurer@jcr.dow.cam.ac.uk</li>"
+
+            $('#errors').html(message);
+            $('#validationDiv').css("visibility", "visible").css("display", "block");
+            $('#titleDiv')[0].scrollIntoView();
+            return false
+        } else {
+            $('#validationDiv').css("visibility", "hidden").css("display", "none");
+            return true
+        }
+    }
 
     function validateForm() {
         let validated = true;
         let message = "";
-
         
-        if (items.length === 0) {
+        if (items['General'].length + items['Cuppers'].length + items['Exceptional'].length === 0) {
             validated = false;
             message += "<li>Please add at least one item.</li>"
         }
 
-
         if (!validated) {
-            $('html, body').animate({
-                scrollTop: $("#titleDiv").offset().top
-            }, 1000);
-            document.getElementById('errors').innerHTML = message;
+            $('#errors').html(message);
             $('#validationDiv').css("visibility", "visible").css("display", "block");
+            $('#titleDiv')[0].scrollIntoView();
         } else {
             $('#validationDiv').css("visibility", "hidden").css("display", "none");
         }
-        
+
         return validated;
     }
 
 
     function showItems() {
-        var itemsHtml = "";
-        var total = 0;
-        items.forEach(function (item, index) {
-            itemsHtml += generateTableRowFromItem(item, index);
-            total += parseFloat(item.amount);
-        });
-        document.getElementById('items').innerHTML = itemsHtml;
-        document.getElementById('totalAmountInSummary').innerHTML = total.toFixed(2);
+
+        for (const budgetType in items) {
+            var itemsHtml = "";
+            var total = 0;
+            let itemsOfType = items[budgetType]
+
+            itemsOfType.forEach(function (item, index) {
+                itemsHtml += generateTableRowFromItem(item, budgetType, index);
+                total += parseFloat(item.amount);
+            });
+            $('#items' + budgetType).html(itemsHtml);
+            $('totalAmountInSummary').html(total.toFixed(2));
+        }
         $('#itemsJson').val(JSON.stringify(items));
+
+    }
+
+    // Hide bank details jumbotron if no bank details are given
+    function updateBankDetailVisibility() {
+        let has_bank_account = $('input[name="has_bank_account"]:checked')[0].value;
+        console.log(has_bank_account)
+        if (has_bank_account=="True") {
+            $('#bankInfo').show()
+        } else {
+            $('#bankInfo').hide()
+        }
     }
 
 
@@ -187,12 +222,57 @@
                         {{ form.organization|add_class:"custom-select d-block" }}
                     </div>
     
+                    <div class="jumbotron">
+                        <h4><i class="fas fa-info-circle mr-2"></i> Society Details</h4>
+                        <p>Enter the name and CRSid of the President and Treasurer of the society. These members will be able to view the budget so make sure that their CRSids are correct, and do not include the '@cam.ac.uk' after the CRSid.</p>
+                        <div class="row mt-3">
+
+                            <div class="input-group col-md-6 col-12 pt-0">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">{{ form.president | add_label_class:"mb-0" }}</span>
+                                </div>
+                                {{ form.president|add_class:"form-control" }}
+                                {{ form.president.errors|add_class:"invalid-feedback"}}
+                            </div>
+
+                            
+                            <div class="input-group col-md-6 col-12 pt-3 pt-md-0 pb-3 pb-md-0">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">{{ form.president_crsid | add_label_class:"mb-0" }}</span>
+                                </div>
+                                {{ form.president_crsid|add_class:"form-control" }}
+                                {{ form.president_crsid.errors|add_class:"invalid-feedback"}}
+                            </div>                           
+                            
+                        </div>
+
+                        <div class="row mt-3">
+
+                            <div class="input-group col-md-6 col-12 pt-0">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">{{ form.treasurer | add_label_class:"mb-0" }}</span>
+                                </div>
+                                {{ form.treasurer|add_class:"form-control" }}
+                                {{ form.treasurer.errors|add_class:"invalid-feedback"}}
+                            </div>
+
+                            <div class="input-group col-md-6 col-12 pt-3 pt-md-0">
+                                <div class="input-group-prepend w-sm-25">
+                                    <span class="input-group-text">{{ form.treasurer_crsid | add_label_class:"mb-0" }}</span>
+                                </div>
+                                {{ form.treasurer_crsid|add_class:"form-control" }}
+                                {{ form.treasurer_crsid.errors|add_class:"invalid-feedback"}}
+                            </div>
+                            
+                        </div>
+                    </div>
+
                     <!-- Add Items -->
                     <div class="jumbotron">
                         <h4><i class="fas fa-piggy-bank mr-2"></i> General Funding</h4>
                         <p class="mt-3">Please detail ALL expenses to be incurred in normal operation during the coming year and why (if not obvious) they are necessary. (from Annual Consumable Grant)</p>
     
-                        <table class="table table-light" id="items"></table>
+                        <table class="table table-light" id="itemsGeneral"></table>
     
                         <button type="button" class="btn btn-primary mt-2" id="addItemGeneral">
                             <i class="fas fa-plus mr-1"></i> Add Item
@@ -203,7 +283,7 @@
                         <h4><i class="fas fa-trophy mr-2"></i> Cuppers Allowance</h4>
                         <p class="mt-3">If you are a team that will enter a cuppers competition, you will need additional funding depending on how many cuppers matches you need to play. Please detail all of the possible additional cuppers costs here. (from Annual Consumable Grant)</p>
     
-                        <table class="table table-light" id="items"></table>
+                        <table class="table table-light" id="itemsCuppers"></table>
     
                         <button type="button" class="btn btn-primary mt-2" data-toggle="modal" data-target="#addItemModal" id="addItemCuppers">
                             <i class="fas fa-plus mr-1"></i> Add Item
@@ -214,7 +294,7 @@
                         <h4><i class="fas fa-file-invoice-dollar mr-2"></i> Exceptional Costs</h4>
                         <p class="mt-3">Detail any exceptional (non-recurring) expenses you expect to incur during the forthcoming financial year (including kit/equipment) and why you want this additional level of funding. (from Depreciation Fund)</p>
     
-                        <table class="table table-light" id="items"></table>
+                        <table class="table table-light" id="itemsExceptional"></table>
     
                         <button type="button" class="btn btn-primary mt-2" data-toggle="modal" data-target="#addItemModal" id="addItemExceptional">
                             <i class="fas fa-plus mr-1"></i> Add Item
@@ -224,24 +304,51 @@
                     
                     <div class="jumbotron">
                         <h4><i class="fas fa-wallet mr-2"></i> Bank Details</h4>
-                        <p class="mt-3">Payment may only be made by bank transfer. Your bank details are encrypted and stored in a database on the JCR server, which is hosted by Downing College. For more information about how we process your data, please refer to our data protection policy, accessible on the JCR website.</p>
-                        <div class="row mt-4">
-                            <div class="col-md-6 mb-3">
-                                {{ form.raw_sort_code.label_tag }}
-                                {{ form.raw_sort_code|add_class:"form-control" }}
-                                {{ form.raw_sort_code.errors|add_class:"invalid-feedback"}}
+                        <p>Does your society have a bank account?</p>
+                        
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons" id=#id_has_bank_account>
+                            {% for radio in form.has_bank_account %}
+                            <label class="btn btn-primary pb-0 {% if forloop.last %}active{% endif %}">
+                              {{ radio }}
+                              
+                            </label>
+                            {% endfor %}
+                          </div>
+
+                        <div id="bankInfo">
+                            <p class="mt-3">Your bank details are encrypted and stored in a database on the JCR server, which is hosted by Downing College. For more information about how we process your data, please refer to our data protection policy, accessible on the JCR website.</p>
+                            <div class="row mt-4">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.raw_sort_code.label_tag }}
+                                    {{ form.raw_sort_code|add_class:"form-control" }}
+                                    {{ form.raw_sort_code.errors|add_class:"invalid-feedback"}}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.raw_account_number.label_tag }}
+                                    {{ form.raw_account_number|add_class:"form-control" }}
+                                    {{ form.raw_account_number.errors|add_class:"invalid-feedback" }}
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                {{ form.raw_account_number.label_tag }}
-                                {{ form.raw_account_number|add_class:"form-control" }}
-                                {{ form.raw_account_number.errors|add_class:"invalid-feedback" }}
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    {{ form.name_of_bank.label_tag }}
+                                    {{ form.name_of_bank|add_class:"form-control" }}
+                                    {{ form.name_of_bank.errors|add_class:"invalid-feedback" }}
+                                </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12 mb-1">
-                                {{ form.name_of_bank.label_tag }}
-                                {{ form.name_of_bank|add_class:"form-control" }}
-                                {{ form.name_of_bank.errors|add_class:"invalid-feedback" }}
+
+                            <div class="row">
+                                <div class="col-md-12 mb-1">
+                                    {{ form.raw_balance.label_tag }}
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">£</span>
+                                        </div>
+                                        {{ form.raw_balance|add_class:"form-control" }}
+                                        {{ form.raw_balance.errors|add_class:"invalid-feedback" }}
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -260,10 +367,18 @@
                         <p class="mt-3">After you hit 'finish' below, you won't be able to make any changes to this request. </p>
     
                     </div>
-    
-                    <button type="submit" class="btn btn-primary btn-block" data-toggle="modal" id="finishButton">
-                        Finish <i class="fas fa-arrow-right ml-1"></i>
-                    </button>
+                    
+                    <div class="btn-group btn-block" role="group">
+
+                        <button type="submit" class="btn btn-secondary col-6" data-toggle="modal" id="saveButton">
+                            Save as Draft <i class="fas fa-save ml-1"></i>
+                        </button>
+
+                        <button type="submit" class="btn btn-primary col-6" data-toggle="modal" id="finishButton">
+                            Finish <i class="fas fa-arrow-right ml-1"></i>
+                        </button>
+
+                    </div>
     
             </div>
         

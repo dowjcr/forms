@@ -5,6 +5,7 @@ Author Cameron O'Connor
 """
 
 from django.db import models
+from django.conf import settings
 
 from .constants import *
 
@@ -113,18 +114,28 @@ class ACGReimbursementFormReceiptEntry(models.Model):
 # BUDGET FORM ENTRY
 
 class Budget(models.Model):
-    organization = models.OneToOneField(Organization, on_delete=models.CASCADE, primary_key=True)
+    """"""
+    budget_id = models.AutoField(primary_key=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    submitted = models.BooleanField(default=False)
+    # `year` is the year that the budget was submitted
+    # e.g. 2021 would be for the 2021-22 academic year 
+    year = models.IntegerField()
+
+    date = models.DateField(auto_now_add=True)
     submitter = models.CharField(max_length=10)
+    amount_acg = models.CharField(max_length=20)
+    amount_dep = models.CharField(max_length=20)
 
     president = models.CharField('President', max_length=100)
-    president_crsid = models.CharField('President CRSid', max_length=10)
+    president_crsid = models.CharField('CRSid', max_length=10)
     treasurer = models.CharField('Treasurer', max_length=100)
-    treasurer_crsid = models.CharField('Treasurer CRSid', max_length=10)
+    treasurer_crsid = models.CharField('CRSid', max_length=10)
 
-    has_bank_account = models.BooleanField()
+    has_bank_account = models.BooleanField(choices=((True, 'Yes'), (False, 'No')), default=False)
     account_number = models.BinaryField('Account Number', max_length=1000, null=True)
     sort_code = models.BinaryField('Sort Code', max_length=1000, null=True)
-    name_of_bank = models.CharField('Name of Bank', max_length=100, null=True)
+    name_of_bank = models.CharField('Name of Bank', max_length=100, blank=True, null=True)
     balance = models.BinaryField('Rough Balance', max_length=1000, null=True)
     
 
@@ -133,6 +144,7 @@ class Budget(models.Model):
 # A single item on a budget
 
 class BudgetItem(models.Model):
+    """"""
     entry_id = models.AutoField(primary_key=True)
     budget = models.ForeignKey(Budget, on_delete=models.SET_DEFAULT, default=None)
     

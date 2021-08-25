@@ -77,8 +77,9 @@ ACG_FORMS = {
 
 class BudgetForm(forms.ModelForm):
     """"""
-    raw_sort_code = forms.CharField(label='Sort Code', min_length=6, max_length=6, widget=TextInput(attrs={'placeholder': '123456'}))
-    raw_account_number = forms.CharField(label='Account Number', min_length=8, max_length=8, widget=TextInput(attrs={'placeholder': '12345678'}))
+    raw_sort_code = forms.CharField(label='Sort Code', min_length=6, max_length=6, required=False, widget=TextInput(attrs={'placeholder': '123456'}))
+    raw_account_number = forms.CharField(label='Account Number', min_length=8, max_length=8, required=False, widget=TextInput(attrs={'placeholder': '12345678'}))
+    raw_balance = forms.CharField(label='Rough Balance', required=False, widget=NumberInput(attrs={'step': "1", "min": "0", "placeholder": "0.00"}))
 
     class Meta:
         model = Budget
@@ -88,7 +89,14 @@ class BudgetForm(forms.ModelForm):
             'president_crsid',
             'treasurer',
             'treasurer_crsid',
+
+            'has_bank_account',
+            'name_of_bank',
         ]
+
+        widgets = {
+            'has_bank_account': RadioSelect
+        }
 
 
 

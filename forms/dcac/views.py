@@ -46,7 +46,7 @@ def dashboard(request):
     return render(request, 'dcac/dashboard-student.html', {'requests': requests,
                                                            'student': student})
 
-
+# --- ACG REQUEST VIEWS ---
 # ALL REQUESTS
 # Allow student to view all requests they have made.
 
@@ -146,17 +146,52 @@ def acg_form_submit(request):
     else:
         return redirect("/dcac/form/acg-standard")
 
+# --- BUDGET VIEWS ---
+# ALL BUDGETS
+
+@login_required(login_url='/accounts/login/')
+def all_budgets(request):
+    student = user_or_403(request, Student)
+
+
+# VIEW BUDGET
+
+@login_required(login_url='/accounts/login/')
+def view_budget(request, budget_id):
+    student = user_or_403(request, Student)
+    budget = get_object_or_404(Budget, pk=budget_id)
+    items = BudgetItem.objects.filter(budget_id=budget_id)
+    print(items)
+
+    return render(request, 'dcac/view-budget-student.html', {
+        'student': student,
+        'budget': budget,
+        'items': items
+        })
+
 
 # BUDGET FORM
 
 @login_required(login_url='/accounts/login/')
 def budget_form(request):
+    if not settings.ALLOW_BUDGET_SUBMIT:
+        pass
     student = user_or_403(request, Student)
     budget_form = BudgetForm()
     item_form = BudgetItemForm()
+    
+    current_year = datetime.now().year
+    # orgs = Organization.objects.filter(budget__year=current_year).values()
+    orgs = Budget.objects.filter(year=current_year, submitted=True).values()
+
+    # print(orgs)
+    # orgs = {'Club Name': #budget id from current_year}
+
+    submitted_organizations = json.dumps({})
     return render(request, 'dcac/budget-form-student.html', {'student': student,
                                                             'form': budget_form,
-                                                            'item_form': item_form})
+                                                            'item_form': item_form,
+                                                            'submittedOrganizations': submitted_organizations})
 
 
 # BUDGET FORM SUBMIT
@@ -164,9 +199,45 @@ def budget_form(request):
 
 @login_required(login_url='/accounts/login/')
 def budget_form_submit(request):
-    #TODO: if budget form already exists for this organization...
+    student = user_or_403(request, Student)
+    if request.method == 'POST':
+        print(request.POST)
+        form = BudgetForm(request.POST)
+        if form.is_valid():
+            budget = form.save(commit=False)
+            budget.submitter = student.user_id
+            budget.year = datetime.now().year
 
-    return render(request, 'dcac/budget-form-student.html')
+            items = json.loads(request.POST.get('items'))
+            total_acg = 0
+            total_dep = 0
+
+            budget.save()
+
+            for items_of_type in items.values():
+                for item in items_of_type:
+                    budget_item = BudgetItem(**item)
+                    budget_item.save(commit=False)
+                    budget_item.budget = budget
+                    
+                    if item['budget_type'] == BudgetType.EXCEPTIONAL:
+                        total_dep += float(item['amount'])
+                    else:
+                        total_acg += float(item['amount'])
+
+                    budget_item.save()
+
+            budget.amount_acg = total_acg
+            budget.amount_dep = total_dep
+
+            #TODO: bank account info
+
+            budget.save()
+
+            return redirect(f'/dcac/budget/{budget.budget_id}')
+
+    else:
+        return redirect('/dcac/form/budget')
 
 
 # --- ADMIN VIEWS ---
