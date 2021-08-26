@@ -3,6 +3,7 @@ import json
 from django.shortcuts import redirect, render, get_object_or_404, render_to_response
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
+from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from datetime import datetime
 from simplecrypt import encrypt, decrypt
@@ -155,19 +156,44 @@ def all_budgets(request):
 
 
 # VIEW BUDGET
+# If the budget has not been submitted, render the form with the existing information
+# Otherwise display the budget
 
 @login_required(login_url='/accounts/login/')
 def view_budget(request, budget_id):
     student = user_or_403(request, Student)
     budget = get_object_or_404(Budget, pk=budget_id)
     items = BudgetItem.objects.filter(budget_id=budget_id)
-    print(items)
 
-    return render(request, 'dcac/view-budget-student.html', {
-        'student': student,
-        'budget': budget,
-        'items': items
-        })
+    if budget.submitted or not settings.ALLOW_BUDGET_SUBMIT:
+        return render(request, 'dcac/view-budget-student.html', {
+            'student': student,
+            'budget': budget,
+            'items': items
+            })
+
+    else:
+        # a draft has been created, and can be viewed by
+        # the submitter, the treasurer, and the president
+        if student.user_id not in (budget.submitter, budget.president_crsid, budget.treasurer_crsid):
+            raise PermissionDenied
+
+
+        budget_form = BudgetForm(instance=budget)
+        item_form = BudgetItemForm()
+        existing_items = {}
+        for budget_type, budget_type_str in BudgetType.CHOICES:
+            items_json = serializers.serialize('json', BudgetItem.objects.filter(budget_id=budget_id, budget_type=budget_type))
+            items_dict = json.loads(items_json)
+            existing_items[budget_type_str] = [{'entry_id': item['pk'], **item['fields']} for item in items_dict]
+        
+        return render(request, 'dcac/budget-form-student.html', {
+            'student': student,
+            'form': budget_form,
+            'item_form': item_form,
+            'existingItems': existing_items,
+            'draft': True
+            })
 
 
 # BUDGET FORM
@@ -188,10 +214,12 @@ def budget_form(request):
     # orgs = {'Club Name': #budget id from current_year}
 
     submitted_organizations = json.dumps({})
-    return render(request, 'dcac/budget-form-student.html', {'student': student,
-                                                            'form': budget_form,
-                                                            'item_form': item_form,
-                                                            'submittedOrganizations': submitted_organizations})
+    return render(request, 'dcac/budget-form-student.html', {
+        'student': student,
+        'form': budget_form,
+        'item_form': item_form,
+        'submittedOrganizations': submitted_organizations
+        })
 
 
 # BUDGET FORM SUBMIT
@@ -201,13 +229,29 @@ def budget_form(request):
 def budget_form_submit(request):
     student = user_or_403(request, Student)
     if request.method == 'POST':
-        print(request.POST)
         form = BudgetForm(request.POST)
+        submitted = 'finish_button' in request.POST
         if form.is_valid():
-            budget = form.save(commit=False)
-            budget.submitter = student.user_id
-            budget.year = datetime.now().year
+            budget_from_form = form.save(commit=False)
+            current_year = datetime.now().year
 
+            # find if form already exists
+            print(form.cleaned_data)
+            budget, created = Budget.objects.update_or_create(
+                organization=form.cleaned_data['organization'], year=current_year,
+                defaults=form.cleaned_data
+            )
+            print(f"{created=}")
+            # try:
+            #     existing_budget = Budget.objects.get(organization=budget.organization, year=current_year)
+            #     budget.
+            # except Budget.DoesNotExist:
+            #     budget.submitter = student.user_id
+            #     budget.year = current_year
+            if created:
+                budget.submitter = student.user_id
+
+            budget.submitted = submitted
             items = json.loads(request.POST.get('items'))
             total_acg = 0
             total_dep = 0
@@ -216,10 +260,16 @@ def budget_form_submit(request):
 
             for items_of_type in items.values():
                 for item in items_of_type:
-                    budget_item = BudgetItem(**item)
-                    budget_item.save(commit=False)
-                    budget_item.budget = budget
-                    
+                    # do not add items that have already been added
+                    try:
+                        if 'entry_id' not in item:
+                            raise BudgetItem.DoesNotExist
+                        budget_item = BudgetItem.objects.get(pk=item['entry_id'])
+                    except BudgetItem.DoesNotExist:
+                        budget_item = BudgetItem(**item)
+                        budget_item.budget = budget
+
+
                     if item['budget_type'] == BudgetType.EXCEPTIONAL:
                         total_dep += float(item['amount'])
                     else:
@@ -231,8 +281,12 @@ def budget_form_submit(request):
             budget.amount_dep = total_dep
 
             #TODO: bank account info
-
             budget.save()
+
+            # For any items that were deleted, remove them from the database
+            deleted_items = json.loads(request.POST.get('deletedItems'))
+            for entry_id in deleted_items:
+                BudgetItem.objects.filter(pk=entry_id).delete()
 
             return redirect(f'/dcac/budget/{budget.budget_id}')
 

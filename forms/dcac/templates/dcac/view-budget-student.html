@@ -1,0 +1,122 @@
+{% extends 'dcac/base-student.html' %}
+
+{% load custom_filters %}
+
+{% block content %}
+
+<head>
+    <title>Budget {{ budget.budget_id }} | DCAC Budget</title>
+</head>
+{% comment %} 
+Budget for year {{ budget.year }}, <br> society {{ budget.organization }}
+
+
+{% for item in items|filter_budget_type:1 %}
+{{ item.title }}
+{{ item.amount }}
+{{ item.description }}
+{% endfor %} {% endcomment %}
+
+
+<div class="container-fluid d-block" style="background: #A39161">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-12">
+                <div class="jumbotron mt-sm-2 pt-3 pt-sm-5 pb-3 pb-sm-5" style="background: white">
+                    <div class="row mb-sm-2" id="titleDiv">
+                        <div class="col-12">
+                            <h2 align="center">Budget - {{ budget.organization }}</h2>
+                            <p style="text-transform: uppercase; font-size: 1.5em; color: grey" align="center">
+                            {{budget.year}}
+                            </p>
+                            <p align="center" class="mb-0">This is a submitted request. If there are any errors in this form, you must contact the JCR Treasurer</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="container mt-4">
+
+        {% if items|filter_budget_type:1 %}
+        <div class="row mt-3">
+            <div class="col-lg-12">
+                <h4>General Funding</h4>
+                <table class="table table-striped table-hover mt-3">
+                <thead>
+                <tr>
+                    <th class="col-md-8 col-sm-4">Item</th>
+                    <th class="col-md-2 col-sm-4">Amount</th>
+                </tr>
+                </thead>
+            
+                {% for item in items|filter_budget_type:1 %}
+                <tr>
+                    <td><p>{{ item.title }}<br><span class='small'>{{ item.description|linebreaks }}</span></p></td>
+                    <td>£{{ item.amount|floatformat:2 }}</td>
+                </tr>
+
+                {% endfor %}
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if items|filter_budget_type:2 %}
+        <div class="row mt-3">
+            <div class="col-lg-12">
+                <h4>Details</h4>
+                <table class="table table-striped table-hover mt-3">
+                <thead>
+                <tr>
+                    <th class="col-md-8 col-sm-4">Item</th>
+                    <th class="col-md-2 col-sm-4">Amount</th>
+                </tr>
+                </thead>
+            
+                {% for item in items|filter_budget_type:2 %}
+                <tr>
+                    <td><p>{{ item.title }}<br><span class='small'>{{ item.description|linebreaks }}</span></p></td>
+                    <td>£{{ item.amount|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if items|filter_budget_type:3 %}
+        <div class="row mt-3">
+            <div class="col-lg-12">
+                <h4>Details</h4>
+                <table class="table table-striped table-hover mt-3">
+                <thead>
+                <tr>
+                    <th class="col-md-8 col-sm-4">Item</th>
+                    <th class="col-md-2 col-sm-4">Amount</th>
+                </tr>
+                </thead>
+            
+                {% for item in items|filter_budget_type:3 %}
+                <tr>
+                    <td><p>{{ item.title }}<br><span class='small'>{{ item.description|linebreaks }}</span></p></td>
+                    <td>£{{ item.amount|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+
+{% endblock %}

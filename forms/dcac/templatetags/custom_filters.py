@@ -19,3 +19,9 @@ def str_fund_source(fund_source):
 @register.filter()
 def str_budget_type(budget_type):
     return dict(BudgetType.CHOICES).get(budget_type, 'General Funding')
+
+
+@register.filter()
+def filter_budget_type(items, budget_type):
+    """Filter a list of items to only those of a given type"""
+    return items.filter(budget_type=budget_type)

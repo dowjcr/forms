@@ -53,7 +53,7 @@ class BudgetType:
     EXCEPTIONAL = 3
 
     CHOICES = (
-        (GENERAL, 'General Funding'),
-        (CUPPERS, 'Cuppers Allowance'),
-        (EXCEPTIONAL, 'Exceptional Costs')
+        (GENERAL, 'General'),
+        (CUPPERS, 'Cuppers'),
+        (EXCEPTIONAL, 'Exceptional')
     )

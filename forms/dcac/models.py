@@ -133,10 +133,10 @@ class Budget(models.Model):
     treasurer_crsid = models.CharField('CRSid', max_length=10)
 
     has_bank_account = models.BooleanField(choices=((True, 'Yes'), (False, 'No')), default=False)
-    account_number = models.BinaryField('Account Number', max_length=1000, null=True)
-    sort_code = models.BinaryField('Sort Code', max_length=1000, null=True)
+    account_number = models.CharField('Account Number', max_length=8, null=True)
+    sort_code = models.CharField('Sort Code', max_length=6, null=True)
     name_of_bank = models.CharField('Name of Bank', max_length=100, blank=True, null=True)
-    balance = models.BinaryField('Rough Balance', max_length=1000, null=True)
+    balance = models.CharField('Rough Balance', max_length=20, null=True)
     
 
 
