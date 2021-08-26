@@ -1,4 +1,5 @@
 import json
+from django.db.models.query_utils import Q
 
 from django.shortcuts import redirect, render, get_object_or_404, render_to_response
 from django.contrib.auth.decorators import login_required
@@ -31,7 +32,7 @@ def landing(request):
     if not request.user.is_authenticated:
         return render(request, 'dcac/landing.html')
     else:
-        return HttpResponseRedirect('/dcac/dashboard')
+        return redirect('/dcac/dashboard')
 
 
 # DASHBOARD
@@ -153,6 +154,12 @@ def acg_form_submit(request):
 @login_required(login_url='/accounts/login/')
 def all_budgets(request):
     student = user_or_403(request, Student)
+    budgets = Budget.objects.filter(Q(submitter=student.user_id) | Q(president_crsid=student.user_id) | Q(treasurer_crsid=student.user_id))
+    return render(request, 'dcac/all-budgets-student.html', {
+        'student': student,
+        'budgets': budgets,
+        'allow_budget_submit': settings.ALLOW_BUDGET_SUBMIT
+    })
 
 
 # VIEW BUDGET
@@ -201,16 +208,16 @@ def view_budget(request, budget_id):
 @login_required(login_url='/accounts/login/')
 def budget_form(request):
     if not settings.ALLOW_BUDGET_SUBMIT:
-        pass
+        return redirect('/dcac/budgets')
     student = user_or_403(request, Student)
     budget_form = BudgetForm()
     item_form = BudgetItemForm()
     
     current_year = datetime.now().year
     # orgs = Organization.objects.filter(budget__year=current_year).values()
-    orgs = Budget.objects.filter(year=current_year, submitted=True).values()
+    orgs = Budget.objects.filter(year=current_year).values('organization')
 
-    # print(orgs)
+    print(orgs)
     # orgs = {'Club Name': #budget id from current_year}
 
     submitted_organizations = json.dumps({})
@@ -232,22 +239,14 @@ def budget_form_submit(request):
         form = BudgetForm(request.POST)
         submitted = 'finish_button' in request.POST
         if form.is_valid():
-            budget_from_form = form.save(commit=False)
             current_year = datetime.now().year
-
-            # find if form already exists
             print(form.cleaned_data)
+            # find if form already exists
             budget, created = Budget.objects.update_or_create(
                 organization=form.cleaned_data['organization'], year=current_year,
                 defaults=form.cleaned_data
             )
-            print(f"{created=}")
-            # try:
-            #     existing_budget = Budget.objects.get(organization=budget.organization, year=current_year)
-            #     budget.
-            # except Budget.DoesNotExist:
-            #     budget.submitter = student.user_id
-            #     budget.year = current_year
+
             if created:
                 budget.submitter = student.user_id
 
@@ -261,6 +260,7 @@ def budget_form_submit(request):
             for items_of_type in items.values():
                 for item in items_of_type:
                     # do not add items that have already been added
+                    #TODO: use get_or_create
                     try:
                         if 'entry_id' not in item:
                             raise BudgetItem.DoesNotExist
@@ -280,7 +280,6 @@ def budget_form_submit(request):
             budget.amount_acg = total_acg
             budget.amount_dep = total_dep
 
-            #TODO: bank account info
             budget.save()
 
             # For any items that were deleted, remove them from the database
@@ -289,6 +288,9 @@ def budget_form_submit(request):
                 BudgetItem.objects.filter(pk=entry_id).delete()
 
             return redirect(f'/dcac/budget/{budget.budget_id}')
+
+        else:
+            print(form.errors)
 
     else:
         return redirect('/dcac/form/budget')

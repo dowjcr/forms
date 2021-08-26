@@ -13,7 +13,7 @@ class UploadReceiptForm(forms.ModelForm):
 
 class ACGReimbursementFormItemEntryClass(forms.ModelForm):
     title = forms.CharField()
-    amount = forms.CharField(widget=NumberInput(attrs={"min": "0", "value": "0.00"}))
+    amount = forms.CharField(widget=NumberInput(attrs={"min": "0", "step": "0.01", "value": "0.00"}))
     description = forms.CharField(label='Description & Reasoning', widget=Textarea(attrs={'rows': 5}))
 
     class Meta:
@@ -79,7 +79,7 @@ class BudgetForm(forms.ModelForm):
     """"""
     sort_code = forms.CharField(label='Sort Code', min_length=6, max_length=6, required=False, widget=TextInput(attrs={'placeholder': '123456'}))
     account_number = forms.CharField(label='Account Number', min_length=8, max_length=8, required=False, widget=TextInput(attrs={'placeholder': '12345678'}))
-    balance = forms.CharField(label='Rough Balance', required=False, widget=NumberInput(attrs={"min": "0", "placeholder": "0.00"}))
+    balance = forms.CharField(label='Rough Balance', required=False, widget=NumberInput(attrs={"min": "0", "step": "0.01", "placeholder": "0.00"}))
 
     class Meta:
         model = Budget
@@ -91,7 +91,10 @@ class BudgetForm(forms.ModelForm):
             'treasurer_crsid',
 
             'has_bank_account',
+            'sort_code',
+            'account_number',
             'name_of_bank',
+            'balance',
         ]
 
         widgets = {

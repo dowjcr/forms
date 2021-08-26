@@ -1,0 +1,62 @@
+{% extends 'dcac/base-student.html' %}
+
+{% block content %}
+
+<head>
+    <title>Previous Requests | DCAC Reimbursement</title>
+</head>
+
+<script>
+    $(document).ready(function () {
+
+        $(".clickable-row").click(function () {
+            window.location = $(this).data("href");
+        });
+
+    });
+</script>
+
+<div class="container-fluid d-block" style="background: #A39161">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-12">
+                <div class="jumbotron mt-sm-2 pt-3 pt-sm-5 pb-3 pb-sm-5" style="background: white">
+                    <div class="row mb-sm-2" id="titleDiv">
+                        <div class="col-12">
+                            <h2 align="center">All Budgets</h2>
+                            <p style="text-transform: uppercase; font-size: 1.5em; color: grey" align="center">
+                            </p>
+                            <p align="center" class="mb-0">Below are all of the budgets that you have either submitted, or for which you are the president/treasurer of the society.<br>
+                            {% if not allow_budget_submit %}
+                            We are currently <strong>not</strong> accepting new budgets for this academic year.
+                            {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+{% comment %} {% for budget in budgets %}
+{{budget.organization}}
+{% endfor %} {% endcomment %}
+
+<div class="container mt-4">
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'dcac/includes/budget-table.html' with view='student' %}
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

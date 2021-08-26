@@ -1,0 +1,28 @@
+{% load custom_filters %}
+
+<table class="table table-bordered table-striped table-hover mt-4">
+    <thead>
+    <tr>
+        <th scope="col">Organisation</th>
+        <th scope="col" class="d-none d-md-table-cell">Year</th>
+        <th scope="col">Total ACG</th>
+        <th scope="col">Total Depreciation</th>
+        <th scope="col" class="d-none d-md-table-cell">Total</th>
+        <th scope="col">Status</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% for budget in budgets %}
+    <tr class="clickable-row" data-href="/dcac/budget/{{ budget.budget_id }}"
+        style="cursor: pointer;">
+        <td>{{ budget.organization }}</td>
+        <td class="d-none d-md-table-cell">{{ budget.year|str_academic_year }}</td>
+        <td>£{{ budget.amount_acg|floatformat:2 }}</td>
+        <td>£{{ budget.amount_dep|floatformat:2 }}</td>
+        <td class="d-none d-md-table-cell">£{{ budget.amount_dep|add_strings:budget.amount_acg|floatformat:2 }}</td>
+        <td>{% if not budget.submitted %}Draft{% else %}Submitted{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

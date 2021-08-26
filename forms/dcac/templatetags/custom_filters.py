@@ -22,6 +22,17 @@ def str_budget_type(budget_type):
 
 
 @register.filter()
+def str_academic_year(year):
+    return f"{year}-{(year+1)%100}"
+
+
+@register.filter()
 def filter_budget_type(items, budget_type):
     """Filter a list of items to only those of a given type"""
     return items.filter(budget_type=budget_type)
+
+
+@register.filter()
+def add_strings(a, b):
+    """Add two floats that are stored as strings"""
+    return sum(map(float, (a, b)))
