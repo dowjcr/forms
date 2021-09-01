@@ -1,4 +1,4 @@
-{% extends 'dcac/base-student.html' %}
+{% extends 'dcac/base-admin.html' %}
 
 {% load custom_filters %}
 {% load widget_tweaks %}
@@ -72,7 +72,6 @@
                             <p style="text-transform: uppercase; font-size: 1.5em; color: grey" align="center">
                             {{budget.year|str_academic_year}}
                             </p>
-                            <p align="center" class="mb-0">This is a submitted budget, and can no longer be edited</p>
                         </div>
                     </div>
 
@@ -86,6 +85,17 @@
 
 <div class="container mt-4">
     <form id="id_budgetForm" action="/dcac/form/budget/submit" method="POST">
+        {% if not budget.submitted %}
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-secondary">
+                    <p>This is a draft, and can still be edited by the original submitter of the budget, the president of the society, and the treasurer of the society.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
         <div class="row mb-5">
             <div class="col-lg-9 col-md-12 col-sm-12 col-xs-12">
                 <div class="jumbotron" id="organizationDiv">
@@ -139,13 +149,14 @@
                                 <input type="text" class="form-control" readonly value={{ budget.active_members }}></input>
                             </div>
                         </div>
-
+                        
                         <div class="row mt-3">
                             <div class="col-md-9 mb-3">
                                 Subcription Details:
                                 <textarea type="text" class="form-control" readonly>{{ budget.subscription_details }}</textarea>
                             </div>
                         </div>
+
                 </div>
 
                 <!-- Add Items -->
@@ -174,7 +185,7 @@
                 <div class="jumbotron">
                     <h4><i class="fas fa-wallet mr-2"></i> Bank Details</h4>
                     {% if not budget.has_bank_account %}
-                    <p>Your society does not have a bank account.</p>
+                    <p>This society does not have a bank account.</p>
                     
                     {% else %}
 

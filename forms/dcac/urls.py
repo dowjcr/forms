@@ -27,5 +27,8 @@ urlpatterns = [
     path('admin', views.dashboard_admin, name='dashboard-admin'),
     path('admin/requests', views.all_requests_admin, name='all-requests-admin'),
     path('admin/request/<int:form_id>', views.view_request_admin, name='view-request-admin'),
+    path('admin/budgets', views.all_budgets_admin, name='all-budgets-admin'),
+    path('admin/budgets/<int:year>', views.all_budgets_admin, name='all-budgets-admin-prev-year'),
+    path('admin/budget/<int:budget_id>', views.view_budget_admin, name='view-budget-admin'),
     path('admin/profile', views.profile_admin, name='profile-admin'),
 ]

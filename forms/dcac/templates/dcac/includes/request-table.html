@@ -1,12 +1,22 @@
+<script>
+    $(document).ready(function () {
+
+        $(".clickable-row").click(function () {
+            window.location = $(this).data("href");
+        });
+
+    });
+</script>
+
 {% load custom_filters %}
 
 {% if view == "student" %}
 <table class="table table-bordered table-striped table-hover mt-4">
     <thead>
     <tr>
-        <th scope="col">Date</th>
-        <th scope="col" class="d-none d-sm-table-cell">Organisation</th>
-        <th scope="col" class="d-none d-sm-table-cell">Amount</th>
+        <th scope="col" class="d-none d-sm-table-cell">Date</th>
+        <th scope="col">Organisation</th>
+        <th scope="col">Amount</th>
         <th scope="col">Status</th>
         <th scope="col" class="d-none d-sm-table-cell">Type</th>
     </tr>
@@ -16,11 +26,11 @@
     {% for request in requests %}
     <tr class="clickable-row" data-href="/dcac/request/{{ request.form_id }}"
         style="cursor: pointer;">
-        <td>{{ request.date|date:"d/m/Y" }}</td>
-        <td class="d-none d-sm-table-cell">{{ request.organization }}</td>
+        <td class="d-none d-sm-table-cell">{{ request.date|date:"d/m/Y" }}</td>
+        <td>{{ request.organization }}</td>
         <td>£{{ request.amount|floatformat:2 }}</td>
         <td>{% if request.bursary_paid %}Paid{% elif request.rejected %}Rejected{% else %}In Progress{% endif %}</td>
-        <td>{{ request.reimbursement_type|str_reimbursement_type }}</td>
+        <td class="d-none d-sm-table-cell">{{ request.reimbursement_type|str_reimbursement_type }}</td>
     </tr>
     {% endfor %}
     </tbody>
@@ -34,7 +44,7 @@
         <th scope="col" class="d-none d-sm-table-cell">Date</th>
         <th scope="col">Organisation</th>
         <th scope="col">Amount</th>
-        <th scope="col" class="d-none d-sm-table-cell">Type</th>
+        <th scope="col">Type</th>
     </tr>
     </thead>
 

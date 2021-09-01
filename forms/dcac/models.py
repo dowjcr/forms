@@ -6,6 +6,8 @@ Author Cameron O'Connor
 
 from django.db import models
 from django.conf import settings
+from django.core import serializers
+import json
 
 from .constants import *
 
@@ -132,12 +134,37 @@ class Budget(models.Model):
     president_crsid = models.CharField('CRSid', max_length=10)
     treasurer = models.CharField('Treasurer', max_length=100)
     treasurer_crsid = models.CharField('CRSid', max_length=10)
+    active_members = models.PositiveIntegerField('Number of Active Members', default=0)
+    subscription_details = models.CharField('Details of subscriptions received from members (if any)', max_length=300, blank=True)
 
     has_bank_account = models.BooleanField(choices=((True, 'Yes'), (False, 'No')), default=False)
-    account_number = models.CharField('Account Number', max_length=8, null=True)
-    sort_code = models.CharField('Sort Code', max_length=6, null=True)
-    name_of_bank = models.CharField('Name of Bank', max_length=100, blank=True, null=True)
-    balance = models.CharField('Rough Balance', max_length=20, null=True)
+    account_number = models.CharField('Account Number', max_length=8, blank=True)
+    sort_code = models.CharField('Sort Code', max_length=6, blank=True)
+    name_of_bank = models.CharField('Name of Bank', max_length=100, blank=True)
+    balance = models.CharField('Rough Balance', max_length=20, blank=True)
+
+    comments = models.CharField('Comments', max_length=1000, blank=True)
+
+    def get_items_as_json(self):
+        """Returns all items for this budget as a json object"""
+        items = {}
+        for budget_type, budget_type_str in BudgetType.CHOICES:
+            items_json = serializers.serialize('json', BudgetItem.objects.filter(budget_id=self.budget_id, budget_type=budget_type))
+            items_dict = json.loads(items_json)
+            items[budget_type_str] = [{'entry_id': item['pk'], **item['fields']} for item in items_dict]
+
+        return items
+
+
+    def budgets_from_year(year):
+        """Returns a dictionary of all of the existing budgets for a given year
+        {`organization_id`: `budget_id`}"""
+        budgets = Budget.objects.filter(year=year).values('organization', 'budget_id')
+        budget_dict = {}
+        for budget in budgets:
+            org, budget_id = budget.values()
+            budget_dict[org] = budget_id
+        return budget_dict
     
 
 

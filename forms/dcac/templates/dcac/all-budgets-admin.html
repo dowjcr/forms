@@ -1,0 +1,60 @@
+{% extends 'dcac/base-admin.html' %}
+
+{% load custom_filters %}
+
+{% block content %}
+
+<head>
+    <title>All Budgets | DCAC Reimbursement</title>
+</head>
+
+<div class="container-fluid d-block" style="background: #A39161">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-12">
+                <div class="jumbotron mt-2" style="background: white">
+                    <div class="row">
+                        <div class="col-12">
+                            <h2 align="center">All Budgets - {{year|str_academic_year}}</h2>
+                            <p style="text-transform: uppercase; font-size: 0.8em; color: grey" align="center">Admin Portal
+                            </p>
+                            {% if not allow_budget_submit %}
+                            We are currently <strong>not</strong> accepting new budgets for this academic year.
+                            {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="container mt-4">
+
+    <nav>
+    <ul class="pagination justify-content-center">
+        <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+        <li class="page-item"><a class="page-link" href="/dcac/admin/budgets/2019">{{2019|str_academic_year}}</a></li>
+        <li class="page-item"><a class="page-link" href="/dcac/admin/budgets/2020">{{2020|str_academic_year}}</a></li>
+        <li class="page-item"><a class="page-link" href="/dcac/admin/budgets/2021">{{2021|str_academic_year}}</a></li>
+        <li class="page-item"><a class="page-link" href="#">Next</a></li>
+    </ul>
+    </nav>
+
+
+    <div class="row">
+        <div class="col-12">
+            {% include 'dcac/includes/budget-table.html' with view='admin' %}
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}

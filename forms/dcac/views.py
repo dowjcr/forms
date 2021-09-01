@@ -170,35 +170,32 @@ def all_budgets(request):
 def view_budget(request, budget_id):
     student = user_or_403(request, Student)
     budget = get_object_or_404(Budget, pk=budget_id)
-    items = BudgetItem.objects.filter(budget_id=budget_id)
+
+    # a draft has been created, and can be viewed by
+    # the submitter, the treasurer, and the president
+    if student.user_id not in (budget.submitter, budget.president_crsid, budget.treasurer_crsid):
+            raise PermissionDenied
+
+    items = budget.get_items_as_json()
 
     if budget.submitted or not settings.ALLOW_BUDGET_SUBMIT:
         return render(request, 'dcac/view-budget-student.html', {
             'student': student,
             'budget': budget,
-            'items': items
+            'existingItems': items
             })
 
     else:
-        # a draft has been created, and can be viewed by
-        # the submitter, the treasurer, and the president
-        if student.user_id not in (budget.submitter, budget.president_crsid, budget.treasurer_crsid):
-            raise PermissionDenied
-
-
+        
         budget_form = BudgetForm(instance=budget)
         item_form = BudgetItemForm()
-        existing_items = {}
-        for budget_type, budget_type_str in BudgetType.CHOICES:
-            items_json = serializers.serialize('json', BudgetItem.objects.filter(budget_id=budget_id, budget_type=budget_type))
-            items_dict = json.loads(items_json)
-            existing_items[budget_type_str] = [{'entry_id': item['pk'], **item['fields']} for item in items_dict]
+    
         
         return render(request, 'dcac/budget-form-student.html', {
             'student': student,
             'form': budget_form,
             'item_form': item_form,
-            'existingItems': existing_items,
+            'existingItems': items,
             'draft': True
             })
 
@@ -213,19 +210,14 @@ def budget_form(request):
     budget_form = BudgetForm()
     item_form = BudgetItemForm()
     
-    current_year = datetime.now().year
-    # orgs = Organization.objects.filter(budget__year=current_year).values()
-    orgs = Budget.objects.filter(year=current_year).values('organization')
+    current_year = settings.CURRENT_YEAR
+    existing_budgets = Budget.budgets_from_year(current_year)
 
-    print(orgs)
-    # orgs = {'Club Name': #budget id from current_year}
-
-    submitted_organizations = json.dumps({})
     return render(request, 'dcac/budget-form-student.html', {
         'student': student,
         'form': budget_form,
         'item_form': item_form,
-        'submittedOrganizations': submitted_organizations
+        'existingBudgets': existing_budgets
         })
 
 
@@ -239,8 +231,7 @@ def budget_form_submit(request):
         form = BudgetForm(request.POST)
         submitted = 'finish_button' in request.POST
         if form.is_valid():
-            current_year = datetime.now().year
-            print(form.cleaned_data)
+            current_year = settings.CURRENT_YEAR
             # find if form already exists
             budget, created = Budget.objects.update_or_create(
                 organization=form.cleaned_data['organization'], year=current_year,
@@ -402,8 +393,46 @@ def view_request_admin(request, form_id):
 def all_requests_admin(request):
     user = user_or_403(request, AdminUser)
     requests = ACGReimbursementForm.objects.order_by('-form_id')
-    return render(request, 'dcac/all-requests-admin.html', {'user': user,
-                                                            'requests': requests})
+    return render(request, 'dcac/all-requests-admin.html', {
+        'user': user,
+        'requests': requests
+        })
+
+
+# ADMIN VIEW BUDGET
+# For admin to view the details of a budget
+
+@login_required(login_url='/accounts/login/')
+def view_budget_admin(request, budget_id):
+    user = user_or_403(request, AdminUser)
+    budget = get_object_or_404(Budget, pk=budget_id)
+    items = budget.get_items_as_json()
+
+    return render(request, 'dcac/view-budget-admin.html', {
+        'user': user,
+        'budget': budget,
+        'existingItems': items,
+    })
+
+# ALL BUDGETS ADMIN
+# Shows all previous budgets
+
+@login_required(login_url='/accounts/login/')
+def all_budgets_admin(request, year=None):
+    user = user_or_403(request, AdminUser)
+    if year is None: 
+        year = settings.CURRENT_YEAR
+
+    budgets = Budget.objects.filter(year=year).order_by('-year', 'organization') 
+    organizations = Organization.objects.exclude(budget__year=year)
+
+    return render(request, 'dcac/all-budgets-admin.html', {
+        'user': user,
+        'budgets': budgets,
+        'year': year,
+        'remaining_organizations': organizations,
+        'allow_budget_submit': settings.ALLOW_BUDGET_SUBMIT
+    })
 
 
 # ADMIN PROFILE

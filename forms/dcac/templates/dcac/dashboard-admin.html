@@ -6,15 +6,7 @@
     <title>Admin Dashboard | DCAC Reimbursement</title>
 </head>
 
-<script>
-    $(document).ready(function () {
 
-        $(".clickable-row").click(function () {
-            window.location = $(this).data("href");
-        });
-
-    });
-</script>
 
 <div class="container-fluid" style="background: #A39161">
 
@@ -58,6 +50,10 @@
             <div class="list-group">
                 <a href="/dcac/admin/requests" class="list-group-item d-flex justify-content-between align-items-center">
                     <span>Previous Requests</span>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                <a href="/dcac/admin/budgets" class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>All Budgets</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </div>

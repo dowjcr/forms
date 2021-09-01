@@ -91,6 +91,9 @@
     var curBudgetType = 1;
     var curBudgetTypeTitle = ""
 
+    
+    var existingBudgets = {% if existingBudgets %} {{ existingBudgets }} {% else %} {} {% endif %}
+
     function changeBudgetItemType(newTitle, newType) {
         return function () {
             curBudgetType = newType
@@ -122,11 +125,11 @@
     }
 
     function validateOrganization() {
-        let organization = $('#{{ form.organization.id_for_label }}').find(':selected').text()
-        let submittedOrganizations = JSON.parse("{{ submittedOrganizations | escapejs }}");
+        let organization = $('#{{ form.organization.id_for_label }}').find(':selected').val()
 
-        if (submittedOrganizations[organization]) {
-            message = "<li>A budget has already been submitted for this organization. If you are the president, treasurer, or submitter, you can view the budget <a href='/dcac/budgets'>here</a>. Otherwise, if you think that the budget has been submitted in error, please contact treasurer@jcr.dow.cam.ac.uk</li>"
+        if (existingBudgets[organization]) {
+            let link = "<a href='/dcac/budget/" + existingBudgets[organization] + "'>here<a>"
+            message = "<li>A budget has already been submitted for this organization. If you are the president, treasurer, or submitter, you can view the budget " + link + ". Otherwise, if you think that the budget has been submitted in error, please contact treasurer@jcr.dow.cam.ac.uk</li>"
 
             $('#errors').html(message);
             $('#validationDiv').css("visibility", "visible").css("display", "block");
@@ -142,6 +145,14 @@
         let validated = true;
         let message = "";
         
+        if (!validateOrganization()) {
+            validated = false
+            let organization = $('#{{ form.organization.id_for_label }}').find(':selected').val()
+            let link = "<a href='/dcac/budget/" + existingBudgets[organization] + "'>here<a>"
+            message += "<li>A budget has already been submitted for this organization. If you are the president, treasurer, or submitter, you can view the budget " + link + ". Otherwise, if you think that the budget has been submitted in error, please contact treasurer@jcr.dow.cam.ac.uk</li>"
+        }
+
+
         if (items['General'].length + items['Cuppers'].length + items['Exceptional'].length === 0) {
             validated = false;
             message += "<li>Please add at least one item.</li>"
@@ -191,9 +202,11 @@
     function updateBankDetailVisibility() {
         let has_bank_account = $('input[name="has_bank_account"]:checked')[0].value;
         if (has_bank_account=="True") {
-            $('#bankInfo').show()
+            $('#bankInfo').show();
+            $('#bankInfo input').prop('disabled', false);
         } else {
-            $('#bankInfo').hide()
+            $('#bankInfo').hide();
+            $('#bankInfo input').prop('disabled', true);
         }
     }
 
@@ -260,6 +273,7 @@
                         <p class="mt-3">
                             If the organisation you need isn't listed here, please contact the Treasurer.</p>
                         {{ form.organization|add_class:"custom-select d-block" }}
+                        {{ form.organization.error }}
                     </div>
     
                     <div class="jumbotron">
@@ -305,9 +319,25 @@
                             </div>
                             
                         </div>
+
+                        <div class="row mt-3">
+                           <div class="col-md-9 mb-3">
+                                {{ form.active_members.label_tag }}
+                                {{ form.active_members|add_class:"form-control" }}
+                                {{ form.active_members.errors|add_class:"invalid-feedback"}}
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-9 mb-3">
+                                {{ form.subscription_details.label_tag }}
+                                {{ form.subscription_details|add_class:"form-control" }}
+                                {{ form.subscription_details.errors|add_class:"invalid-feedback"}}
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Add Items -->
+                    <!-- Items -->
                     <div class="jumbotron">
                         <h4><i class="fas fa-piggy-bank mr-2"></i> General Funding</h4>
                         <p class="mt-3">Please detail ALL expenses to be incurred in normal operation during the coming year and why (if not obvious) they are necessary. (from Annual Consumable Grant)</p>
@@ -346,7 +376,7 @@
                         <h4><i class="fas fa-wallet mr-2"></i> Bank Details</h4>
                         <p>Does your society have a bank account?</p>
                         
-                        <div class="btn-group btn-group-toggle" data-toggle="buttons" id=#id_has_bank_account>
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons" id="id_has_bank_account">
                             {% for radio in form.has_bank_account %}
                             <label class="btn btn-primary pb-0 {% if forloop.last %}active{% endif %}">
                               {{ radio }}
@@ -393,6 +423,13 @@
                         </div>
                     </div>
     
+                    <div class="jumbotron">
+                        <h4><i class="fas fa-question mr-2"></i> Comments and Queries</h4>
+                        <p>If there is a significant change in anticipated costs expected in the forthcoming year compared to the previous year, please outline why there is going to be a change as well as justification for the change. </p>
+                        {{ form.comments|add_class:"form-control" }}
+                        {{ form.comments.errors|add_class:"invalid-feedback" }}
+                    </div>
+
                     <div class="jumbotron">
                         <h4><i class="fas fa-map-signs mr-2"></i> Summary</h4>
                         <p>
