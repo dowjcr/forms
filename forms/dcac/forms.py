@@ -77,8 +77,6 @@ ACG_FORMS = {
 
 class BudgetForm(forms.ModelForm):
     """"""
-    # sort_code = forms.CharField(label='Sort Code', min_length=6, max_length=6, required=False, widget=TextInput(attrs={'placeholder': '123456'}))
-    account_number = forms.CharField(label='Account Number', min_length=8, max_length=8, required=False, widget=TextInput(attrs={'placeholder': '12345678'}))
     balance = forms.CharField(label='Rough Balance', required=False, widget=NumberInput(attrs={"min": "0", "step": "0.01", "placeholder": "0.00"}))
 
     class Meta:
@@ -105,7 +103,7 @@ class BudgetForm(forms.ModelForm):
             'has_bank_account': RadioSelect,
             'subscription_details': Textarea(attrs={'rows':1}),
             'sort_code': TextInput(attrs={'placeholder': '123456'}),
-            'comments': Textarea,
+            'account_number': TextInput(attrs={'placeholder': '12345678'}),
 
             'president_crsid': TextInput(attrs={'pattern': '[a-zA-Z0-9]+'}),
             'treasurer_crsid': TextInput(attrs={'pattern': '[a-zA-Z0-9]+'})

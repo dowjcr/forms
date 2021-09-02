@@ -7,9 +7,12 @@ Author Cameron O'Connor
 from django.db import models
 from django.conf import settings
 from django.core import serializers
+
 import json
+from simplecrypt import encrypt, decrypt
 
 from .constants import *
+from fernet_fields import EncryptedCharField
 
 
 # STUDENT
@@ -138,24 +141,16 @@ class Budget(models.Model):
     subscription_details = models.CharField('Details of subscriptions received from members (if any)', max_length=300, blank=True)
 
     has_bank_account = models.BooleanField(choices=((True, 'Yes'), (False, 'No')), default=False)
-    account_number = models.CharField('Account Number', max_length=8, blank=True)
-    sort_code = models.CharField('Sort Code', max_length=6, blank=True)
+    account_number = EncryptedCharField('Account Number', max_length=8, blank=True)
+    sort_code = EncryptedCharField('Sort Code', max_length=6, blank=True)
     name_of_bank = models.CharField('Name of Bank', max_length=100, blank=True)
     balance = models.CharField('Rough Balance', max_length=20, blank=True)
 
-    comments = models.CharField('Comments', max_length=1000, blank=True)
-
-    def get_items_as_json(self):
-        """Returns all items for this budget as a json object"""
-        items = {}
-        for budget_type, budget_type_str in BudgetType.CHOICES:
-            items_json = serializers.serialize('json', BudgetItem.objects.filter(budget_id=self.budget_id, budget_type=budget_type))
-            items_dict = json.loads(items_json)
-            items[budget_type_str] = [{'entry_id': item['pk'], **item['fields']} for item in items_dict]
-
-        return items
+    comments = models.TextField('Comments', blank=True)
+    treasurer_comments = models.TextField('Treasurer Comments', blank=True)
 
 
+    # --- CLASS METHODS ---
     def budgets_from_year(year):
         """Returns a dictionary of all of the existing budgets for a given year
         {`organization_id`: `budget_id`}"""
@@ -165,6 +160,19 @@ class Budget(models.Model):
             org, budget_id = budget.values()
             budget_dict[org] = budget_id
         return budget_dict
+
+
+    # --- INSTANCE METHODS ---
+    def get_items_as_json(self):
+        """Returns all items for this budget as a json object"""
+        items = {}
+        for budget_type, budget_type_str in BudgetType.CHOICES:
+            items_json = serializers.serialize('json', BudgetItem.objects.filter(budget_id=self.budget_id, budget_type=budget_type))
+            items_dict = json.loads(items_json)
+            items[budget_type_str] = [{'entry_id': item['pk'], **item['fields']} for item in items_dict]
+
+        return items
+        
     
 
 
@@ -180,3 +188,5 @@ class BudgetItem(models.Model):
     description = models.CharField(max_length=500)
     amount = models.CharField(max_length=20)
     budget_type = models.IntegerField(choices=BudgetType.CHOICES)
+
+    treasurer_comments = models.TextField('Treasurer Comments', blank=True)

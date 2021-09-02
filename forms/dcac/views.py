@@ -45,8 +45,12 @@ def dashboard(request):
 
     requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')[:3]
 
-    return render(request, 'dcac/dashboard-student.html', {'requests': requests,
-                                                           'student': student})
+    return render(request, 'dcac/dashboard-student.html', {
+        'requests': requests,
+        'student': student,
+        'allow_budget_submit': settings.ALLOW_BUDGET_SUBMIT,
+        'year': settings.CURRENT_YEAR,
+        })
 
 # --- ACG REQUEST VIEWS ---
 # ALL REQUESTS
@@ -67,10 +71,16 @@ def all_requests(request):
 def view_request(request, form_id):
     student = user_or_403(request, Student)
     acg_request = get_object_or_404(ACGReimbursementForm, pk=form_id)
+    # only the student that submitted the request should be able to view it
+    if student.user_id != acg_request.submitter:
+        raise PermissionDenied
+
     items = ACGReimbursementFormItemEntry.objects.filter(form_id=acg_request)
-    return render(request, 'dcac/view-request-student.html', {'student': student,
-                                                              'request': acg_request,
-                                                              'items': items})
+    return render(request, 'dcac/view-request-student.html', {
+        'student': student,
+        'request': acg_request,
+        'items': items
+        })
 
 
 # ACG FORM
@@ -90,11 +100,13 @@ def acg_form(request, request_type):
         item_form = ACGReimbursementFormItemEntryClass()
         receipt_form = UploadReceiptForm()
         
-        return render(request, 'dcac/acg-form-student.html', {'student': student,
-                                                              'form': reimbursement_form,
-                                                              'item_form': item_form,
-                                                              'receipt_form': receipt_form,
-                                                              'reimbursement_type': reimbursement_type})
+        return render(request, 'dcac/acg-form-student.html', {
+            'student': student,
+            'form': reimbursement_form,
+            'item_form': item_form,
+            'receipt_form': receipt_form,
+            'reimbursement_type': reimbursement_type
+            })
 
 # ACG FORM SUBMIT
 # Allows submission of completed form.
@@ -174,7 +186,7 @@ def view_budget(request, budget_id):
     # a draft has been created, and can be viewed by
     # the submitter, the treasurer, and the president
     if student.user_id not in (budget.submitter, budget.president_crsid, budget.treasurer_crsid):
-            raise PermissionDenied
+        raise PermissionDenied
 
     items = budget.get_items_as_json()
 
@@ -186,16 +198,15 @@ def view_budget(request, budget_id):
             })
 
     else:
-        
         budget_form = BudgetForm(instance=budget)
         item_form = BudgetItemForm()
-    
         
         return render(request, 'dcac/budget-form-student.html', {
             'student': student,
             'form': budget_form,
             'item_form': item_form,
             'existingItems': items,
+            'existingOrganization': budget.organization,
             'draft': True
             })
 
@@ -203,11 +214,14 @@ def view_budget(request, budget_id):
 # BUDGET FORM
 
 @login_required(login_url='/accounts/login/')
-def budget_form(request):
+def budget_form(request, budget_form=None):
     if not settings.ALLOW_BUDGET_SUBMIT:
         return redirect('/dcac/budgets')
     student = user_or_403(request, Student)
-    budget_form = BudgetForm()
+    
+    if budget_form is None:
+        budget_form = BudgetForm()
+    
     item_form = BudgetItemForm()
     
     current_year = settings.CURRENT_YEAR
@@ -272,6 +286,8 @@ def budget_form_submit(request):
             budget.amount_dep = total_dep
 
             budget.save()
+            notify_budget_submit(budget)
+            notify_treasurer_budget(budget)
 
             # For any items that were deleted, remove them from the database
             deleted_items = json.loads(request.POST.get('deletedItems'))
@@ -281,7 +297,7 @@ def budget_form_submit(request):
             return redirect(f'/dcac/budget/{budget.budget_id}')
 
         else:
-            print(form.errors)
+            return budget_form(request, budget_form=form)
 
     else:
         return redirect('/dcac/form/budget')
@@ -313,8 +329,10 @@ def dashboard_admin(request):
         ).filter(reimbursement_type=RequestTypes.LARGE).order_by('form_id')
     else:
         requests = []
-    return render(request, 'dcac/dashboard-admin.html', {'user': user,
-                                                         'requests': requests})
+    return render(request, 'dcac/dashboard-admin.html', {
+        'user': user,
+        'requests': requests
+        })
 
 
 # ADMIN VIEW REQUEST
@@ -380,10 +398,12 @@ def view_request_admin(request, form_id):
     if user.role in (AdminRoles.BURSARY, AdminRoles.ASSISTANTBURSAR) and not acg_request.bursary_paid and acg_request.sort_code is not None:
         acg_request.sort_code = str(decrypt(ENCRYPTION_KEY, acg_request.sort_code)).replace("b", '').replace("'", '')
         acg_request.account_number = str(decrypt(ENCRYPTION_KEY, acg_request.account_number)).replace("b", '').replace("'", '')
-    return render(request, 'dcac/view-request-admin.html', {'user': user,
-                                                            'request': acg_request,
-                                                            'items': items,
-                                                            'receipts': receipts})
+    return render(request, 'dcac/view-request-admin.html', {
+        'user': user,
+        'request': acg_request,
+        'items': items,
+        'receipts': receipts
+        })
 
 
 # ALL REQUESTS ADMIN
@@ -441,7 +461,9 @@ def all_budgets_admin(request, year=None):
 @login_required(login_url='/accounts/login/')
 def profile_admin(request):
     user = user_or_403(request, AdminUser)
-    return render(request, 'dcac/profile-admin.html', {'user': user})
+    return render(request, 'dcac/profile-admin.html', {
+        'user': user
+        })
 
 
 def user_or_403(request, model):

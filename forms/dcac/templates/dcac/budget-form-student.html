@@ -80,6 +80,11 @@
         $('#organizationDiv').hide()
         {% endif %}
 
+        {% if form.errors %}
+        $('#validationDiv').css("visibility", "visible").css("display", "block");
+        $('#titleDiv')[0].scrollIntoView();
+        {% endif %}
+
     });
 
     {% if draft %}    
@@ -143,7 +148,7 @@
 
     function validateForm() {
         let validated = true;
-        let message = "";
+        let message = '{{ form.errors }}'
         
         if (!validateOrganization()) {
             validated = false
@@ -220,14 +225,15 @@
                 <div class="jumbotron mt-2" style="background: white">
                     <div class="row" id="titleDiv">
                         <div class="col">
+                            <h2 align="center" id="budgetTitle">DCAC Budget Form
+                            {% if existingOrganization %}
+                             - {{ existingOrganization}}
+                            {% endif%}
+                            </h2>
 
-
-                            <h2 align="center">DCAC Budget Form</h2>
-                            <p style="text-transform: uppercase; font-size: 4em; color: grey" align="center">
-                            {% if draft %}Draft {% endif %}
+                            <p style="text-transform: uppercase; font-size: 1.5em; color: grey" align="center">
+                            {% if draft %}Draft{% endif %}
                             </p>
-                            <p align="center"></p>
-          
                 
                         </div>
                     </div>
@@ -260,7 +266,7 @@
                     <b>Whoops! There are some problems with this form.</b><br>
                     Please correct them before proceeding.<br>
                     <ul id="errors" class="mt-2">
-    
+                        {{ form.errors }}
                     </ul>
                 </div>
             </div>
@@ -286,7 +292,7 @@
                                     <span class="input-group-text">{{ form.president | add_label_class:"mb-0" }}</span>
                                 </div>
                                 {{ form.president|add_class:"form-control" }}
-                                {{ form.president.errors|add_class:"invalid-feedback"}}
+                                {{ form.president.errors}}
                             </div>
 
                             
@@ -295,7 +301,7 @@
                                     <span class="input-group-text">{{ form.president_crsid | add_label_class:"mb-0" }}</span>
                                 </div>
                                 {{ form.president_crsid|add_class:"form-control" }}
-                                {{ form.president_crsid.errors|add_class:"invalid-feedback"}}
+                                {{ form.president_crsid.errors}}
                             </div>                           
                             
                         </div>
@@ -307,7 +313,7 @@
                                     <span class="input-group-text">{{ form.treasurer | add_label_class:"mb-0" }}</span>
                                 </div>
                                 {{ form.treasurer|add_class:"form-control" }}
-                                {{ form.treasurer.errors|add_class:"invalid-feedback"}}
+                                {{ form.treasurer.errors}}
                             </div>
 
                             <div class="input-group col-md-6 col-12 pt-3 pt-md-0">
@@ -315,7 +321,7 @@
                                     <span class="input-group-text">{{ form.treasurer_crsid | add_label_class:"mb-0" }}</span>
                                 </div>
                                 {{ form.treasurer_crsid|add_class:"form-control" }}
-                                {{ form.treasurer_crsid.errors|add_class:"invalid-feedback"}}
+                                {{ form.treasurer_crsid.errors}}
                             </div>
                             
                         </div>
@@ -324,7 +330,7 @@
                            <div class="col-md-9 mb-3">
                                 {{ form.active_members.label_tag }}
                                 {{ form.active_members|add_class:"form-control" }}
-                                {{ form.active_members.errors|add_class:"invalid-feedback"}}
+                                {{ form.active_members.errors}}
                             </div>
                         </div>
 
@@ -332,7 +338,7 @@
                             <div class="col-md-9 mb-3">
                                 {{ form.subscription_details.label_tag }}
                                 {{ form.subscription_details|add_class:"form-control" }}
-                                {{ form.subscription_details.errors|add_class:"invalid-feedback"}}
+                                {{ form.subscription_details.errors}}
                             </div>
                         </div>
                     </div>
@@ -391,19 +397,19 @@
                                 <div class="col-md-6 mb-3">
                                     {{ form.sort_code.label_tag }}
                                     {{ form.sort_code|add_class:"form-control" }}
-                                    {{ form.sort_code.errors|add_class:"invalid-feedback"}}
+                                    {{ form.sort_code.errors}}
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     {{ form.account_number.label_tag }}
                                     {{ form.account_number|add_class:"form-control" }}
-                                    {{ form.account_number.errors|add_class:"invalid-feedback" }}
+                                    {{ form.account_number.errors }}
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12 mb-3">
                                     {{ form.name_of_bank.label_tag }}
                                     {{ form.name_of_bank|add_class:"form-control" }}
-                                    {{ form.name_of_bank.errors|add_class:"invalid-feedback" }}
+                                    {{ form.name_of_bank.errors }}
                                 </div>
                             </div>
 
@@ -415,7 +421,7 @@
                                             <span class="input-group-text">£</span>
                                         </div>
                                         {{ form.balance|add_class:"form-control" }}
-                                        {{ form.balance.errors|add_class:"invalid-feedback" }}
+                                        {{ form.balance.errors }}
                                     </div>
 
                                 </div>
@@ -427,7 +433,7 @@
                         <h4><i class="fas fa-question mr-2"></i> Comments and Queries</h4>
                         <p>If there is a significant change in anticipated costs expected in the forthcoming year compared to the previous year, please outline why there is going to be a change as well as justification for the change. </p>
                         {{ form.comments|add_class:"form-control" }}
-                        {{ form.comments.errors|add_class:"invalid-feedback" }}
+                        {{ form.comments.errors }}
                     </div>
 
                     <div class="jumbotron">
