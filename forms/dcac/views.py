@@ -426,6 +426,24 @@ def all_requests_admin(request):
 def view_budget_admin(request, budget_id):
     user = user_or_403(request, AdminUser)
     budget = get_object_or_404(Budget, pk=budget_id)
+    
+    # a comment has been added
+    if request.method == 'POST':
+        comment = request.POST.get('comment')
+        target = request.POST.get('target')
+
+        if target == 'budget':
+            budget.treasurer_comments = comment
+            budget.save()
+
+        else:
+            item = BudgetItem.objects.get(pk=target)
+            item.treasurer_comments = comment
+            item.save()
+
+        return HttpResponse(json.dumps({'target': target,'comment': comment}), content_type='application/json')
+        
+
     items = budget.get_items_as_json()
 
     return render(request, 'dcac/view-budget-admin.html', {

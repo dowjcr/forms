@@ -20,15 +20,87 @@
 
         showItems();
 
+         $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
+        });
+
+        $('#id_addComment').submit(function( event ) {
+            event.preventDefault();
+            postComment()
+        });
+
+        $('textarea[name="budgetComments"]').val("{{ budget.treasurer_comments }}")
+
+
     });
 
     var items = {{ existingItems|safe }}
 
-    function generateTableRowFromItem(item, budgetType, index) {
-        return "<tr><td class='col-8'><p>" + item.title + "<br><span class='small'>" + item.description + "</span></p></td>"
-            + "<td>£" + item.amount + "</td>";
+    function getItemById(entryId) {
+        // Return the item with a given id
+        let itemsList = [].concat(items['General'], items['Cuppers'], items['Exceptional'])
+        let item = itemsList.filter(x => x.entry_id==entryId)[0]
+        return item
     }
 
+    function postComment() {
+        let form = $('#id_addComment')[0];
+        //console.log(form.serialize())
+
+        data = {
+            'csrfmiddlewaretoken': '{{ csrf_token }}',
+            'comment': $('textarea[name="comment"]').val(),
+            'target': $('input[name="target"]').val()
+        }
+
+    
+        $.ajax({
+            url: '{{ request.path }}',
+            type: 'POST',
+            data: data,
+
+            success: function (response) {
+                console.log(response)
+                if (response.target == 'budget') {
+                    $('textarea[name="budgetComments"]').val(response.comment)
+                } else {
+                    console.log(response)
+                    let item = getItemById(response.target)
+                    item.treasurer_comments = response.comment
+                }
+                $('#addCommentModal').modal('hide')
+                showItems()
+            },
+            
+        });
+    }
+
+    
+
+    function generateTableRowFromItem(item) {
+        return "<tr><td class='col-8'><p>" + item.title + "<br><span class='small'>" + item.description + "<br><mark>" + item.treasurer_comments + "</mark></span></p></td>"
+            + "<td>£" + item.amount + "</td>"
+            + "<td><button type='button' class=\'btn btn-primary btn-sm\' onclick=\'addItemComment(" + item.entry_id + ")\'><i class=\"fas fa-edit mr-1\"></i> Comment</button></td>";
+    }
+
+    function addItemComment(item_id) {
+        let item = getItemById(item_id)
+
+        $('input[name="target"]').val(item_id)
+        $('textarea[name="comment"]').val(item.treasurer_comments)
+
+        $('#addCommentModal').modal('show')
+    }
+
+    function addBudgetComment() {
+        let currentComments = $('textarea[name="budgetComments"]').val()
+
+        $('input[name="target"]').val('budget')
+        $('textarea[name="comment"]').val(currentComments)
+
+        $('#addCommentModal').modal('show')
+
+    }
 
     function showItems() {
         var total = 0;
@@ -112,7 +184,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text mb-0">President</span>
                             </div>
-                            <input type="text" class="form-control" readonly value={{ budget.president }}></input>
+                            <input type="text" class="form-control" readonly value="{{ budget.president }}"></input>
                         </div>
 
                         
@@ -120,7 +192,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">CRSid</span>
                             </div>
-                            <input type="text" class="form-control" readonly value={{ budget.president_crsid }}></input>
+                            <input type="text" class="form-control" readonly value="{{ budget.president_crsid }}"></input>
                         </div>                           
                         
                     </div>
@@ -131,14 +203,14 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text mb-0">Treasurer</span>
                             </div>
-                            <input type="text" class="form-control" readonly value={{ budget.treasurer }}></input>
+                            <input type="text" class="form-control" readonly value="{{ budget.treasurer }}"></input>
                         </div>
 
                         <div class="input-group col-md-6 col-12 pt-3 pt-md-0">
                             <div class="input-group-prepend">
                                 <span class="input-group-text mb-0">CRSid</span>
                             </div>
-                            <input type="text" class="form-control" readonly value={{ budget.treasurer_crsid }}></input>
+                            <input type="text" class="form-control" readonly value="{{ budget.treasurer_crsid }}"></input>
                         </div>
                         
                     </div>
@@ -146,7 +218,7 @@
                     <div class="row mt-3">
                            <div class="col-md-9 mb-3">
                                 Active Members:
-                                <input type="text" class="form-control" readonly value={{ budget.active_members }}></input>
+                                <input type="text" class="form-control" readonly value="{{ budget.active_members }}"></input>
                             </div>
                         </div>
                         
@@ -159,7 +231,7 @@
 
                 </div>
 
-                <!-- Add Items -->
+                <!-- Items -->
                 <div class="jumbotron">
                     <h4><i class="fas fa-piggy-bank mr-2"></i> General Funding</h4>
                     <p class="mt-3">Please detail ALL expenses to be incurred in normal operation during the coming year and why (if not obvious) they are necessary. (from Annual Consumable Grant)</p>
@@ -194,17 +266,17 @@
                         <div class="row mt-4">
                             <div class="col-md-6 mb-3">
                                 <label>Sort Code:</label>
-                                <input type="text" class="form-control" readonly value={{ budget.sort_code }}></input>
+                                <input type="text" class="form-control" readonly value="{{ budget.sort_code }}"></input>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label>Account Number:</label>
-                                <input type="text" class="form-control" readonly value={{ budget.account_number }}></input>
+                                <input type="text" class="form-control" readonly value="{{ budget.account_number }}"></input>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label>Bank Name:</label>
-                                <input type="text" class="form-control" readonly value={{ budget.name_of_bank }}></input>
+                                <input type="text" class="form-control" readonly value="{{ budget.name_of_bank }}"></input>
                             </div>
                         </div>
 
@@ -215,7 +287,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">£</span>
                                     </div>
-                                <input type="text" class="form-control" readonly value={{ budget.balance }}></input>
+                                <input type="text" class="form-control" readonly value="{{ budget.balance }}"></input>
                                 </div>
 
                             </div>
@@ -228,6 +300,8 @@
                     <h4><i class="fas fa-question mr-2"></i> Comments and Queries</h4>
                     <p>If there is a significant change in anticipated costs expected in the forthcoming year compared to the previous year, please outline why there is going to be a change as well as justification for the change. </p>
                     <textarea type="text" class="form-control" readonly>{{ budget.comments }}</textarea>
+                    <button type="button" class="btn btn-primary mt-3 mb-3" onclick=addBudgetComment()><i class="fas fa-edit mr-2"></i> Edit Treasurer Comments</button>
+                    <textarea name="budgetComments" rows="8" class="form-control" readonly>{{ budget.treasurer_comments }}</textarea>
                 </div>
 
                 <div class="jumbotron">
@@ -243,5 +317,33 @@
         </div>
     </form>
 </div>
+
+<form id="id_addComment" action="/dcac/admin/budget/{{ budget.budget_id }}" method="POST">
+    {% csrf_token %}
+
+    <input hidden name="target"></input>
+    <div class="modal fade" id="addCommentModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Comment</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Treasurer Comments:</p>
+                    <textarea class="form-control" name="comment" rows=5></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                    </button>
+                    <button type="submit" id="addItemButton" class="btn btn-primary">Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
 
 {% endblock %}

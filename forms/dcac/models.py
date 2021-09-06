@@ -9,7 +9,6 @@ from django.conf import settings
 from django.core import serializers
 
 import json
-from simplecrypt import encrypt, decrypt
 
 from .constants import *
 from fernet_fields import EncryptedCharField
