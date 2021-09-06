@@ -15,12 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from .views import get_home
+from . import views
 
-app_name = 'dcac'
+# app_name = 'dcac'
 urlpatterns = [
-    path('', get_home),
-    path('admin/', admin.site.urls),
+    path('', views.landing, name='landing'),
+    path('welcome/', views.landing, name='landing-welcome'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('backend/', admin.site.urls),
+    path('admin/', views.dashboard_admin, name='dashboard-admin'),
+
     path('dcac/', include('dcac.urls')),
     path('budget/', include('budget.urls')),
     path(r'', include('ucamwebauth.urls'))

@@ -31,7 +31,7 @@ from dcac.models import *
 def all_budgets(request):
     student = user_or_403(request, Student)
     budgets = Budget.objects.filter(Q(submitter=student.user_id) | Q(president_crsid=student.user_id) | Q(treasurer_crsid=student.user_id))
-    return render(request, 'dcac/all-budgets-student.html', {
+    return render(request, 'budget/all-budgets-student.html', {
         'student': student,
         'budgets': budgets,
         'allow_budget_submit': settings.ALLOW_BUDGET_SUBMIT
@@ -55,7 +55,7 @@ def view_budget(request, budget_id):
     items = budget.get_items_as_json()
 
     if budget.submitted or not settings.ALLOW_BUDGET_SUBMIT:
-        return render(request, 'dcac/view-budget-student.html', {
+        return render(request, 'budget/view-budget-student.html', {
             'student': student,
             'budget': budget,
             'existingItems': items
@@ -65,7 +65,7 @@ def view_budget(request, budget_id):
         budget_form = BudgetForm(instance=budget)
         item_form = BudgetItemForm()
         
-        return render(request, 'dcac/budget-form-student.html', {
+        return render(request, 'budget/budget-form-student.html', {
             'student': student,
             'form': budget_form,
             'item_form': item_form,
@@ -91,7 +91,7 @@ def budget_form(request, budget_form=None):
     current_year = settings.CURRENT_YEAR
     existing_budgets = Budget.budgets_from_year(current_year)
 
-    return render(request, 'dcac/budget-form-student.html', {
+    return render(request, 'budget/budget-form-student.html', {
         'student': student,
         'form': budget_form,
         'item_form': item_form,
@@ -194,7 +194,7 @@ def view_budget_admin(request, budget_id):
 
     items = budget.get_items_as_json()
 
-    return render(request, 'dcac/view-budget-admin.html', {
+    return render(request, 'budget/view-budget-admin.html', {
         'user': user,
         'budget': budget,
         'existingItems': items,
@@ -212,7 +212,7 @@ def all_budgets_admin(request, year=None):
     budgets = Budget.objects.filter(year=year).order_by('-year', 'organization') 
     organizations = Organization.objects.exclude(budget__year=year)
 
-    return render(request, 'dcac/all-budgets-admin.html', {
+    return render(request, 'budget/all-budgets-admin.html', {
         'user': user,
         'budgets': budgets,
         'year': year,

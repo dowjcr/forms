@@ -27,9 +27,9 @@
                                 </a>
                                 
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="/dcac/form/acg-standard">Standard Request</a>
-                                    <a class="dropdown-item" href="/dcac/form/acg-internal">Internal Transfer</a>
-                                    <a class="dropdown-item" href="/dcac/form/acg-large">Large Requests</a>
+                                    <a class="dropdown-item" href="{% url 'acg-form' 'standard' %}">Standard Request</a>
+                                    <a class="dropdown-item" href="{% url 'acg-form' 'standard' %}">Internal Transfer</a>
+                                    <a class="dropdown-item" href="{% url 'acg-form' 'standard' %}">Large Requests</a>
                                     <a class="dropdown-item" data-toggle="modal" data-target="#requestTypes" style="cursor: pointer;"><i class="fas fa-question-circle"></i> What's this?</a>
                                 </div>
 
@@ -69,19 +69,19 @@
 
         <div class="col-12 col-md-3">
             <div class="list-group">
-                <a href="/dcac/form/acg-standard" class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{% url 'acg-form' 'standard' %}" class="list-group-item d-flex justify-content-between align-items-center">
                     <span>New Request</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>
-                <a href="/dcac/requests" class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{% url 'all-requests' %}" class="list-group-item d-flex justify-content-between align-items-center">
                     <span>Previous Requests</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>
-                <a href="/dcac/form/budget" class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{% url 'budget-form' %}" class="list-group-item d-flex justify-content-between align-items-center">
                     <span>New Budget</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>
-                <a href="/dcac/budgets" class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{% url 'all-budgets' %}" class="list-group-item d-flex justify-content-between align-items-center">
                     <span>Previous Budgets</span>
                     <i class="fas fa-chevron-right"></i>
                 </a>

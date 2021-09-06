@@ -24,7 +24,7 @@
 
     <tbody>
     {% for request in requests %}
-    <tr class="clickable-row" data-href="/dcac/request/{{ request.form_id }}"
+    <tr class="clickable-row" data-href="{% url 'view-request' request.form_id %}"
         style="cursor: pointer;">
         <td class="d-none d-sm-table-cell">{{ request.date|date:"d/m/Y" }}</td>
         <td>{{ request.organization }}</td>
@@ -50,7 +50,7 @@
 
     <tbody>
         {% for request in requests %}
-        <tr class="clickable-row" data-href="/dcac/admin/request/{{ request.form_id }}"
+        <tr class="clickable-row" data-href="{% url 'view-request-admin' request.form_id %}"
             style="cursor: pointer;">
             <td class="d-none d-sm-table-cell">{{ request.form_id }}</td>
             <td class="d-none d-sm-table-cell">{{ request.date|date:"d/m/Y" }}</td>

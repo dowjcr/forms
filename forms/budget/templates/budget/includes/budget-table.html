@@ -26,7 +26,7 @@
 
     <tbody>
     {% for budget in budgets %}
-    <tr class="clickable-row" data-href="/dcac/budget/{{ budget.budget_id }}"
+    <tr class="clickable-row" data-href="{% url 'view-budget' budget.budget_id %}"
         style="cursor: pointer;">
         <td>{{ budget.organization }}</td>
         <td class="d-none d-md-table-cell">{{ budget.year|str_academic_year }}</td>
@@ -55,7 +55,7 @@
 
     <tbody>
     {% for budget in budgets %}
-    <tr class="clickable-row" data-href="/dcac/admin/budget/{{ budget.budget_id }}"
+    <tr class="clickable-row" data-href="{% url 'view-budget-admin' budget.budget_id %}"
         style="cursor: pointer;">
         <td>{{ budget.organization }}</td>
         <td class="d-none d-md-table-cell">{{ budget.year|str_academic_year }}</td>

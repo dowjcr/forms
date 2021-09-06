@@ -4,7 +4,6 @@ from django.db.models.query_utils import Q
 from django.shortcuts import redirect, render, get_object_or_404, render_to_response
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from datetime import datetime
 from simplecrypt import encrypt, decrypt
@@ -16,6 +15,7 @@ from budget.models import *
 from .forms import *
 from .email import *
 from .constants import *
+from forms.utils import *
 from django.conf import settings
 import logging
 
@@ -28,34 +28,6 @@ logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 
-# LANDING PAGE
-# Shown to user if they are not already authenticated
-# using Raven.
-
-def landing(request):
-    if not request.user.is_authenticated:
-        return render(request, 'dcac/landing.html')
-    else:
-        return redirect('dashboard')
-
-
-# DASHBOARD
-# Shows summary of requests and clubs for which this
-# user is an owner/administrator.
-
-@login_required(login_url='/accounts/login/')
-def dashboard(request):
-    student = user_or_403(request, Student)
-    print(settings.BASE_DIR, settings.STATICFILES_DIRS)
-
-    requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')[:3]
-
-    return render(request, 'dcac/dashboard-student.html', {
-        'requests': requests,
-        'student': student,
-        'allow_budget_submit': settings.ALLOW_BUDGET_SUBMIT,
-        'year': settings.CURRENT_YEAR,
-        })
 
 # --- ACG REQUEST VIEWS ---
 # ALL REQUESTS
@@ -167,36 +139,6 @@ def acg_form_submit(request):
 
 
 # --- ADMIN VIEWS ---
-# ADMIN DASHBOARD
-# Show dashboard with items for user to action.
-
-@login_required(login_url='/accounts/login/')
-def dashboard_admin(request):
-    user = user_or_403(request, AdminUser)
-
-    if user.role == AdminRoles.JCRTREASURER:
-        requests = ACGReimbursementForm.objects.filter(
-            rejected=False, jcr_treasurer_approved=False
-        ).order_by('form_id')
-    elif user.role == AdminRoles.SENIORTREASURER:
-        requests = ACGReimbursementForm.objects.filter(
-            rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False
-        ).order_by('form_id')
-    elif user.role == AdminRoles.BURSARY:
-        requests = ACGReimbursementForm.objects.filter(
-            jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False
-        ).order_by('form_id')
-    elif user.role == AdminRoles.ASSISTANTBURSAR:
-        requests = ACGReimbursementForm.objects.filter(
-            jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False
-        ).filter(reimbursement_type=RequestTypes.LARGE).order_by('form_id')
-    else:
-        requests = []
-    return render(request, 'dcac/dashboard-admin.html', {
-        'user': user,
-        'requests': requests
-        })
-
 
 # ADMIN VIEW REQUEST
 # For admin to view details of request.
@@ -293,10 +235,3 @@ def profile_admin(request):
     return render(request, 'dcac/profile-admin.html', {
         'user': user
         })
-
-
-def user_or_403(request, model):
-    try:
-        return model.objects.get(user_id=request.user.username)
-    except:
-        raise PermissionDenied

@@ -203,9 +203,9 @@
                             </p>
                                
                             <div class="btn-group d-flex justify-content-center">
-                                <a href="/dcac/form/acg-standard" class="btn btn-primary mt-2 {% if reimbursement_type == 1 %}disabled{% endif %}">Standard</a>
-                                <a href="/dcac/form/acg-internal" class="btn btn-primary mt-2 {% if reimbursement_type == 2 %}disabled{% endif %}">Internal</a>
-                                <a href="/dcac/form/acg-large" class="btn btn-primary mt-2 {% if reimbursement_type == 3 %}disabled{% endif %}">Large</a>
+                                <a href="{% url 'acg-form' 'standard'%}" class="btn btn-primary mt-2 {% if reimbursement_type == 1 %}disabled{% endif %}">Standard</a>
+                                <a href="{% url 'acg-form' 'internal'%}" class="btn btn-primary mt-2 {% if reimbursement_type == 2 %}disabled{% endif %}">Internal</a>
+                                <a href="{% url 'acg-form' 'large'%}" class="btn btn-primary mt-2 {% if reimbursement_type == 3 %}disabled{% endif %}">Large</a>
                                 <a class="btn btn-primary mt-2" data-toggle="modal" data-target="#requestTypes" style="cursor: pointer;color:white;"><i class="fas fa-question-circle"></i></a>
                             </div>
 
@@ -221,7 +221,7 @@
 </div>
 
 <div class="container mt-4">
-<form id="id_acgForm" action="/dcac/form/acg/submit" method="POST">
+<form id="id_acgForm" action="{% url 'acg-submit' %}" method="POST">
     <input type="hidden" value="[]" id="itemsJson" name="items">
     <input type="hidden" value="[]" id="receiptsJson" name="receipts">
     <input type="hidden" value="{{ reimbursement_type }}" id="reimbursementType" name="reimbursement_type">
