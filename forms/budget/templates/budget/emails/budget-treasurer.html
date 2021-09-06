@@ -1,0 +1,10 @@
+{% extends 'budget/emails/template.html' %}
+
+{% block content %}
+Hi,<br><br>
+
+A budget has been submitted for the society, {{budget.organization}}. <br><br>
+
+<a href="https://forms.downingjcr.co.uk/{% url 'view-budget-admin' budget_id={{ budget.budget_id }} %}">View Budget</a>
+
+{% endblock %}

@@ -1,4 +1,4 @@
-{% extends 'dcac/base-student.html' %}
+{% extends 'budget/base-student.html' %}
 
 {% load widget_tweaks %}
 {% load custom_filters %}
@@ -6,7 +6,7 @@
 {% block content %}
 
 <head>
-    <title>Budget Form | DCAC Reimbursement</title>
+    <title>Budget Form | DCAC Budget</title>
     <style>
         html {scroll-behavior: smooth;}
         .form-control {scroll-margin: 10em;}
@@ -133,7 +133,7 @@
         let organization = $('#{{ form.organization.id_for_label }}').find(':selected').val()
 
         if (existingBudgets[organization]) {
-            let link = "<a href='/dcac/budget/" + existingBudgets[organization] + "'>here<a>"
+            let link = "<a href='/budget/budget/" + existingBudgets[organization] + "'>here<a>"
             message = "<li>A budget has already been submitted for this organization. If you are the president, treasurer, or submitter, you can view the budget " + link + ". Otherwise, if you think that the budget has been submitted in error, please contact treasurer@jcr.dow.cam.ac.uk</li>"
 
             $('#errors').html(message);
@@ -153,7 +153,7 @@
         if (!validateOrganization()) {
             validated = false
             let organization = $('#{{ form.organization.id_for_label }}').find(':selected').val()
-            let link = "<a href='/dcac/budget/" + existingBudgets[organization] + "'>here<a>"
+            let link = "<a href='/budget/budget/" + existingBudgets[organization] + "'>here<a>"
             message += "<li>A budget has already been submitted for this organization. If you are the president, treasurer, or submitter, you can view the budget " + link + ". Otherwise, if you think that the budget has been submitted in error, please contact treasurer@jcr.dow.cam.ac.uk</li>"
         }
 
@@ -244,7 +244,7 @@
 </div>
 
 <div class="container mt-4">
-    <form id="id_budgetForm" action="/dcac/form/budget/submit" method="POST">
+    <form id="id_budgetForm" action="{% url 'budget-submit' %}" method="POST">
         <input type="hidden" value="[]" id="itemsJson" name="items">
         <input type="hidden" value="[]" id="deletedItems" name="deletedItems">
     

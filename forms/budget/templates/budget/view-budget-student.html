@@ -1,4 +1,4 @@
-{% extends 'dcac/base-student.html' %}
+{% extends 'budget/base-student.html' %}
 
 {% load custom_filters %}
 {% load widget_tweaks %}
@@ -85,7 +85,7 @@
 </div>
 
 <div class="container mt-4">
-    <form id="id_budgetForm" action="/dcac/form/budget/submit" method="POST">
+    <form id="id_budgetForm" action="{% url 'budegt-submit' %}" method="POST">
         <div class="row mb-5">
             <div class="col-lg-9 col-md-12 col-sm-12 col-xs-12">
                 <div class="jumbotron" id="organizationDiv">

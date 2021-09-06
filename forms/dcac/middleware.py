@@ -7,7 +7,7 @@ Author Cameron O'Connor
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from re import compile
-from .models import Student, AdminUser
+from forms.models import *
 
 
 # AUTH REQUIRED

@@ -1,4 +1,4 @@
-{% extends 'dcac/base-admin.html' %}
+{% extends 'budget/base-admin.html' %}
 
 {% load custom_filters %}
 {% load widget_tweaks %}
@@ -156,7 +156,7 @@
 </div>
 
 <div class="container mt-4">
-    <form id="id_budgetForm" action="/dcac/form/budget/submit" method="POST">
+    <form id="id_budgetForm" action="">
         {% if not budget.submitted %}
         
         <div class="row mb-4">
@@ -318,7 +318,7 @@
     </form>
 </div>
 
-<form id="id_addComment" action="/dcac/admin/budget/{{ budget.budget_id }}" method="POST">
+<form id="id_addComment" action="{% url 'view-budget-admin' {{ budget.budget_id }} %}" method="POST">
     {% csrf_token %}
 
     <input hidden name="target"></input>

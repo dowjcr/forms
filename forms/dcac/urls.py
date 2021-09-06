@@ -19,16 +19,9 @@ urlpatterns = [
     path('form/acg-<str:request_type>', views.acg_form, name='acg-form'),
     path('form/acg/submit', views.acg_form_submit, name='acg-submit'),
 
-    path('budgets', views.all_budgets, name='all_budgets'),
-    path('budget/<int:budget_id>', views.view_budget, name='view_budget'),
-    path('form/budget', views.budget_form, name='budget-form'),
-    path('form/budget/submit', views.budget_form_submit, name='budget-submit'),
 
     path('admin', views.dashboard_admin, name='dashboard-admin'),
     path('admin/requests', views.all_requests_admin, name='all-requests-admin'),
     path('admin/request/<int:form_id>', views.view_request_admin, name='view-request-admin'),
-    path('admin/budgets', views.all_budgets_admin, name='all-budgets-admin'),
-    path('admin/budgets/<int:year>', views.all_budgets_admin, name='all-budgets-admin-prev-year'),
-    path('admin/budget/<int:budget_id>', views.view_budget_admin, name='view-budget-admin'),
     path('admin/profile', views.profile_admin, name='profile-admin'),
 ]

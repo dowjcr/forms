@@ -1,4 +1,4 @@
-{% extends 'dcac/emails/template.html' %}
+{% extends 'budget/emails/template.html' %}
 
 {% block content %}
 Hi,<br><br>
@@ -6,6 +6,6 @@ Hi,<br><br>
 A budget has been submitted for your society, {{budget.organization}}. Please click the link below to view the budget.<br>
 The JCR Treasurer will contact all undergraduates once the budget has been finalised.<br><br>
 
-<a href="https://forms.downingjcr.co.uk/dcac/budget/{{ budget.budget_id }}">View Budget</a>
+<a href="https://forms.downingjcr.co.uk/{% url 'view-budget' budget_id={{ budget.budget_id }} %}">View Budget</a>
 
 {% endblock %}

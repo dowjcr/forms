@@ -6,12 +6,14 @@ Author Cameron O'Connor.
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from .models import AdminUser
+from .models import *
+from forms.models import *
 import logging
+from django.conf import settings
 
 from .constants import *
 
-FROM_EMAIL = "DCAC <no-reply@downingjcr.co.uk>"
+FROM_EMAIL = settings.FROM_EMAIL
 
 
 # NOTIFY BURSARY

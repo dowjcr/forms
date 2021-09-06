@@ -22,5 +22,6 @@ urlpatterns = [
     path('', get_home),
     path('admin/', admin.site.urls),
     path('dcac/', include('dcac.urls')),
+    path('budget/', include('budget.urls')),
     path(r'', include('ucamwebauth.urls'))
 ]
