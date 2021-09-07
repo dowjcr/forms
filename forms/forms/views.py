@@ -35,7 +35,6 @@ def landing(request):
 @login_required(login_url='/accounts/login/')
 def dashboard(request):
     student = user_or_403(request, Student)
-    print(settings.BASE_DIR, settings.STATICFILES_DIRS)
 
     requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')[:3]
 

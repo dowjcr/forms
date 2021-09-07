@@ -1,12 +1,14 @@
 {% load static %}
+{% load compress %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE-edge">
     <meta name="viewport" content="width = device-width, initial-scale = 1">
-    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
-    <link rel="stylesheet" href="{% static 'css/bs-stepper.css' %}">
+    {% compress css %}
+    <link rel="stylesheet" type="text/x-scss" href="{% static 'theme.scss' %}">
+    {% endcompress %}
     <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" type="text/css"
           media="all"/>
@@ -41,25 +43,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark">
-
-    <a class="navbar-brand d-none d-md-block" href="/dcac/admin">
-        <img src="https://www.jcr.dow.cam.ac.uk/storage/app/media/dcac_logo.png" width="80"
-             style="padding-right: 10px">
-    </a>
-    <a class="navbar-brand d-md-none" href="/dcac/admin">
-        <img src="https://www.jcr.dow.cam.ac.uk/storage/app/media/dcac_logo.png" width="70"
-             style="padding-right: 10px">
-    </a>
-
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-
-    {% include 'forms/includes/navbar.html' with view='admin' %}
-
-</nav>
+{% include 'forms/includes/navbar.html' with view='admin' %}
 
 {% block content %}
 {% endblock %}

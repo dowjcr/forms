@@ -1,4 +1,4 @@
-{% extends 'dcac/base-student.html' %}
+{% extends 'forms/base-student.html' %}
 
 {% load custom_filters %}
 
@@ -8,7 +8,7 @@
     <title>Dashboard | DCAC Reimbursement</title>
 </head>
 
-<div class="container-fluid d-none d-md-block" style="background: #A39161">
+<div class="container-fluid d-none d-md-block bg-primary">
 
     <div class="container">
 
@@ -20,7 +20,7 @@
                             <h3>Your Recent Requests</h3>
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
-                            <div class="dropdown show">
+                            <div class="dropdown">
                                 <a href="#" class="btn btn-primary dropdown-toggle float-right" type="button" id="dropdownMenuButton" data-toggle="dropdown">
                                     <i class="fas fa-plus mr-1"></i>
                                     New Request
@@ -59,7 +59,7 @@
         <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
             {% if allow_budget_submit %}
             <div class="alert alert-info mb-3">
-            <p class="mb-0">We are currently accepting budgets for the year {{year|str_academic_year}}! Please use <a href="/dcac/form/budget">this link</a>, or the link in the sidebar, to create a new budget. You can also view budgets for your societies <a href="/dcac/budgets">here</a>.</p>
+            <p class="mb-0">We are currently accepting budgets for the year {{year|str_academic_year}}! Please use <a href="{% url 'budget-form' %}">this link</a>, or the link in the sidebar, to create a new budget. You can also view budgets for your societies <a href="{% url 'all-budgets' %}">here</a>.</p>
             </div>
             {% endif %}
 

@@ -1,4 +1,4 @@
-from dcac.email import notify_budget_submit, notify_treasurer_budget
+from .email import notify_budget_submit, notify_treasurer_budget
 import json
 from django.db.models.query_utils import Q
 
@@ -19,7 +19,6 @@ import logging
 from forms.utils import user_or_403
 from .models import *
 from forms.models import *
-from dcac.models import *
 
 
 # Create your views here.

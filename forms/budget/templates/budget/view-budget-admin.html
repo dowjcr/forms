@@ -133,7 +133,7 @@
 </script>
 
 
-<div class="container-fluid d-block" style="background: #A39161">
+<div class="container-fluid d-block bg-primary">
     <div class="container">
         <div class="row">
             <div class="col-12">
@@ -318,7 +318,7 @@
     </form>
 </div>
 
-<form id="id_addComment" action="{% url 'view-budget-admin' {{ budget.budget_id }} %}" method="POST">
+<form id="id_addComment" action="{% url 'view-budget-admin' budget.budget_id %}" method="POST">
     {% csrf_token %}
 
     <input hidden name="target"></input>
