@@ -11,7 +11,6 @@ from .email import notify_budget_submit, notify_treasurer_budget
 
 class BudgetForm(forms.ModelForm):
     """"""
-    balance = forms.CharField(label='Rough Balance', required=False, widget=NumberInput(attrs={"min": "0", "step": "0.01", "placeholder": "0.00"}))
     items = forms.CharField(required=False, widget=HiddenInput())
     deleted_items = forms.CharField(initial="[]", required=False, widget=HiddenInput())
 
@@ -40,15 +39,11 @@ class BudgetForm(forms.ModelForm):
             'subscription_details': Textarea(attrs={'rows':1}),
             'sort_code': TextInput(attrs={'placeholder': '123456'}),
             'account_number': TextInput(attrs={'placeholder': '12345678'}),
+            'balance': NumberInput(attrs={"min": "0", "step": "0.01", "placeholder": "0.00"}),
 
             'president_crsid': TextInput(attrs={'pattern': '[a-zA-Z0-9]+'}),
             'treasurer_crsid': TextInput(attrs={'pattern': '[a-zA-Z0-9]+'})
         }
-
-    def send_email(self):
-        budget = self.instance
-        notify_budget_submit(budget)
-        notify_treasurer_budget(budget)
 
 
     def create_items_from_json(self, budget):
@@ -76,13 +71,16 @@ class BudgetForm(forms.ModelForm):
 
 
 class BudgetItemForm(forms.ModelForm):
-    """"""
-    amount = forms.CharField(widget=NumberInput(attrs={"min": "0", "step": "0.01", "value": "0.00"}))
-    description = forms.CharField(label='Description & Reasoning', widget=Textarea(attrs={'rows': 5}))
-
     class Meta:
         model = BudgetItem
         fields = [
             'title',
+            'amount',
+            'description',
             'budget_type',
         ]
+
+        widgets = {
+            'amount': NumberInput(attrs={"min": "0", "step": "0.01", "value": "0.00"}),
+            'description': Textarea(attrs={'rows': 5})
+        }

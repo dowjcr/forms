@@ -5,6 +5,7 @@ from .models import *
 from forms.models import *
 from .constants import *
 
+
 class ACGReimbursementFormReceiptEntryClass(forms.ModelForm):
     class Meta:
         model = ACGReimbursementFormReceiptEntry
@@ -31,7 +32,6 @@ class ACGReimbursementFormItemEntryClass(forms.ModelForm):
             'fund_source': RadioSelect,
         }
 
-        
 
 class ACGReimbursementFormClass(forms.ModelForm):
     class Meta:
@@ -56,9 +56,8 @@ class ACGReimbursementFormClass(forms.ModelForm):
         }
 
 
-
 class ACGStandardForm(ACGReimbursementFormClass):
-    """"""
+    """Form for standard requests."""
 
 
 class ACGInternalForm(ACGReimbursementFormClass):

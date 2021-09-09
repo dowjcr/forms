@@ -1,4 +1,3 @@
-from .email import notify_budget_submit, notify_treasurer_budget
 import json
 
 from django.shortcuts import redirect
@@ -12,7 +11,6 @@ from django.views.generic.edit import CreateView, UpdateView, ModelFormMixin
 
 from .models import *
 from .forms import *
-from .email import *
 from django.conf import settings
 import logging
 
@@ -24,7 +22,7 @@ from forms.views import FormsStudentMixin, FormsAdminMixin
 # --- STUDENT VIEWS ---
 
 class AllBudgetsView(ListView, FormsStudentMixin):
-    """"""
+    """View a list of all budgets for which the student submitted, or is the president/treasurer of the society"""
     template_name = 'budget/all-budgets-student.html'
     context_object_name = 'budgets'
 
@@ -39,7 +37,7 @@ class AllBudgetsView(ListView, FormsStudentMixin):
 
 
 class DetailBudgetView(DetailView, FormsStudentMixin):
-    """"""
+    """View the details of a submitted budget"""
     template_name = 'budget/view-budget-student.html'
     model = Budget
     pk_url_kwarg = 'budget_id'
@@ -64,8 +62,6 @@ class DetailBudgetView(DetailView, FormsStudentMixin):
 
         return context
 
-# BUDGET FORM
-# The following classes are for the submission of new/draft budgets
 
 class SubmitBudgetMixin(ModelFormMixin):
     """Mixin for handling budget viewing authorisation, and item handling from submitted budget"""
@@ -102,7 +98,7 @@ class SubmitBudgetMixin(ModelFormMixin):
         budget.update_totals()
 
         if self.kwargs['submitted']:
-            form.send_email()
+            budget.send_email()
             budget.submitted = True
         
         budget.save()
@@ -114,7 +110,7 @@ class SubmitBudgetMixin(ModelFormMixin):
 
 
 class UpdateBudgetView(UpdateView, SubmitBudgetMixin, FormsStudentMixin):
-    """"""
+    """View for updating a draft of an existing budget that has not been submitted yet"""
     template_name = 'budget/budget-form-student.html'
     model = Budget
     form_class = BudgetForm
@@ -135,7 +131,7 @@ class UpdateBudgetView(UpdateView, SubmitBudgetMixin, FormsStudentMixin):
 
 
 class CreateBudgetView(CreateView, SubmitBudgetMixin, FormsStudentMixin):
-    """"""
+    """View for creating a new budget"""
     template_name = 'budget/budget-form-student.html'
     form_class = BudgetForm
 
@@ -154,14 +150,14 @@ class CreateBudgetView(CreateView, SubmitBudgetMixin, FormsStudentMixin):
 # --- ADMIN VIEWS ---
 
 class DetailBudgetAdminView(DetailView, FormsAdminMixin):
-    """"""
+    """View a budget, and allow the treasurer to leave comments"""
     template_name = 'budget/view-budget-admin.html'
     model = Budget
     pk_url_kwarg = 'budget_id'
     context_object_name = 'budget'
 
     def post(self, request, *args, **kwargs):
-        """Handles comments made by Junior Treasurer"""
+        # handle comments made by Junior Treasurer
         comment = request.POST.get('comment')
         target = request.POST.get('target')
         budget = self.get_object()
@@ -187,7 +183,7 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
 
 
 class AllBudgetsAdminView(ListView, FormsAdminMixin):
-    """"""
+    """View a list of all budgets for a given year"""
     template_name = 'budget/all-budgets-admin.html'
     ordering = ['organization']
     context_object_name = 'budgets'

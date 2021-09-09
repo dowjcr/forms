@@ -1,25 +1,19 @@
-from django.shortcuts import redirect, render, get_object_or_404, render_to_response
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from datetime import datetime
 import json
-from simplecrypt import encrypt, decrypt
 
-from django.views.generic import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, UpdateView, ModelFormMixin
+from django.views.generic.edit import CreateView
 from forms.views import FormsStudentMixin, FormsAdminMixin
 
 from .models import *
 from forms.models import *
 
 from .forms import *
-from .email import *
 from .constants import *
-from forms.utils import *
 from django.conf import settings
 import logging
 
@@ -35,7 +29,7 @@ logger = logging.getLogger(__name__)
 # --- STUDENT VIEWS ---
 
 class AllRequestsView(ListView, FormsStudentMixin):
-    """Allow student to view all requests they have made."""
+    """Allow student to view all requests they have made"""
     template_name = 'dcac/all-requests-student.html'
     context_object_name = 'requests'
     
@@ -44,7 +38,7 @@ class AllRequestsView(ListView, FormsStudentMixin):
 
 
 class DetailRequestView(DetailView, FormsStudentMixin):
-    """For student to view details of previous request."""
+    """For student to view details of previous request"""
     template_name = 'dcac/view-request-student.html'
     context_object_name = 'request'
     pk_url_kwarg = 'form_id'
@@ -64,7 +58,7 @@ class DetailRequestView(DetailView, FormsStudentMixin):
     
 
 class AcgFormView(CreateView, FormsStudentMixin):
-    """Allows student to fill out ACG reimbursement form."""
+    """Allows student to fill out ACG reimbursement form"""
     template_name = 'dcac/acg-form-student.html'
     pk_url_kwarg = 'request_type'
     
@@ -123,7 +117,7 @@ class AcgFormView(CreateView, FormsStudentMixin):
 # --- ADMIN VIEWS ---
 
 class DetailRequestAdminView(DetailView, FormsAdminMixin):
-    """"""
+    """For admin to view details of request"""
     template_name = 'dcac/view-request-admin.html'
     model = ACGReimbursementForm
     pk_url_kwarg = 'form_id'
@@ -132,11 +126,13 @@ class DetailRequestAdminView(DetailView, FormsAdminMixin):
     def post(self, request, *args, **kwargs):
         code = request.POST.get('code')
         comments = request.POST.get('comments')
-        self.object.handle_admin_response(code, self.user, comments)
+        reimbursement = self.get_object()
 
-        return super().post(request, *args, **kwargs)
+        reimbursement.handle_admin_response(code, self.user, comments)
+        return HttpResponse(json.dumps({}))
     
     def get_context_data(self, **kwargs):
+        
         context = super().get_context_data(**kwargs)
         context['items'] = ACGReimbursementFormItemEntry.objects.filter(form=self.object)
         context['receipts'] = ACGReimbursementFormReceiptEntry.objects.filter(form=self.object)
@@ -144,7 +140,7 @@ class DetailRequestAdminView(DetailView, FormsAdminMixin):
 
 
 class AllRequestsAdminView(ListView, FormsAdminMixin):
-    """"""
+    """Shows all previous requests"""
     template_name = 'dcac/all-requests-admin.html'
     model = ACGReimbursementForm
     paginate_by = 50

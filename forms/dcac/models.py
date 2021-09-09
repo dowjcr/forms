@@ -10,7 +10,7 @@ from django.core import serializers
 from django.db.models import Sum, Q
 
 import json
-import datetime
+from datetime import datetime
 
 from forms.constants import *
 from .constants import *
@@ -19,10 +19,9 @@ from fernet_fields import EncryptedCharField
 from forms.models import Organization
 from .email import *
 
-# ACG REIMBURSEMENT FORM
-# Record of submitted form.
 
 class ACGReimbursementForm(models.Model):
+    """Record of submitted form."""
     form_id = models.AutoField(primary_key=True)
     submitter = models.CharField(max_length=10)
     organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
@@ -30,19 +29,18 @@ class ACGReimbursementForm(models.Model):
     amount = models.CharField(max_length=20)
     reimbursement_type = models.IntegerField(choices=RequestTypes.CHOICES, default=RequestTypes.STANDARD)
     rejected = models.BooleanField(default=False)
+
     name_on_account = models.CharField(max_length=100, null=True)
-    # account_number = models.BinaryField(max_length=1000, null=True)
-    # sort_code = models.BinaryField(max_length=1000, null=True)
     account_number = EncryptedCharField('Account Number', max_length=8, blank=True, null=True)
     sort_code = EncryptedCharField('Sort Code', max_length=6, blank=True, null=True)
 
     jcr_treasurer_approved = models.BooleanField(default=False)
-    jcr_treasurer_comments = models.CharField(max_length=500, blank=True)
+    jcr_treasurer_comments = models.TextField(blank=True)
     jcr_treasurer_name = models.CharField(max_length=100)
     jcr_treasurer_date = models.DateField(null=True)
 
     senior_treasurer_approved = models.BooleanField(default=False)
-    senior_treasurer_comments = models.CharField(max_length=500, blank=True)
+    senior_treasurer_comments = models.TextField(blank=True)
     senior_treasurer_name = models.CharField(max_length=100)
     senior_treasurer_date = models.DateField(null=True)
 
@@ -116,7 +114,7 @@ class ACGReimbursementForm(models.Model):
         self.senior_treasurer_name = str(user)
 
         if approved:
-            # notify bursar for all requests; only notify assistant b
+            # notify bursar for all requests; only notify assistant bursar for large requests
             if self.reimbursement_type == RequestTypes.LARGE:
                 notify_assistant_bursar(self)
                             
@@ -137,16 +135,12 @@ class ACGReimbursementForm(models.Model):
         return "Request " + str(self.form_id) + ", " + str(self.organization)
 
 
-
-# ACG REIMBURSEMENT FORM ITEM ENTRY
-# Item entry for reimbursement, included in
-# a submitted ACG form.
-
 class ACGReimbursementFormItemEntry(models.Model):
+    """Item entry for reimbursement, included in a submitted ACG form."""
     entry_id = models.AutoField(primary_key=True)
     form = models.ForeignKey(ACGReimbursementForm, on_delete=models.SET_DEFAULT, default=None)
     title = models.CharField(max_length=100)
-    description = models.CharField(max_length=500)
+    description = models.TextField()
     amount = models.CharField(max_length=20)
     fund_source = models.IntegerField(choices=FundSources.CHOICES, default=FundSources.ACG)
 
@@ -155,11 +149,8 @@ class ACGReimbursementFormItemEntry(models.Model):
         return "Form " + str(self.form.form_id) + ", " + str(self.title)
 
 
-# ACG REIMBURSEMENT FORM RECEIPT ENTRY
-# Receipt to support a submitted ACG form.
-
 class ACGReimbursementFormReceiptEntry(models.Model):
+    """Receipt to support a submitted ACG form."""
     entry_id = models.AutoField(primary_key=True)
     form = models.ForeignKey(ACGReimbursementForm, on_delete=models.SET_DEFAULT, default=None, null=True)
     file = models.FileField(null=True)
-

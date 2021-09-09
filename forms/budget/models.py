@@ -12,11 +12,12 @@ import json
 from django.db.models import Sum
 from django.db.models.query_utils import Q
 
+from forms.models import Organization
 from forms.constants import *
 from budget.constants import *
+from budget.email import notify_budget_submit, notify_treasurer_budget
 from fernet_fields import EncryptedCharField
 
-from forms.models import Organization
 
 def Q_student_budget(user_id):
     """Queryset to determine if a user can view/edit a budget
@@ -25,7 +26,7 @@ def Q_student_budget(user_id):
 
 
 class Budget(models.Model):
-    """"""
+    """A budget submitted for a given `organization` for a single `year`"""
     budget_id = models.AutoField(primary_key=True)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     submitted = models.BooleanField(default=False)
@@ -44,7 +45,7 @@ class Budget(models.Model):
     treasurer = models.CharField('Treasurer', max_length=100)
     treasurer_crsid = models.CharField('CRSid', max_length=10)
     active_members = models.PositiveIntegerField('Number of Active Members', default=0)
-    subscription_details = models.CharField('Details of subscriptions received from members (if any)', max_length=300, blank=True)
+    subscription_details = models.TextField('Details of subscriptions received from members (if any)', blank=True)
 
     has_bank_account = models.BooleanField(choices=((True, 'Yes'), (False, 'No')), default=False)
     account_number = EncryptedCharField('Account Number', max_length=8, blank=True, null=True)
@@ -90,6 +91,10 @@ class Budget(models.Model):
         self.amount_acg = budget_items.exclude(budget_type=BudgetType.EXCEPTIONAL).aggregate(Sum('amount'))['amount__sum'] or 0
         self.amount_dep = budget_items.filter(budget_type=BudgetType.EXCEPTIONAL).aggregate(Sum('amount'))['amount__sum'] or 0
         self.save()
+
+    def send_email(self):
+        notify_budget_submit(self)
+        notify_treasurer_budget(self)
         
     
 
@@ -98,12 +103,12 @@ class Budget(models.Model):
 # A single item on a budget
 
 class BudgetItem(models.Model):
-    """"""
+    """An item submitted for a single `Budget`"""
     entry_id = models.AutoField(primary_key=True)
     budget = models.ForeignKey(Budget, on_delete=models.SET_DEFAULT, default=None)
     
     title = models.CharField(max_length=100)
-    description = models.CharField(max_length=500)
+    description = models.TextField('Description & Reasoning')
     amount = models.CharField(max_length=20)
     budget_type = models.IntegerField(choices=BudgetType.CHOICES)
 

@@ -15,8 +15,6 @@ from forms.constants import *
 FROM_EMAIL = settings.FROM_EMAIL
 
 
-# --- BUDGET ---
-
 def notify_budget_submit(budget):
     subject = "Budget Submitted"
     recipient_list = [user + "@cam.ac.uk" for user in (budget.submitter, budget.president_crsid, budget.treasurer_crsid)]
