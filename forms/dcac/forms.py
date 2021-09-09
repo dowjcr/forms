@@ -3,46 +3,56 @@ from django.forms import widgets
 from django.forms.widgets import NumberInput, RadioSelect, Textarea, TextInput
 from .models import *
 from forms.models import *
-from budget.models import *
 from .constants import *
 
-class UploadReceiptForm(forms.ModelForm):
-    file = forms.FileField(required=False)
+class ACGReimbursementFormReceiptEntryClass(forms.ModelForm):
     class Meta:
         model = ACGReimbursementFormReceiptEntry
-        fields = []
+        fields = ['file']
 
 
 class ACGReimbursementFormItemEntryClass(forms.ModelForm):
-    title = forms.CharField()
-    amount = forms.CharField(widget=NumberInput(attrs={"min": "0", "step": "0.01", "value": "0.00"}))
-    description = forms.CharField(label='Description & Reasoning', widget=Textarea(attrs={'rows': 5}))
-
     class Meta:
         model = ACGReimbursementFormItemEntry
         fields = [
+            'title',
+            'amount',
+            'description',
             'fund_source',
         ]
 
+        labels = {
+            'description': 'Description & Reasoning',
+        }
+
         widgets = {
-            'fund_source': RadioSelect
+            'description': Textarea(attrs={'rows': 5}),
+            'amount': NumberInput(attrs={"min": "0", "step": "0.01", "value": "0.00"}),
+            'fund_source': RadioSelect,
         }
 
         
 
 class ACGReimbursementFormClass(forms.ModelForm):
-    raw_sort_code = forms.CharField(label='Sort Code', min_length=6, max_length=6, widget=TextInput(attrs={'placeholder': '123456'}))
-    raw_account_number = forms.CharField(label='Account Number', min_length=8, max_length=8, widget=TextInput(attrs={'placeholder': '12345678'}))
-    name_on_account = forms.CharField(label='Account Holder', max_length=100, widget=TextInput(attrs={'placeholder': 'Mr Joe Bloggs'}))
-        
     class Meta:
         model = ACGReimbursementForm
         fields = [
             'organization',
             'reimbursement_type',
+
+            'name_on_account',
+            'sort_code',
+            'account_number',
         ]
 
         labels = {
+            'name_on_account': 'Account Holder'
+        }
+
+        widgets = {
+            'name_on_account': TextInput(attrs={'placeholder': 'Mr Joe Bloggs'}),
+            'sort_code': TextInput(attrs={'placeholder': '123456'}),
+            'account_number': TextInput(attrs={'placeholder': '12345678'}),
         }
 
 
@@ -53,20 +63,14 @@ class ACGStandardForm(ACGReimbursementFormClass):
 
 class ACGInternalForm(ACGReimbursementFormClass):
     """Form for internal requests. Does not need bank information"""
-    raw_sort_code = None
-    raw_account_number = None
-
     class Meta(ACGReimbursementFormClass.Meta):
-        exclude = ['name_on_account']
+        exclude = ['name_on_account', 'sort_code', 'account_number']
 
 
 class ACGLargeForm(ACGReimbursementFormClass):
     """Form for large requests. Does not need bank information"""
-    raw_sort_code = None
-    raw_account_number = None
-
     class Meta(ACGReimbursementFormClass.Meta):
-        exclude = ['name_on_account']
+        exclude = ['name_on_account', 'sort_code', 'account_number']
 
 
 ACG_FORMS = {
@@ -74,53 +78,3 @@ ACG_FORMS = {
     'internal': (ACGInternalForm, RequestTypes.INTERNAL),
     'large':    (ACGLargeForm, RequestTypes.LARGE),
 }
-
-# BUDGET FORM
-
-class BudgetForm(forms.ModelForm):
-    """"""
-    balance = forms.CharField(label='Rough Balance', required=False, widget=NumberInput(attrs={"min": "0", "step": "0.01", "placeholder": "0.00"}))
-
-    class Meta:
-        model = Budget
-        fields = [
-            'organization',
-            'president',
-            'president_crsid',
-            'treasurer',
-            'treasurer_crsid',
-            'active_members',
-            'subscription_details',
-
-            'has_bank_account',
-            'sort_code',
-            'account_number',
-            'name_of_bank',
-            'balance',
-
-            'comments',
-        ]
-
-        widgets = {
-            'has_bank_account': RadioSelect,
-            'subscription_details': Textarea(attrs={'rows':1}),
-            'sort_code': TextInput(attrs={'placeholder': '123456'}),
-            'account_number': TextInput(attrs={'placeholder': '12345678'}),
-
-            'president_crsid': TextInput(attrs={'pattern': '[a-zA-Z0-9]+'}),
-            'treasurer_crsid': TextInput(attrs={'pattern': '[a-zA-Z0-9]+'})
-        }
-
-
-
-class BudgetItemForm(forms.ModelForm):
-    """"""
-    amount = forms.CharField(widget=NumberInput(attrs={"min": "0", "step": "0.01", "value": "0.00"}))
-    description = forms.CharField(label='Description & Reasoning', widget=Textarea(attrs={'rows': 5}))
-
-    class Meta:
-        model = BudgetItem
-        fields = [
-            'title',
-            'budget_type',
-        ]

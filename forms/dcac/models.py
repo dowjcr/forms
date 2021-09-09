@@ -7,13 +7,17 @@ Author Cameron O'Connor
 from django.db import models
 from django.conf import settings
 from django.core import serializers
+from django.db.models import Sum, Q
 
 import json
+import datetime
 
+from forms.constants import *
 from .constants import *
 from fernet_fields import EncryptedCharField
 
 from forms.models import Organization
+from .email import *
 
 # ACG REIMBURSEMENT FORM
 # Record of submitted form.
@@ -27,8 +31,10 @@ class ACGReimbursementForm(models.Model):
     reimbursement_type = models.IntegerField(choices=RequestTypes.CHOICES, default=RequestTypes.STANDARD)
     rejected = models.BooleanField(default=False)
     name_on_account = models.CharField(max_length=100, null=True)
-    account_number = models.BinaryField(max_length=1000, null=True)
-    sort_code = models.BinaryField(max_length=1000, null=True)
+    # account_number = models.BinaryField(max_length=1000, null=True)
+    # sort_code = models.BinaryField(max_length=1000, null=True)
+    account_number = EncryptedCharField('Account Number', max_length=8, blank=True, null=True)
+    sort_code = EncryptedCharField('Sort Code', max_length=6, blank=True, null=True)
 
     jcr_treasurer_approved = models.BooleanField(default=False)
     jcr_treasurer_comments = models.CharField(max_length=500, blank=True)
@@ -43,8 +49,93 @@ class ACGReimbursementForm(models.Model):
     bursary_paid = models.BooleanField(default=False)
     bursary_date = models.DateField(null=True)
 
+
+    # -- STATIC METHODS ---
+    @staticmethod
+    def admin_to_action(role):
+        """Returns a query set of all requests that require action from the given admin user"""
+        if role == AdminRoles.JCRTREASURER:
+            query = Q(rejected=False, jcr_treasurer_approved=False)
+        elif role == AdminRoles.SENIORTREASURER:
+            query = Q(rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False)
+        elif role == AdminRoles.BURSARY:
+            query = Q(jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False)
+        elif role == AdminRoles.ASSISTANTBURSAR:
+            query = Q(jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False) & Q(reimbursement_type=RequestTypes.LARGE)
+        else:
+            query = Q(form_id=-1) # empty query
+    
+        requests = ACGReimbursementForm.objects.filter(query).order_by('form_id')
+        return requests
+
+    # --- INSTANCE METHODS ---
+    def update_amount(self):
+        """Update the amount of the reimbursement based on the sum of all items"""
+        self.amount = ACGReimbursementFormItemEntry.objects.filter(form=self).aggregate(Sum('amount'))['amount__sum']
+        self.save()
+
+    # Admin response handling
+    
+    def handle_admin_response(self, code, user, comments):
+        """Calls function based on the response type `code`, and the role of the admin user"""
+        if code == ResponseCodes.APPROVED:
+            if user.role == AdminRoles.JCRTREASURER:
+                self.jcr_treasurer_response(user, comments, approved=True)
+            elif user.role == AdminRoles.SENIORTREASURER:
+                self.senior_treasurer_response(user, comments, approved=True)
+
+        elif code == ResponseCodes.REJECTED:
+            self.clear_bank_details()
+            if user.role == AdminRoles.JCRTREASURER:
+                self.jcr_treasurer_response(user, comments, approved=False)
+            elif user.role == AdminRoles.SENIORTREASURER:
+                self.senior_treasurer_response(user, comments, approved=False)
+
+        elif code == ResponseCodes.PAID:
+            self.clear_bank_details()
+            self.bursary_response()
+                    
+        self.save()
+
+
+    def jcr_treasurer_response(self, user, comments, approved):
+        self.jcr_treasurer_approved = approved
+        self.rejected = not approved
+        self.jcr_treasurer_comments = comments
+        self.jcr_treasurer_date = datetime.now()
+        self.jcr_treasurer_name = str(user)
+
+        if approved:
+            notify_senior_treasurer(self)
+
+    def senior_treasurer_response(self, user, comments, approved):
+        self.senior_treasurer_approved = approved
+        self.rejected = not approved
+        self.senior_treasurer_comments = comments
+        self.senior_treasurer_date = datetime.now()
+        self.senior_treasurer_name = str(user)
+
+        if approved:
+            # notify bursar for all requests; only notify assistant b
+            if self.reimbursement_type == RequestTypes.LARGE:
+                notify_assistant_bursar(self)
+                            
+            notify_bursary(self)
+
+    def bursary_response(self):
+        self.bursary_paid = True
+        self.bursary_date = datetime.now()
+
+        notify_paid(self)
+
+    def clear_bank_details(self):
+        self.sort_code = None
+        self.account_number = None
+        self.name_on_account = None
+
     def __str__(self):
         return "Request " + str(self.form_id) + ", " + str(self.organization)
+
 
 
 # ACG REIMBURSEMENT FORM ITEM ENTRY
@@ -70,5 +161,5 @@ class ACGReimbursementFormItemEntry(models.Model):
 class ACGReimbursementFormReceiptEntry(models.Model):
     entry_id = models.AutoField(primary_key=True)
     form = models.ForeignKey(ACGReimbursementForm, on_delete=models.SET_DEFAULT, default=None, null=True)
-    file = models.FileField()
+    file = models.FileField(null=True)
 

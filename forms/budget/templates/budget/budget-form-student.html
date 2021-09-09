@@ -123,7 +123,7 @@
         let pk = items[budgetType][index]['entry_id'];
         if (pk) {
             deletedItems.push(pk)
-            $('#deletedItems').val(JSON.stringify(deletedItems))
+            $('#{{ form.deleted_items.id_for_label }}').val(JSON.stringify(deletedItems))
             }
         items[budgetType].splice(index, 1);
         showItems();
@@ -199,7 +199,7 @@
         $('#totalAmountInSummaryAcg').html(totalAmountAcg.toFixed(2));
         $('#totalAmountInSummaryDep').html(totalAmountDep.toFixed(2));
         $('#totalAmountInSummary').html(total.toFixed(2));
-        $('#itemsJson').val(JSON.stringify(items));
+        $('#{{ form.items.id_for_label }}').val(JSON.stringify(items));
 
     }
 
@@ -209,9 +209,13 @@
         if (has_bank_account=="True") {
             $('#bankInfo').show();
             $('#bankInfo input').prop('disabled', false);
+            $('#id_bankbutton_0').addClass('active')
+            $('#id_bankbutton_1').removeClass('active')
         } else {
             $('#bankInfo').hide();
             $('#bankInfo input').prop('disabled', true);
+            $('#id_bankbutton_0').removeClass('active')
+            $('#id_bankbutton_1').addClass('active')
         }
     }
 
@@ -226,8 +230,8 @@
                     <div class="row" id="titleDiv">
                         <div class="col">
                             <h2 align="center" id="budgetTitle">DCAC Budget Form
-                            {% if existingOrganization %}
-                             - {{ existingOrganization}}
+                            {% if draft %}
+                             - {{ budget.organization }}
                             {% endif%}
                             </h2>
 
@@ -244,9 +248,9 @@
 </div>
 
 <div class="container mt-4">
-    <form id="id_budgetForm" action="{% url 'budget-submit' %}" method="POST">
-        <input type="hidden" value="[]" id="itemsJson" name="items">
-        <input type="hidden" value="[]" id="deletedItems" name="deletedItems">
+    <form id="id_budgetForm" action="{{ request.path }}" method="POST">
+        {{ form.items }}
+        {{ form.deleted_items }}
     
         {% csrf_token %}
 
@@ -384,7 +388,7 @@
                         
                         <div class="btn-group btn-group-toggle" data-toggle="buttons" id="id_has_bank_account">
                             {% for radio in form.has_bank_account %}
-                            <label class="btn btn-primary pb-0 {% if forloop.last %}active{% endif %}">
+                            <button id="id_bankbutton_{{forloop.counter0}}"class="btn btn-primary pb-0 {% if forloop.last %}active{% endif %}">
                               {{ radio }}
                               
                             </label>

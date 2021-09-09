@@ -1,16 +1,20 @@
-import json
-from django.db.models.query_utils import Q
-
 from django.shortcuts import redirect, render, get_object_or_404, render_to_response
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
+from django.urls import reverse
 from datetime import datetime
+import json
 from simplecrypt import encrypt, decrypt
+
+from django.views.generic import TemplateView
+from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView, UpdateView, ModelFormMixin
+from forms.views import FormsStudentMixin, FormsAdminMixin
 
 from .models import *
 from forms.models import *
-from budget.models import *
 
 from .forms import *
 from .email import *
@@ -28,210 +32,121 @@ logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 
+# --- STUDENT VIEWS ---
 
-# --- ACG REQUEST VIEWS ---
-# ALL REQUESTS
-# Allow student to view all requests they have made.
-
-@login_required(login_url='/accounts/login/')
-def all_requests(request):
-    student = user_or_403(request, Student)
-    requests = ACGReimbursementForm.objects.filter(submitter=student.user_id).order_by('-form_id')
-    return render(request, 'dcac/all-requests-student.html', {'student': student,
-                                                              'requests': requests})
+class AllRequestsView(ListView, FormsStudentMixin):
+    """Allow student to view all requests they have made."""
+    template_name = 'dcac/all-requests-student.html'
+    context_object_name = 'requests'
+    
+    def get_queryset(self):
+        return ACGReimbursementForm.objects.filter(submitter=self.student.user_id).order_by('-form_id')
 
 
-# VIEW REQUEST
-# For student to view details of previous request.
+class DetailRequestView(DetailView, FormsStudentMixin):
+    """For student to view details of previous request."""
+    template_name = 'dcac/view-request-student.html'
+    context_object_name = 'request'
+    pk_url_kwarg = 'form_id'
+    model = ACGReimbursementForm
 
-@login_required(login_url='/accounts/login/')
-def view_request(request, form_id):
-    student = user_or_403(request, Student)
-    acg_request = get_object_or_404(ACGReimbursementForm, pk=form_id)
-    # only the student that submitted the request should be able to view it
-    if student.user_id != acg_request.submitter:
-        raise PermissionDenied
-
-    items = ACGReimbursementFormItemEntry.objects.filter(form_id=acg_request)
-    return render(request, 'dcac/view-request-student.html', {
-        'student': student,
-        'request': acg_request,
-        'items': items
-        })
-
-
-# ACG FORM
-# Allows student to fill out ACG reimbursement form.
-
-@login_required(login_url='/accounts/login/')
-def acg_form(request, request_type='standard'):
-    student = user_or_403(request, Student)
-    if request.method == 'POST':
-        file_entry = ACGReimbursementFormReceiptEntry()
-        file_entry.file = request.FILES['receipt']
-        file_entry.save()
-        return HttpResponse(json.dumps({'receipt_id': file_entry.entry_id}), content_type="application/json")
-    else:
-        cls, reimbursement_type = ACG_FORMS[request_type]
-        reimbursement_form = cls()
-        item_form = ACGReimbursementFormItemEntryClass()
-        receipt_form = UploadReceiptForm()
+    def get_object(self):
+        obj = super().get_object()
+        if obj.submitter != self.student.user_id:
+            raise PermissionDenied
         
-        return render(request, 'dcac/acg-form-student.html', {
-            'student': student,
-            'form': reimbursement_form,
-            'item_form': item_form,
-            'receipt_form': receipt_form,
-            'reimbursement_type': reimbursement_type
-            })
+        return obj
 
-# ACG FORM SUBMIT
-# Allows submission of completed form.
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['items'] = ACGReimbursementFormItemEntry.objects.filter(form_id=self.object)
+        return context
+    
 
-@login_required(login_url='/accounts/login/')
-def acg_form_submit(request):
-    student = user_or_403(request, Student)
-    if request.method == 'POST':
-        reimbursement_type = int(request.POST.get('reimbursement_type'))
-        reimbursement_type_name = dict(RequestTypes.CHOICES)[reimbursement_type]
-        form_cls = ACG_FORMS[reimbursement_type_name.lower()][0]
-        form = form_cls(request.POST)
+class AcgFormView(CreateView, FormsStudentMixin):
+    """Allows student to fill out ACG reimbursement form."""
+    template_name = 'dcac/acg-form-student.html'
+    pk_url_kwarg = 'request_type'
+    
+    def post(self, request, *args, **kwargs):
+        if 'is_receipt' in request.POST:
+            receipt_form = ACGReimbursementFormReceiptEntryClass(request.POST, request.FILES)
+            file_entry = receipt_form.save()
+            return HttpResponse(json.dumps({'receipt_id': file_entry.entry_id}), content_type="application/json")
 
-        if form.is_valid():
-            reimbursement = form.save(commit=False)
+        else:
+            self.kwargs['items'] = json.loads(request.POST.get('items'))
+            self.kwargs['receipts'] = json.loads(request.POST.get('receipts'))
+            return super().post(request, *args, **kwargs)
 
-            items = json.loads(request.POST.get('items'))
-            receipts = json.loads(request.POST.get('receipts'))
+    def form_valid(self, form):
+        reimbursement = form.instance
+        reimbursement.submitter = self.student.user_id
+        reimbursement.date = datetime.now()
+        
+        reimbursement.save()
 
-            reimbursement.date = datetime.now()
-            if 'raw_sort_code' in form.cleaned_data:
-                reimbursement.sort_code = encrypt(ENCRYPTION_KEY, form.cleaned_data['raw_sort_code'])
-                reimbursement.account_number = encrypt(ENCRYPTION_KEY, form.cleaned_data['raw_account_number'])
-            reimbursement.submitter = student.user_id
+        for item in self.kwargs['items']:
+            entry = ACGReimbursementFormItemEntry.objects.create(form=reimbursement, **item)
+            entry.save()
 
-            total = 0
-            reimbursement.save()
+        for receipt in self.kwargs['receipts']:
+            entry = ACGReimbursementFormReceiptEntry.objects.get(entry_id=receipt)
+            entry.form = reimbursement
+            entry.save()
 
-            for item in items:
-                total += float(item['amount'])
-                entry = ACGReimbursementFormItemEntry()
-                entry.form = reimbursement
-                entry.title = item['title']
-                entry.description = item['description']
-                entry.amount = item['amount']
-                entry.fund_source = item['fund_source']
-                entry.save()
+        reimbursement.update_amount()
 
-            for receipt in receipts:
-                entry = ACGReimbursementFormReceiptEntry.objects.get(entry_id=receipt)
-                entry.form = reimbursement
-                entry.save()
+        notify_junior_treasurer(reimbursement)
 
-            reimbursement.amount = total
-            reimbursement.save()
+        return super().form_valid(form)
 
-            notify_junior_treasurer(reimbursement)
+    def get_form_class(self):
+        form_cls, reimbursement_type = ACG_FORMS[self.kwargs['request_type']]
+        self.kwargs['reimbursement_type'] = reimbursement_type
+        return form_cls
 
-            return redirect('view-request', reimbursement.form_id)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-    else:
-        return redirect('acg-form')
+        context['item_form'] = ACGReimbursementFormItemEntryClass()
+        context['receipt_form'] = ACGReimbursementFormReceiptEntryClass()
+        context['reimbursement_type'] = self.kwargs['reimbursement_type']
+
+        return context
+
+    def get_success_url(self):
+        kwargs = {'form_id': self.object.form_id}
+        return reverse('view-request', kwargs=kwargs)
 
 
 # --- ADMIN VIEWS ---
 
-# ADMIN VIEW REQUEST
-# For admin to view details of request.
+class DetailRequestAdminView(DetailView, FormsAdminMixin):
+    """"""
+    template_name = 'dcac/view-request-admin.html'
+    model = ACGReimbursementForm
+    pk_url_kwarg = 'form_id'
+    context_object_name = 'request'
 
-@login_required(login_url='/accounts/login/')
-def view_request_admin(request, form_id):
-    user = user_or_403(request, AdminUser)
-    acg_request = get_object_or_404(ACGReimbursementForm, pk=form_id)
-    if request.method == 'POST':
-        # Clicked 'approve'.
+    def post(self, request, *args, **kwargs):
+        code = request.POST.get('code')
         comments = request.POST.get('comments')
-        if request.POST.get('code') == ResponseCodes.APPROVED:
-            if user.role == AdminRoles.JCRTREASURER:
-                acg_request.jcr_treasurer_approved = True
-                acg_request.jcr_treasurer_comments = comments
-                acg_request.jcr_treasurer_date = datetime.now()
-                acg_request.jcr_treasurer_name = str(user)
-                notify_senior_treasurer(acg_request)
-            elif user.role == AdminRoles.SENIORTREASURER:
-                acg_request.senior_treasurer_approved = True
-                acg_request.senior_treasurer_comments = comments
-                acg_request.senior_treasurer_date = datetime.now()
-                acg_request.senior_treasurer_name = str(user)
+        self.object.handle_admin_response(code, self.user, comments)
 
-                # notify bursar for all requests; only notify assistant bursar for large requests
-                if acg_request.reimbursement_type == RequestTypes.LARGE:
-                    notify_assistant_bursar(acg_request)
-                
-                notify_bursary(acg_request)
-            acg_request.save()
-        # Clicked 'rejected'
-        elif request.POST.get('code') == ResponseCodes.REJECTED:
-            acg_request.rejected = True
-            acg_request.sort_code = None
-            acg_request.account_number = None
-            acg_request.name_on_account = None
-            if user.role == AdminRoles.JCRTREASURER:
-                acg_request.jcr_treasurer_approved = False
-                acg_request.jcr_treasurer_comments = comments
-                acg_request.jcr_treasurer_date = datetime.now()
-                acg_request.jcr_treasurer_name = str(user)
-            elif user.role == AdminRoles.SENIORTREASURER:
-                acg_request.senior_treasurer_approved = False
-                acg_request.senior_treasurer_comments = comments
-                acg_request.senior_treasurer_date = datetime.now()
-                acg_request.senior_treasurer_name = str(user)
-            acg_request.save()
-            notify_rejected(acg_request)
-        elif request.POST.get('code') == ResponseCodes.PAID:
-            acg_request.bursary_paid = True
-            acg_request.bursary_date = datetime.now()
-            acg_request.account_number = None
-            acg_request.sort_code = None
-            acg_request.name_on_account = None
-            acg_request.save()
-            notify_paid(acg_request)
-        return HttpResponse(json.dumps({'responseCode': 1}), content_type="application/json")
-
-    items = ACGReimbursementFormItemEntry.objects.filter(form=acg_request)
-    receipts = ACGReimbursementFormReceiptEntry.objects.filter(form=acg_request)
-
-    if user.role in (AdminRoles.BURSARY, AdminRoles.ASSISTANTBURSAR) and not acg_request.bursary_paid and acg_request.sort_code is not None:
-        acg_request.sort_code = str(decrypt(ENCRYPTION_KEY, acg_request.sort_code)).replace("b", '').replace("'", '')
-        acg_request.account_number = str(decrypt(ENCRYPTION_KEY, acg_request.account_number)).replace("b", '').replace("'", '')
-    return render(request, 'dcac/view-request-admin.html', {
-        'user': user,
-        'request': acg_request,
-        'items': items,
-        'receipts': receipts
-        })
+        return super().post(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['items'] = ACGReimbursementFormItemEntry.objects.filter(form=self.object)
+        context['receipts'] = ACGReimbursementFormReceiptEntry.objects.filter(form=self.object)
+        return context
 
 
-# ALL REQUESTS ADMIN
-# Shows all previous requests.
-
-@login_required(login_url='/accounts/login/')
-def all_requests_admin(request):
-    user = user_or_403(request, AdminUser)
-    requests = ACGReimbursementForm.objects.order_by('-form_id')
-    return render(request, 'dcac/all-requests-admin.html', {
-        'user': user,
-        'requests': requests
-        })
-
-
-
-
-# ADMIN PROFILE
-# Allows admin to view/change their role.
-
-@login_required(login_url='/accounts/login/')
-def profile_admin(request):
-    user = user_or_403(request, AdminUser)
-    return render(request, 'dcac/profile-admin.html', {
-        'user': user
-        })
+class AllRequestsAdminView(ListView, FormsAdminMixin):
+    """"""
+    template_name = 'dcac/all-requests-admin.html'
+    model = ACGReimbursementForm
+    paginate_by = 50
+    ordering = ['-form_id']
+    context_object_name = 'requests'

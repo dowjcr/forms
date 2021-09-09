@@ -1,4 +1,5 @@
 {% load static %}
+{% load compress %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,12 +7,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE-edge">
     <meta name="viewport" content="width = device-width, initial-scale = 1">
     <title>Error</title>
-    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+    {% compress css %}
+    <link rel="stylesheet" type="text/x-scss" href="{% block theme %}{% static 'theme.scss' %}{% endblock theme %}">
+    {% endcompress %}
+    <link href='http://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
     <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark justify-content-between mb-4">
+<nav class="navbar navbar-expand-lg navbar-dark justify-content-between mb-4 bg-primary">
 
     <a class="navbar-brand" href="{% url 'dashboard' %}">
         <img src="https://www.jcr.dow.cam.ac.uk/storage/app/media/dowjcrwhite.png" width="60"

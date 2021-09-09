@@ -1,20 +1,5 @@
 """Stores all constants used as numbers for readability"""
 
-class AdminRoles:
-    """ """
-    JCRTREASURER = 1
-    SENIORTREASURER = 2
-    BURSARY = 3
-    ASSISTANTBURSAR = 4
-
-    CHOICES = (
-        (JCRTREASURER, 'JCR Treasurer'),
-        (SENIORTREASURER, 'Senior Treasurer'),
-        (BURSARY, 'Bursary'),
-        (ASSISTANTBURSAR, 'Assistant Bursar')
-    )
-
-
 class RequestTypes:
     """ """
     STANDARD = 1
@@ -43,17 +28,4 @@ class FundSources:
     CHOICES = (
         (ACG, 'Annual Consumable Grant'),
         (DEPRECIATION, 'Depreciation Fund')
-    )
-
-
-class BudgetType:
-    """"""
-    GENERAL = 1
-    CUPPERS = 2
-    EXCEPTIONAL = 3
-
-    CHOICES = (
-        (GENERAL, 'General'),
-        (CUPPERS, 'Cuppers'),
-        (EXCEPTIONAL, 'Exceptional')
     )

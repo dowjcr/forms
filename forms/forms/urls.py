@@ -15,15 +15,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 from . import views
+from .views import *
 
 
 urlpatterns = [
-    path('', views.landing, name='landing'),
-    path('welcome/', views.landing, name='landing-welcome'),
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('', RedirectView.as_view(pattern_name='landing')),
+    path('welcome/', LandingView.as_view(), name='landing'),
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('backend/', admin.site.urls),
-    path('admin/', views.dashboard_admin, name='dashboard-admin'),
+    path('admin/', DashboardAdminView.as_view(), name='dashboard-admin'),
+    path('admin/profile/', ProfileAdminView.as_view(), name='profile-admin'),
 
     path('dcac/', include('dcac.urls')),
     path('budget/', include('budget.urls')),

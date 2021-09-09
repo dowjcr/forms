@@ -9,10 +9,20 @@ from django.core import serializers
 
 import json
 
+from django.db.models import Sum
+from django.db.models.query_utils import Q
+
 from forms.constants import *
+from budget.constants import *
 from fernet_fields import EncryptedCharField
 
 from forms.models import Organization
+
+def Q_student_budget(user_id):
+    """Queryset to determine if a user can view/edit a budget
+    i.e. is the submitter, president, or treasurer"""
+    return Q(submitter=user_id) | Q(president_crsid=user_id) | Q(treasurer_crsid=user_id)
+
 
 class Budget(models.Model):
     """"""
@@ -26,8 +36,8 @@ class Budget(models.Model):
 
     date = models.DateField(auto_now_add=True)
     submitter = models.CharField(max_length=10)
-    amount_acg = models.CharField(max_length=20)
-    amount_dep = models.CharField(max_length=20)
+    amount_acg = models.CharField(max_length=20, default='0')
+    amount_dep = models.CharField(max_length=20, default='0')
 
     president = models.CharField('President', max_length=100)
     president_crsid = models.CharField('CRSid', max_length=10)
@@ -47,6 +57,7 @@ class Budget(models.Model):
 
 
     # --- CLASS METHODS ---
+    @staticmethod
     def budgets_from_year(year):
         """Returns a dictionary of all of the existing budgets for a given year
         {`organization_id`: `budget_id`}"""
@@ -59,6 +70,9 @@ class Budget(models.Model):
 
 
     # --- INSTANCE METHODS ---
+    def student_can_edit(self, user_id):
+        return self.submitter==user_id or self.president_crsid==user_id or self.treasurer_crsid==user_id
+
     def get_items_as_json(self):
         """Returns all items for this budget as a json object"""
         items = {}
@@ -68,6 +82,14 @@ class Budget(models.Model):
             items[budget_type_str] = [{'entry_id': item['pk'], **item['fields']} for item in items_dict]
 
         return items
+
+    def update_totals(self):
+        """Update the totals for the budget based on the sum of all items
+        `or 0` ensures that the sum is a number even if no items of that type are in the budget"""
+        budget_items = BudgetItem.objects.filter(budget=self)
+        self.amount_acg = budget_items.exclude(budget_type=BudgetType.EXCEPTIONAL).aggregate(Sum('amount'))['amount__sum'] or 0
+        self.amount_dep = budget_items.filter(budget_type=BudgetType.EXCEPTIONAL).aggregate(Sum('amount'))['amount__sum'] or 0
+        self.save()
         
     
 

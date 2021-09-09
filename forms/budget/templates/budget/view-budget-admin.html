@@ -29,7 +29,7 @@
             postComment()
         });
 
-        $('textarea[name="budgetComments"]').val("{{ budget.treasurer_comments }}")
+        $('textarea[name="budgetComments"]').val("{{ budget.treasurer_comments|escapejs }}")
 
 
     });
@@ -45,7 +45,6 @@
 
     function postComment() {
         let form = $('#id_addComment')[0];
-        //console.log(form.serialize())
 
         data = {
             'csrfmiddlewaretoken': '{{ csrf_token }}',
@@ -60,11 +59,9 @@
             data: data,
 
             success: function (response) {
-                console.log(response)
                 if (response.target == 'budget') {
                     $('textarea[name="budgetComments"]').val(response.comment)
                 } else {
-                    console.log(response)
                     let item = getItemById(response.target)
                     item.treasurer_comments = response.comment
                 }
@@ -78,7 +75,8 @@
     
 
     function generateTableRowFromItem(item) {
-        return "<tr><td class='col-8'><p>" + item.title + "<br><span class='small'>" + item.description + "<br><mark>" + item.treasurer_comments + "</mark></span></p></td>"
+        let comments = item.treasurer_comments.replace(/(?:\r\n|\r|\n)/g, '<br>');
+        return "<tr><td class='col-8'><p>" + item.title + "<br><span class='small'>" + item.description + "<br><mark>" + comments + "</mark></span></p></td>"
             + "<td>£" + item.amount + "</td>"
             + "<td><button type='button' class=\'btn btn-primary btn-sm\' onclick=\'addItemComment(" + item.entry_id + ")\'><i class=\"fas fa-edit mr-1\"></i> Comment</button></td>";
     }

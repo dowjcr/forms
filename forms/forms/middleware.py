@@ -6,6 +6,7 @@ Author Cameron O'Connor
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from re import compile
 from forms.models import *
 
@@ -27,7 +28,7 @@ class AuthRequiredMiddleware(object):
         if not request.user.is_authenticated:
             path = request.path_info.lstrip('/')
             if not any(m.match(path) for m in EXEMPT_URLS):
-                return HttpResponseRedirect('/dcac/welcome')
+                return redirect('landing')
             else:
                 return response
         # Check that user is registered as a student, excluding admin pages.

@@ -1,183 +1,170 @@
 from .email import notify_budget_submit, notify_treasurer_budget
 import json
-from django.db.models.query_utils import Q
 
-from django.shortcuts import redirect, render, get_object_or_404, render_to_response
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 from django.http import HttpResponse
-from django.core import serializers
 from django.core.exceptions import PermissionDenied
-from datetime import datetime
-from simplecrypt import encrypt, decrypt
+from django.urls import reverse
+
+from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView, UpdateView, ModelFormMixin
+
 from .models import *
 from .forms import *
 from .email import *
-# from .constants import *
 from django.conf import settings
 import logging
 
-from forms.utils import user_or_403
 from .models import *
 from forms.models import *
+from forms.views import FormsStudentMixin, FormsAdminMixin
 
 
-# Create your views here.
+# --- STUDENT VIEWS ---
 
-# --- BUDGET VIEWS ---
-# ALL BUDGETS
+class AllBudgetsView(ListView, FormsStudentMixin):
+    """"""
+    template_name = 'budget/all-budgets-student.html'
+    context_object_name = 'budgets'
 
-@login_required(login_url='/accounts/login/')
-def all_budgets(request):
-    student = user_or_403(request, Student)
-    budgets = Budget.objects.filter(Q(submitter=student.user_id) | Q(president_crsid=student.user_id) | Q(treasurer_crsid=student.user_id))
-    return render(request, 'budget/all-budgets-student.html', {
-        'student': student,
-        'budgets': budgets,
-        'allow_budget_submit': settings.ALLOW_BUDGET_SUBMIT
-    })
+    def get_queryset(self):
+        return Budget.objects.filter(Q_student_budget(self.student.user_id)).order_by('-year', 'organization')
 
-
-# VIEW BUDGET
-# If the budget has not been submitted, render the form with the existing information
-# Otherwise display the budget
-
-@login_required(login_url='/accounts/login/')
-def view_budget(request, budget_id):
-    student = user_or_403(request, Student)
-    budget = get_object_or_404(Budget, pk=budget_id)
-
-    # a draft has been created, and can be viewed by
-    # the submitter, the treasurer, and the president
-    if student.user_id not in (budget.submitter, budget.president_crsid, budget.treasurer_crsid):
-        raise PermissionDenied
-
-    items = budget.get_items_as_json()
-
-    if budget.submitted or not settings.ALLOW_BUDGET_SUBMIT:
-        return render(request, 'budget/view-budget-student.html', {
-            'student': student,
-            'budget': budget,
-            'existingItems': items
-            })
-
-    else:
-        budget_form = BudgetForm(instance=budget)
-        item_form = BudgetItemForm()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['allow_budget_submit'] = settings.ALLOW_BUDGET_SUBMIT,
         
-        return render(request, 'budget/budget-form-student.html', {
-            'student': student,
-            'form': budget_form,
-            'item_form': item_form,
-            'existingItems': items,
-            'existingOrganization': budget.organization,
-            'draft': True
-            })
+        return context
 
+
+class DetailBudgetView(DetailView, FormsStudentMixin):
+    """"""
+    template_name = 'budget/view-budget-student.html'
+    model = Budget
+    pk_url_kwarg = 'budget_id'
+
+    def get(self, request, *args, **kwargs):
+        budget = super().get_object()
+
+        if self.student.user_id not in (budget.submitter, budget.president_crsid, budget.treasurer_crsid):
+            raise PermissionDenied
+
+        # enable editing - if the budget is still a draft, redirect to the update form view
+        if not budget.submitted and settings.ALLOW_BUDGET_SUBMIT:
+            return redirect('edit-budget', budget_id=kwargs['budget_id'])
+
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        items = self.object.get_items_as_json()
+        context['existingItems'] = items
+
+        return context
 
 # BUDGET FORM
+# The following classes are for the submission of new/draft budgets
 
-@login_required(login_url='/accounts/login/')
-def budget_form(request, budget_form=None):
-    if not settings.ALLOW_BUDGET_SUBMIT:
-        return redirect('all-budgets')
-    student = user_or_403(request, Student)
+class SubmitBudgetMixin(ModelFormMixin):
+    """Mixin for handling budget viewing authorisation, and item handling from submitted budget"""
+
+    def dispatch(self, request, *args, **kwargs):
+        """Only allow edit while budgets submissions are enabled"""
+        if not settings.ALLOW_BUDGET_SUBMIT:
+            return redirect('view-budget')
+        
+        return super().dispatch(request, *args, **kwargs)
     
-    if budget_form is None:
-        budget_form = BudgetForm()
+    def post(self, request, *args, **kwargs):
+        self.kwargs['submitted'] = 'finish_button' in request.POST
+        return super().post(request, *args, **kwargs)
+
+    def get_object(self):
+        """Only allow students with permission to edit"""
+        budget = super().get_object()
+        
+        if not budget.student_can_edit(self.student.user_id):
+            raise PermissionDenied
+
+        return budget
+
+    def form_valid(self, form):
+        """After validation, save items to budget"""
+        budget = form.instance
+        budget.year = settings.CURRENT_YEAR
+        budget.submitter = self.student.user_id
+        budget.save()
+
+        form.create_items_from_json(budget)
+        form.remove_items_from_json()
+        budget.update_totals()
+
+        if self.kwargs['submitted']:
+            form.send_email()
+            budget.submitted = True
+        
+        budget.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        kwargs = {'budget_id': self.object.budget_id}
+        return reverse('view-budget', kwargs=kwargs)
+
+
+class UpdateBudgetView(UpdateView, SubmitBudgetMixin, FormsStudentMixin):
+    """"""
+    template_name = 'budget/budget-form-student.html'
+    model = Budget
+    form_class = BudgetForm
     
-    item_form = BudgetItemForm()
-    
-    current_year = settings.CURRENT_YEAR
-    existing_budgets = Budget.budgets_from_year(current_year)
+    pk_url_kwarg = 'budget_id'
+    context_object_name = 'budget'
 
-    return render(request, 'budget/budget-form-student.html', {
-        'student': student,
-        'form': budget_form,
-        'item_form': item_form,
-        'existingBudgets': existing_budgets
-        })
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        items = self.object.get_items_as_json()
+        item_form = BudgetItemForm()
 
+        context['item_form'] = item_form
+        context['existingItems'] = items
+        context['draft'] = True
 
-# BUDGET FORM SUBMIT
-# Allows submission of completed form.
-
-@login_required(login_url='/accounts/login/')
-def budget_form_submit(request):
-    student = user_or_403(request, Student)
-    if request.method == 'POST':
-        form = BudgetForm(request.POST)
-        submitted = 'finish_button' in request.POST
-        if form.is_valid():
-            current_year = settings.CURRENT_YEAR
-            # find if form already exists
-            budget, created = Budget.objects.update_or_create(
-                organization=form.cleaned_data['organization'], year=current_year,
-                defaults=form.cleaned_data
-            )
-
-            if created:
-                budget.submitter = student.user_id
-
-            budget.submitted = submitted
-            items = json.loads(request.POST.get('items'))
-            total_acg = 0
-            total_dep = 0
-
-            budget.save()
-
-            for items_of_type in items.values():
-                for item in items_of_type:
-                    # do not add items that have already been added
-                    #TODO: use get_or_create
-                    try:
-                        if 'entry_id' not in item:
-                            raise BudgetItem.DoesNotExist
-                        budget_item = BudgetItem.objects.get(pk=item['entry_id'])
-                    except BudgetItem.DoesNotExist:
-                        budget_item = BudgetItem(**item)
-                        budget_item.budget = budget
+        return context
 
 
-                    if item['budget_type'] == BudgetType.EXCEPTIONAL:
-                        total_dep += float(item['amount'])
-                    else:
-                        total_acg += float(item['amount'])
+class CreateBudgetView(CreateView, SubmitBudgetMixin, FormsStudentMixin):
+    """"""
+    template_name = 'budget/budget-form-student.html'
+    form_class = BudgetForm
 
-                    budget_item.save()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-            budget.amount_acg = total_acg
-            budget.amount_dep = total_dep
+        item_form = BudgetItemForm()
+        existing_budgets = Budget.budgets_from_year(settings.CURRENT_YEAR)
 
-            budget.save()
-            notify_budget_submit(budget)
-            notify_treasurer_budget(budget)
-
-            # For any items that were deleted, remove them from the database
-            deleted_items = json.loads(request.POST.get('deletedItems'))
-            for entry_id in deleted_items:
-                BudgetItem.objects.filter(pk=entry_id).delete()
-
-            return redirect('view-budget', budget.budget_id)
-
-        else:
-            return budget_form(request, budget_form=form)
-
-    else:
-        return redirect('budget-form')
+        context['item_form'] = item_form
+        context['existingBudgets'] = existing_budgets
+        
+        return context
 
 
-# ADMIN VIEW BUDGET
-# For admin to view the details of a budget
+# --- ADMIN VIEWS ---
 
-@login_required(login_url='/accounts/login/')
-def view_budget_admin(request, budget_id):
-    user = user_or_403(request, AdminUser)
-    budget = get_object_or_404(Budget, pk=budget_id)
-    
-    # a comment has been added
-    if request.method == 'POST':
+class DetailBudgetAdminView(DetailView, FormsAdminMixin):
+    """"""
+    template_name = 'budget/view-budget-admin.html'
+    model = Budget
+    pk_url_kwarg = 'budget_id'
+    context_object_name = 'budget'
+
+    def post(self, request, *args, **kwargs):
+        """Handles comments made by Junior Treasurer"""
         comment = request.POST.get('comment')
         target = request.POST.get('target')
+        budget = self.get_object()
 
         if target == 'budget':
             budget.treasurer_comments = comment
@@ -189,32 +176,38 @@ def view_budget_admin(request, budget_id):
             item.save()
 
         return HttpResponse(json.dumps({'target': target,'comment': comment}), content_type='application/json')
-        
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-    items = budget.get_items_as_json()
+        items = self.object.get_items_as_json()
+        context['existingItems'] = items
 
-    return render(request, 'budget/view-budget-admin.html', {
-        'user': user,
-        'budget': budget,
-        'existingItems': items,
-    })
+        return context
 
-# ALL BUDGETS ADMIN
-# Shows all previous budgets
 
-@login_required(login_url='/accounts/login/')
-def all_budgets_admin(request, year=None):
-    user = user_or_403(request, AdminUser)
-    if year is None: 
-        year = settings.CURRENT_YEAR
+class AllBudgetsAdminView(ListView, FormsAdminMixin):
+    """"""
+    template_name = 'budget/all-budgets-admin.html'
+    ordering = ['organization']
+    context_object_name = 'budgets'
 
-    budgets = Budget.objects.filter(year=year).order_by('-year', 'organization') 
-    organizations = Organization.objects.exclude(budget__year=year)
+    page_kwarg = 'year'
 
-    return render(request, 'budget/all-budgets-admin.html', {
-        'user': user,
-        'budgets': budgets,
-        'year': year,
-        'remaining_organizations': organizations,
-        'allow_budget_submit': settings.ALLOW_BUDGET_SUBMIT
-    })
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        self.kwargs.setdefault('year', settings.CURRENT_YEAR)
+        return Budget.objects.filter(year=self.kwargs['year'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        organizations = Organization.objects.exclude(budget__year=self.kwargs['year'])
+
+        context['year'] = self.kwargs['year']
+        context['remaining_organizations'] = organizations
+        context['allow_budget_submit'] = settings.ALLOW_BUDGET_SUBMIT
+
+        return context
