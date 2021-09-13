@@ -277,21 +277,24 @@
                     </button>
                 </div>
                 
-                {% if reimbursement_type != 3 %}
                 <div class="jumbotron">
-                    <h4><i class="fas fa-receipt mr-2"></i> Receipts</h4>
-                    <p class="mt-3">Please ensure you attach receipts to cover all items you've
-                        added above.</p>
+                    <h4><i class="fas fa-receipt mr-2"></i> {% if reimbursement_type == 3 %}Invoices{% else %}Receipts{% endif %}</h4>
+                    <p class="mt-3">
+                    {% if reimbursement_type == 3 %}
+                    Please ensure you attach invoices to cover all items you've added above.
+                    {% else %}
+                    Please ensure you attach receipts to cover all items you've added above.
+                    {% endif %}
+                    </p>
 
                     <table class="table table-light" id="receipts">
                     </table>
 
                     <button type="button" class="btn btn-primary mt-2" data-toggle="modal"
                             data-target="#addReceiptModal">
-                        <i class="fas fa-plus mr-1"></i> Add Receipt
+                        <i class="fas fa-plus mr-1"></i> Add {% if reimbursement_type == 3 %}Invoice{% else %}Receipt{% endif %}
                     </button>
                 </div>
-                {% endif %}
                 
                 {% if form.name_on_account %}
                 <div class="jumbotron">

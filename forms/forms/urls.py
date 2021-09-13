@@ -16,8 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
-from . import views
 from .views import *
+
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -31,4 +33,4 @@ urlpatterns = [
     path('dcac/', include('dcac.urls')),
     path('budget/', include('budget.urls')),
     path(r'', include('ucamwebauth.urls'))
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
