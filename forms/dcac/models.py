@@ -44,8 +44,12 @@ class ACGReimbursementForm(models.Model):
     senior_treasurer_name = models.CharField(max_length=100)
     senior_treasurer_date = models.DateField(null=True)
 
+    assistant_bursar_approved = models.BooleanField(default=False)
+    assistant_bursar_comments = models.TextField(blank=True)
+    assistant_bursar_name = models.CharField(max_length=100, null=True)
+    assistant_bursar_date = models.DateField(null=True)
+
     bursary_paid = models.BooleanField(default=False)
-    bursary_name = models.CharField(max_length=100, null=True)
     bursary_date = models.DateField(null=True)
 
 
@@ -58,9 +62,11 @@ class ACGReimbursementForm(models.Model):
         elif role == AdminRoles.SENIORTREASURER:
             query = Q(rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=False)
         elif role == AdminRoles.BURSARY:
-            query = Q(jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False)
+            query = Q(jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False) & \
+                (~Q(reimbursement_type=RequestTypes.LARGE) | Q(assistant_bursar_approved=True))
         elif role == AdminRoles.ASSISTANTBURSAR:
-            query = Q(jcr_treasurer_approved=True, senior_treasurer_approved=True, bursary_paid=False) & Q(reimbursement_type=RequestTypes.LARGE)
+            query = Q(rejected=False, jcr_treasurer_approved=True, senior_treasurer_approved=True, assistant_bursar_approved=False) & \
+                Q(reimbursement_type=RequestTypes.LARGE)
         else:
             query = Q(form_id=-1) # empty query
     
@@ -82,17 +88,22 @@ class ACGReimbursementForm(models.Model):
                 self.jcr_treasurer_response(user, comments, approved=True)
             elif user.role == AdminRoles.SENIORTREASURER:
                 self.senior_treasurer_response(user, comments, approved=True)
+            elif user.role == AdminRoles.ASSISTANTBURSAR:
+                self.assistant_bursar_response(user, comments, approved=True)
 
         elif code == ResponseCodes.REJECTED:
             self.clear_bank_details()
+            notify_rejected(self)
             if user.role == AdminRoles.JCRTREASURER:
                 self.jcr_treasurer_response(user, comments, approved=False)
             elif user.role == AdminRoles.SENIORTREASURER:
                 self.senior_treasurer_response(user, comments, approved=False)
+            elif user.role == AdminRoles.ASSISTANTBURSAR:
+                self.assistant_bursar_response(user, comments, approved=False)
 
         elif code == ResponseCodes.PAID:
             self.clear_bank_details()
-            self.bursary_response(user)
+            self.bursary_response()
                     
         self.save()
 
@@ -115,15 +126,24 @@ class ACGReimbursementForm(models.Model):
         self.senior_treasurer_name = str(user)
 
         if approved:
-            # notify bursar for all requests; only notify assistant bursar for large requests
+            # only notify assistant bursar for large requests; otherwise notify bursary
             if self.reimbursement_type == RequestTypes.LARGE:
                 notify_assistant_bursar(self)
-                            
+            else:         
+                notify_bursary(self)
+
+    def assistant_bursar_response(self, user, comments, approved):
+        self.assistant_bursar_approved = approved
+        self.rejected = not approved
+        self.assistant_bursar_comments = comments
+        self.assistant_bursar_date = datetime.now()
+        self.assistant_bursar_name = str(user)
+
+        if approved:
             notify_bursary(self)
 
-    def bursary_response(self, user):
+    def bursary_response(self):
         self.bursary_paid = True
-        self.bursary_name = str(user)
         self.bursary_date = datetime.now()
 
         notify_paid(self)

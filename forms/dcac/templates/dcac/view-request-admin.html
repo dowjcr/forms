@@ -1,6 +1,7 @@
 {% extends 'dcac/base-admin.html' %}
 
 {% load custom_filters %}
+{% load dcac_filters %}
 
 {% block content %}
 
@@ -85,44 +86,16 @@
 </div>
 
 <div class="container mt-4 mb-4">
-    {% if user.role == 1 and not request.rejected and not request.jcr_treasurer_approved %}
-    <div class="row mb-3">
-        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <div class="alert" role="alert" id="alert2" align="center">
-                This request is awaiting your approval!<br class="">
-                <button class="btn btn-success mt-2 mr-2" id="approve1" data-toggle="modal"
-                        data-target="#approveModal"><i class="fas fa-check mr-1"></i> Approve
-                </button>
-                <button class="btn btn-danger mt-2" id="reject1" data-toggle="modal"
-                        data-target="#rejectModal"><i class="fas fa-times mr-1"></i> Reject
-                </button>
-            </div>
-        </div>
-    </div>
+    {% if user|view_admin_action:request %}
 
-    {% elif user.role == 2 and not request.rejected and request.jcr_treasurer_approved and not request.senior_treasurer_approved %}
-    <div class="row mb-3">
-        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <div class="alert" role="alert" id="alert3" align="center">
-                This request is awaiting your approval!<br class="">
-                <button class="btn btn-success mt-2 mr-2" id="approve2" data-toggle="modal"
-                        data-target="#approveModal"><i class="fas fa-check mr-1"></i> Approve
-                </button>
-                <button class="btn btn-danger mt-2" id="reject2" data-toggle="modal"
-                        data-target="#rejectModal"><i class="fas fa-times mr-1"></i> Reject
-                </button>
-            </div>
-        </div>
-    </div>
+    {% if user.role == 3 %} 
 
-    {% elif user.role == 3 or user.role == 4 %}
-    {% if request.jcr_treasurer_approved and request.senior_treasurer_approved %}
     <div class="row mb-3">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <div class="alert alert-success">
             {% if request.bursary_paid %}
                 <p><b>Transferred</b><br>
-                This request was processed by {{ request.bursary_name }}.
+                This request was processed by the bursary.
                 </p>
             {% else %}
                 <p><b>Awaiting Payment</b><br>
@@ -145,6 +118,22 @@
                     {% endif %}
                 </button>
             {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+
+    <div class="row mb-3">
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="alert" role="alert" align="center">
+                This request is awaiting your approval!<br>
+                <button class="btn btn-success mt-2 mr-2" data-toggle="modal"
+                        data-target="#approveModal"><i class="fas fa-check mr-1"></i> Approve
+                </button>
+                <button class="btn btn-danger mt-2" data-toggle="modal"
+                        data-target="#rejectModal"><i class="fas fa-times mr-1"></i> Reject
+                </button>
             </div>
         </div>
     </div>
@@ -202,11 +191,34 @@
             </div>
             {% endif %}
 
+            {% if request.rejected and request.senior_treasurer_approved or request.assistant_bursar_approved %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    Assistant Bursar
+                    {% if request.assistant_bursar_approved %}
+                    <span class="badge badge-success ml-2">Approved</span>
+                    {% else %}
+                    <span class="badge badge-danger ml-2">Rejected</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        {% if request.assistant_bursar_comments %}
+                        {{ request.assistant_bursar_comments }}
+                        {% else %}
+                        No comments given.
+                        {% endif %}<br>
+                        <small><i>{{ request.assistant_bursar_name }}, {{ request.assistant_bursar_date|date:"d/m/Y" }}</i></small>
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
             {% if request.bursary_paid %}
             <div class="card mt-4">
                 <div class="card-header">
                     Bursary
-                    <span class="badge badge-success ml-2">Approved</span>
+                    <span class="badge badge-success ml-2">Paid</span>
                 </div>
                 <div class="card-body">
                     <p class="card-text">Paid by bank transfer.<br>
