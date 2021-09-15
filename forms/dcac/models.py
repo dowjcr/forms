@@ -45,6 +45,7 @@ class ACGReimbursementForm(models.Model):
     senior_treasurer_date = models.DateField(null=True)
 
     bursary_paid = models.BooleanField(default=False)
+    bursary_name = models.CharField(max_length=100, null=True)
     bursary_date = models.DateField(null=True)
 
 
@@ -91,7 +92,7 @@ class ACGReimbursementForm(models.Model):
 
         elif code == ResponseCodes.PAID:
             self.clear_bank_details()
-            self.bursary_response()
+            self.bursary_response(user)
                     
         self.save()
 
@@ -120,8 +121,9 @@ class ACGReimbursementForm(models.Model):
                             
             notify_bursary(self)
 
-    def bursary_response(self):
+    def bursary_response(self, user):
         self.bursary_paid = True
+        self.bursary_name = str(user)
         self.bursary_date = datetime.now()
 
         notify_paid(self)
