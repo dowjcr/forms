@@ -9,7 +9,6 @@ from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, ModelFormMixin
 
-from .models import *
 from .forms import *
 from django.conf import settings
 import logging
@@ -27,7 +26,7 @@ class AllBudgetsView(ListView, FormsStudentMixin):
     context_object_name = 'budgets'
 
     def get_queryset(self):
-        return Budget.objects.filter(Q_student_budget(self.student.user_id)).order_by('-year', 'organization')
+        return all_budgets_for_student(self.student.user_id).order_by('-year', 'organization')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -45,7 +44,7 @@ class DetailBudgetView(DetailView, FormsStudentMixin):
     def get(self, request, *args, **kwargs):
         budget = super().get_object()
 
-        if self.student.user_id not in (budget.submitter, budget.president_crsid, budget.treasurer_crsid):
+        if not budget.student_can_edit(self.student.user_id):
             raise PermissionDenied
 
         # enable editing - if the budget is still a draft, redirect to the update form view

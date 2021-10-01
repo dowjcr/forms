@@ -65,12 +65,54 @@ class BudgetFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
 
-class BudgetFormViewTest(TestCase):
+class BudgetFormAccessTest(TestCase):
+    """Tests to assert whether a student has access to all+only the budgets they should be able to access"""
     def setUp(self):
-        self.driver = webdriver.Firefox(executable_path='/opt/WebDriver/bin/geckodriver')
+        self.test_student1 = Student.objects.create(user_id='student1', first_name="John", surname="Smith")
+        self.test_student2 = Student.objects.create(user_id='student2', first_name="Jane", surname="Doe")
+        self.test_student3 = Student.objects.create(user_id='student3', first_name="Bob", surname="Dill")
 
-    def test_create_budget_view(self):
-        # self.driver.get(reverse('budget-form'))
-        self.driver.get(reverse('dashboard'))
-        link = self.driver.find_element_by_partial_link_text('this link')
-        print(link)
+        self.test_organization = Organization.objects.create(
+            organization_id=1,
+            name='Test Organization',
+            description='Test Organization Description'
+        )
+
+        self.test_budget1 = Budget.objects.create(
+            budget_id = 1,
+            organization = self.test_organization,
+            year = 2020,
+            submitter = self.test_student1.user_id,
+            president = str(self.test_student1),
+            president_crsid = self.test_student1.user_id,
+            treasurer = str(self.test_student2),
+            treasurer_crsid = self.test_student2.user_id,
+        )
+
+        self.test_budget2 = Budget.objects.create(
+            budget_id = 2,
+            organization = self.test_organization,
+            year = 2021,
+            submitter = self.test_student3.user_id,
+            president = str(self.test_student3),
+            president_crsid = self.test_student3.user_id,
+            treasurer = str(self.test_student2),
+            treasurer_crsid = self.test_student2.user_id,
+        )
+    
+    def test_student_can_view_all_past_budgets(self):
+        """Test that a student who is the president for the current budget can view all previous budgets"""
+        assert self.test_budget1.student_can_edit(self.test_student3.user_id)
+        assert self.test_budget2.student_can_edit(self.test_student3.user_id)
+
+
+
+
+# class BudgetFormViewTest(TestCase):
+#     def setUp(self):
+#         self.driver = webdriver.Firefox(executable_path='/opt/WebDriver/bin/geckodriver')
+
+#     def test_create_budget_view(self):
+#         # self.driver.get(reverse('budget-form'))
+#         self.driver.get(reverse('dashboard'))
+#         link = self.driver.find_element_by_partial_link_text('this link')

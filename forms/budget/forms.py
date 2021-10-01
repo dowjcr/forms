@@ -53,7 +53,6 @@ class BudgetForm(forms.ModelForm):
         for items_of_type in items.values():
             for item in items_of_type:
                 defaults = {**item, 'budget': budget}
-                print(defaults)
                 if item.get('entry_id'):
                     BudgetItem.objects.update_or_create(
                         pk=item.get('entry_id'),

@@ -6,6 +6,7 @@ Defines database models to be used in the DCAC forms application.
 from django.db import models
 from django.conf import settings
 from django.core import serializers
+from django.forms import TextInput
 
 import json
 
@@ -19,10 +20,27 @@ from budget.email import notify_budget_submit, notify_treasurer_budget
 from fernet_fields import EncryptedCharField
 
 
-def Q_student_budget(user_id):
-    """Queryset to determine if a user can view/edit a budget
-    i.e. is the submitter, president, or treasurer"""
-    return Q(submitter=user_id) | Q(president_crsid=user_id) | Q(treasurer_crsid=user_id)
+def all_budgets_for_student(user_id):
+    """Returns a queryset for all budgets that a student can view/edit
+    i.e. is the submitter, president, or treasurer for any of the organization's budgets"""
+    query = Q(budget__submitter=user_id) | Q(budget__president_crsid=user_id) | Q(budget__treasurer_crsid=user_id)
+    orgs = Organization.objects.filter(query)
+    budgets = Budget.objects.filter(organization__in=orgs)
+    return budgets
+
+
+class CRSidField(models.CharField):
+    """Text field for CRSid - automatic lowercase"""
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 10
+        if not args:
+            # arg[0] is the verbose name, if it exists
+            kwargs.setdefault('verbose_name', 'CRSid')
+        super().__init__(*args, **kwargs)
+
+    def get_prep_value(self, value):
+        """Convert to lowercase"""
+        return str(value).lower()
 
 
 class Budget(models.Model):
@@ -30,7 +48,7 @@ class Budget(models.Model):
     budget_id = models.AutoField(primary_key=True)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     submitted = models.BooleanField(default=False)
-    approved = models.BooleanField(default=False)
+    approved = models.BooleanField(default=False) # currently unused
     # `year` is the year that the budget was submitted
     # e.g. 2021 would be for the 2021-22 academic year 
     year = models.IntegerField()
@@ -41,9 +59,9 @@ class Budget(models.Model):
     amount_dep = models.CharField(max_length=20, default='0')
 
     president = models.CharField('President', max_length=100)
-    president_crsid = models.CharField('CRSid', max_length=10)
+    president_crsid = CRSidField()
     treasurer = models.CharField('Treasurer', max_length=100)
-    treasurer_crsid = models.CharField('CRSid', max_length=10)
+    treasurer_crsid = CRSidField()
     active_members = models.PositiveIntegerField('Number of Active Members', default=0)
     subscription_details = models.TextField('Details of subscriptions received from members (if any)', blank=True)
 
@@ -72,7 +90,8 @@ class Budget(models.Model):
 
     # --- INSTANCE METHODS ---
     def student_can_edit(self, user_id):
-        return self.submitter==user_id or self.president_crsid==user_id or self.treasurer_crsid==user_id
+        return self in all_budgets_for_student(user_id)
+
 
     def get_items_as_json(self):
         """Returns all items for this budget as a json object"""

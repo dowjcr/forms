@@ -9,6 +9,7 @@
 </script>
 
 {% load custom_filters %}
+{% load budget_filters %}
 
 {% if view == "student" %}
 
@@ -26,7 +27,8 @@
 
     <tbody>
     {% for budget in budgets %}
-    <tr class="clickable-row" data-href="{% url 'view-budget' budget.budget_id %}"
+    {% with is_year_change=forloop.counter0|year_change:budgets %}
+    <tr class="clickable-row {% if is_year_change %}table-border-bottom{% endif %}" data-href="{% url 'view-budget' budget.budget_id %}"
         style="cursor: pointer;">
         <td>{{ budget.organization }}</td>
         <td class="d-none d-md-table-cell">{{ budget.year|str_academic_year }}</td>
@@ -35,6 +37,7 @@
         <td class="d-none d-md-table-cell">£{{ budget.amount_dep|add_strings:budget.amount_acg|floatformat:2 }}</td>
         <td>{% if not budget.submitted %}Draft{% else %}Submitted{% endif %}</td>
     </tr>
+    {% endwith %}
     {% endfor %}
     </tbody>
 </table>
