@@ -46,7 +46,7 @@ class BudgetForm(forms.ModelForm):
         }
 
 
-    def create_items_from_json(self, budget):
+    def create_items_from_json(self, budget: Budget):
         """Creates or updates items from the json output of form, in format
         {General: [], Cuppers: [], Exceptional: []}"""
         items = json.loads(self.cleaned_data['items'])

@@ -40,7 +40,15 @@
                 budget_type: curBudgetType
             };
 
-            items[curBudgetTypeTitle].push(item);
+            if (currentlyEditing) {
+                const budgetType = currentlyEditing[0]
+                const index = currentlyEditing[1]
+                item['entry_id'] = items[budgetType][index]['entry_id']
+                items[budgetType][index] = item
+            } else {
+                items[curBudgetTypeTitle].push(item);
+            }
+
             title.val('');
             amount.val('0.00');
             description.val('');
@@ -64,9 +72,9 @@
 
 
         // Display correct "Add Item" prompt for selected button
-        $('#addItemGeneral').click(changeBudgetItemType('General', 1))
-        $('#addItemCuppers').click(changeBudgetItemType('Cuppers', 2))
-        $('#addItemExceptional').click(changeBudgetItemType('Exceptional', 3))
+        $('#addItemGeneral').click(changeBudgetItemType('General'))
+        $('#addItemCuppers').click(changeBudgetItemType('Cuppers'))
+        $('#addItemExceptional').click(changeBudgetItemType('Exceptional'))
         $('input[name="has_bank_account"]').change(updateBankDetailVisibility)
 
         // Edit elements to improve formatting (default options/placeholders)
@@ -96,15 +104,26 @@
     var curBudgetType = 1;
     var curBudgetTypeTitle = ""
 
-    
+    const budgetTypeInt = {
+        'General': 1,
+        'Cuppers': 2,
+        'Exceptional': 3
+    }
+
+    // keeps track if the item form is editing an existing budget, or creating a new one
+    // if updating, store the position in the items object
+    var currentlyEditing = null
+
     var existingBudgets = {% if existingBudgets %} {{ existingBudgets }} {% else %} {} {% endif %}
 
-    function changeBudgetItemType(newTitle, newType) {
+    function changeBudgetItemType(newTitle) {
         return function () {
-            curBudgetType = newType
+            curBudgetType = budgetTypeInt[newTitle]
             curBudgetTypeTitle = newTitle
             $('#addItemModalTitle').html('Add Item - ' + newTitle);
             $('#addItemModal').modal('show')
+            // default behaviour is adding an item, not updating
+            currentlyEditing = null
         }
     }
 
@@ -113,9 +132,10 @@
     }
 
     function generateTableRowFromItem(item, budgetType, index) {
-        return "<tr><td><p>" + item.title + "<br><span class='small'>" + item.description + "</span></p></td>"
-            + "<td>£" + item.amount + "</td>"
-            + "<td><button class=\'btn btn-primary btn-sm\' onclick=\'removeItem(\"" + budgetType + "\", " + index + ")\'><i class=\"fas fa-times mr-1\"></i> Remove</button></td>";
+        return `<tr><td class=col-6><p> ${item.title} <br><span class='small'> ${item.description} </span></p></td>
+            <td>£ ${item.amount} </td>
+            <td class=col-2><button type=button class='btn btn-primary btn-sm' onclick='editItem( "${budgetType}", ${index})'><i class="fas fa-edit mr-1"></i> Edit</button></td>
+            <td class=col-2><button class='btn btn-primary btn-sm' onclick='removeItem( "${budgetType}", ${index} )'><i class="fas fa-times mr-1"></i> Remove</button></td></tr>`;
     }
 
 
@@ -129,12 +149,21 @@
         showItems();
     }
 
+    function editItem(budgetType, index) {
+        changeBudgetItemType(budgetType)();
+        let item = items[budgetType][index]
+        $('#{{ item_form.title.id_for_label }}').val(item.title)
+        $('#{{ item_form.amount.id_for_label }}').val(item.amount)
+        $('#{{ item_form.description.id_for_label }}').val(item.description)
+        currentlyEditing = [budgetType, index]
+    }
+
     function validateOrganization() {
         let organization = $('#{{ form.organization.id_for_label }}').find(':selected').val()
 
         if (existingBudgets[organization]) {
-            let link = "<a href='/budget/budget/" + existingBudgets[organization] + "'>here<a>"
-            message = "<li>A budget has already been submitted for this organization. If you are the president, treasurer, or submitter, you can view the budget " + link + ". Otherwise, if you think that the budget has been submitted in error, please contact treasurer@jcr.dow.cam.ac.uk</li>"
+            let link = `<a href='/budget/budget/${existingBudgets[organization]}'>here<a>`
+            message = `<li>A budget has already been submitted for this organization. If you are the president, treasurer, or submitter, you can view the budget ${link}. Otherwise, if you think that the budget has been submitted in error, please contact treasurer@jcr.dow.cam.ac.uk</li>`
 
             $('#errors').html(message);
             $('#validationDiv').css("visibility", "visible").css("display", "block");

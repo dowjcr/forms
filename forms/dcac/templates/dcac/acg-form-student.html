@@ -49,7 +49,12 @@
                 fund_source: fund_source.val()
             };
 
-            items.push(item);
+            if (currentlyEditing) {
+                const index = currentlyEditing
+                items[index] = item
+            } else {
+                items.push(item);
+            }
             title.val('');
             amount.val('0.00');
             description.val('');
@@ -82,25 +87,44 @@
     var items = [];
     var receipts = [];
 
+    var currentlyEditing = null
+
     function showLoadingModal() {
         $('#loadingModal').modal({backdrop: 'static', keyboard: false})
     }
 
     function generateTableRowFromItem(item, index) {
         fund_source = item.fund_source == 1 ? " (ACG)" : " (Depreciation)"
-        return "<tr><td><p>" + item.title + "<br><span class='small'>" + item.description + fund_source + "</span></p></td>"
-            + "<td>£" + item.amount + "</td>"
-            + "<td><button class=\'btn btn-primary btn-sm\' onclick=\'removeItem(" + index + ")\'><i class=\"fas fa-times mr-1\"></i> Remove</button></td>";
+        return `<tr><td><p> ${item.title} <br><span class='small'> ${item.description} ${fund_source} </span></p></td>
+            <td>£ ${item.amount} </td>
+            <td><button type=button class='btn btn-primary btn-sm' onclick='editItem( "${index}" )'><i class="fas fa-edit mr-1"></i> Edit</button></td>
+            <td><button type=button class='btn btn-primary btn-sm' onclick='removeItem( "${index}" )'><i class="fas fa-times mr-1"></i> Remove</button></td>`;
     }
 
     function generateTableRowFromReceipt(receipt, index) {
-        return "<tr><td><p>" + receipt.description + "<br><span class='small'>" + receipt.fileSize + " KB</span></p></td>"
-            + "<td><button class=\'btn btn-primary btn-sm\' onclick=\'removeReceipt(" + index + ")\'><i class=\"fas fa-times mr-1\"></i> Remove</button></td>";
+        return `<tr><td><p> ${receipt.description} <br><span class='small'> ${receipt.fileSize} KB</span></p></td>
+            <td><button class='btn btn-primary btn-sm' onclick='removeReceipt( "${index}" )'><i class="fas fa-times mr-1"></i> Remove</button></td>`;
+    }
+
+    function addItem() {
+        currentlyEditing = null
+        $('#addItemModal').modal('show')
     }
 
     function removeItem(index) {
         items.splice(index, 1);
         showItems();
+    }
+
+    function editItem(index) {
+        addItem();
+        let item = items[index]
+        $('#{{ item_form.title.id_for_label }}').val(item.title)
+        $('#{{ item_form.amount.id_for_label }}').val(item.amount)
+        $('#{{ item_form.description.id_for_label }}').val(item.description)
+        $(`input[name="fund_source"][value="${item.fund_source}"]`).prop("checked", "checked")
+        currentlyEditing = index
+        
     }
 
     function removeReceipt(index) {
@@ -272,7 +296,7 @@
                     <table class="table table-light" id="items">
                     </table>
 
-                    <button type="button" class="btn btn-primary mt-2" data-toggle="modal" data-target="#addItemModal">
+                    <button type="button" class="btn btn-primary mt-2" onclick="addItem()">
                         <i class="fas fa-plus mr-1"></i> Add Item
                     </button>
                 </div>

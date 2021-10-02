@@ -64,6 +64,7 @@ class DetailBudgetView(DetailView, FormsStudentMixin):
 
 class SubmitBudgetMixin(ModelFormMixin):
     """Mixin for handling budget viewing authorisation, and item handling from submitted budget"""
+    form_class = Budget
 
     def dispatch(self, request, *args, **kwargs):
         """Only allow edit while budgets submissions are enabled"""
@@ -85,7 +86,7 @@ class SubmitBudgetMixin(ModelFormMixin):
 
         return budget
 
-    def form_valid(self, form):
+    def form_valid(self, form: BudgetForm):
         """After validation, save items to budget"""
         budget = form.instance
         budget.year = settings.CURRENT_YEAR

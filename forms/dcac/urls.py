@@ -13,7 +13,7 @@ from django.views.generic.base import RedirectView
 # include urls from previous project structure, so that old links still work
 
 compatibility_urls = [
-    path('welcome/', RedirectView.as_view(pattern_name='landing-welcome')),
+    path('welcome/', RedirectView.as_view(pattern_name='landing')),
     path('dashboard/', RedirectView.as_view(pattern_name='dashboard')),
     path('admin/', RedirectView.as_view(pattern_name='dashboard-admin')),
     path('admin/profile/', RedirectView.as_view(pattern_name='profile-admin')),
