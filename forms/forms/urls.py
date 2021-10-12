@@ -32,5 +32,6 @@ urlpatterns = [
 
     path('dcac/', include('dcac.urls')),
     path('budget/', include('budget.urls')),
+    path('api/', include('api.urls')),
     path(r'', include('ucamwebauth.urls'))
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
