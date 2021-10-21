@@ -39,7 +39,8 @@ class FormsStudentMixin(LoginRequiredMixin, ContextMixin):
         try:
             return Student.objects.get(user_id=self.request.user.username)
         except Student.DoesNotExist:
-            raise PermissionDenied
+            raise PermissionDenied("""You could not be found in the student database. This might be because you are a member of the MCR,
+            or that the list of students has not been updated for this academic year.""")
 
 
 class FormsAdminMixin(LoginRequiredMixin, ContextMixin):

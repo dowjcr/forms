@@ -69,6 +69,7 @@ class SubmitBudgetMixin(ModelFormMixin):
     def dispatch(self, request, *args, **kwargs):
         """Only allow edit while budgets submissions are enabled"""
         if not settings.ALLOW_BUDGET_SUBMIT:
+            #TODO
             return redirect('view-budget')
         
         return super().dispatch(request, *args, **kwargs)
@@ -117,6 +118,8 @@ class UpdateBudgetView(UpdateView, SubmitBudgetMixin, FormsStudentMixin):
     
     pk_url_kwarg = 'budget_id'
     context_object_name = 'budget'
+
+    # TODO: cannot get edit view after submission
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
