@@ -8,6 +8,9 @@ class RequestSerializer(serializers.ModelSerializer):
     """Serializer to turn a ACGReimbursementForm object into a json format"""
     reimbursement_type = serializers.CharField(source='get_reimbursement_type_display') # convert to string
     organization = serializers.StringRelatedField()
+
+    amount_acg = serializers.ReadOnlyField()
+    amount_dep = serializers.ReadOnlyField()
     class Meta:
         model = ACGReimbursementForm
         exclude = ['sort_code', 'account_number']

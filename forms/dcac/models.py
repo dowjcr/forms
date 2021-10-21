@@ -79,6 +79,16 @@ class ACGReimbursementForm(models.Model):
         self.amount = ACGReimbursementFormItemEntry.objects.filter(form=self).aggregate(Sum('amount'))['amount__sum']
         self.save()
 
+    def amount_acg(self):
+        return ACGReimbursementFormItemEntry.objects.filter(
+            form=self, fund_source=FundSources.ACG
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+
+    def amount_dep(self):
+        return ACGReimbursementFormItemEntry.objects.filter(
+            form=self, fund_source=FundSources.DEPRECIATION
+        ).aggregate(Sum('amount'))['amount__sum'] or 0
+
     # Admin response handling
     
     def handle_admin_response(self, code, user, comments):
