@@ -29,14 +29,25 @@ class AdminUser(models.Model):
     def __str__(self):
         return str(self.first_name) + " " + str(self.surname)
 
+class OrganizationManager(models.Manager):
+    """Manager to use organization name as a primary key"""
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
 
 class Organization(models.Model):
     """Represents an organization or society which is eligible for reimbursement."""
     class Meta:
         ordering = ['name']
+
     organization_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50)
     description = models.CharField(max_length=500)
+
+    objects = OrganizationManager()
+
+    def natural_key(self):
+        return self.name
 
     def __str__(self):
         return self.name
