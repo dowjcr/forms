@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  forms:
+    build: .
+    env_file:
+      - .env
+    networks:
+      - traefiknet
+    volumes:
+      - ./settings.py:/app/forms/settings.py
+networks:
+  traefiknet:
+    external: true
+    name: traefiknet
+  dbnet:
+    external: true
+    name: dbnet
