@@ -10,7 +10,7 @@ services:
       - dbnet
     volumes:
       - ./settings.py:/app/forms/settings.py
-      - uploaded-files:/var/forms/uploaded-files
+      - uploaded-media:/var/forms/media
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.forms.rule=Host(`${FORMS_HOST}`)"
@@ -27,4 +27,4 @@ networks:
     name: dbnet
 
 volumes:
-  uploaded-files:
+  uploaded-media:
