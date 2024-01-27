@@ -1,0 +1,7 @@
+version: "3.8"
+services:
+  forms:
+    restart: always
+    labels:
+      - "traefik.http.routers.forms.middlewares=traefik-forward-auth"
+      - "traefik.http.routers.forms.tls.certresolver=myresolver"

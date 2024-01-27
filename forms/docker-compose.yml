@@ -7,8 +7,17 @@ services:
       - .env
     networks:
       - traefiknet
+      - dbnet
     volumes:
       - ./settings.py:/app/forms/settings.py
+      - uploaded-files:/var/forms/uploaded-files
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.forms.rule=Host(`${FORMS_HOST}`)"
+      - "traefik.http.routers.forms.entrypoints=websecure"
+      - "traefik.http.routers.forms.tls=true"
+      - "traefik.http.services.forms.loadbalancer.server.url=`http://forms:${FORMS_PORT}`"
+      - "traefik.http.services.forms.loadbalancer.server.port=${FORMS_PORT}"
 networks:
   traefiknet:
     external: true
@@ -16,3 +25,6 @@ networks:
   dbnet:
     external: true
     name: dbnet
+
+volumes:
+  uploaded-files:
