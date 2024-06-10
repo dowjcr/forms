@@ -11,16 +11,14 @@ import logging
 from django.conf import settings
 
 from forms.constants import *
-
-FROM_EMAIL = settings.FROM_EMAIL
-
+from forms.settings import notifier
 
 def notify_budget_submit(budget):
     subject = "Budget Submitted"
     recipient_list = [user + "@cam.ac.uk" for user in (budget.submitter, budget.president_crsid, budget.treasurer_crsid)]
     html_message = render_to_string('budget/emails/budget-submitted.html', {'budget': budget})
     message = "A budget has been submitted for your society."
-    send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
+    notifier.SendEmail(recipients=recipient_list, subject=subject, bodyhtml=html_message, bodytext=message)
 
 
 def notify_treasurer_budget(budget):
@@ -28,4 +26,4 @@ def notify_treasurer_budget(budget):
     recipient_list = [admin_user.user_id + "@cam.ac.uk" for admin_user in AdminUser.objects.filter(role=AdminRoles.JCRTREASURER)]
     html_message = render_to_string('budget/emails/budget-treasurer.html', {'budget': budget})
     message = "A budget has been submitted for a society. Please go to the DCAC Reimbursement site."
-    send_mail(subject, message, FROM_EMAIL, recipient_list, html_message=html_message)
+    notifier.SendEmail(recipients=recipient_list, subject=subject, bodyhtml=html_message, bodytext=message)
