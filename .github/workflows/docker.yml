@@ -31,7 +31,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./forms
           file: ./forms/Dockerfile
           push: true
           tags: downingjcr/downingjcr:forms
