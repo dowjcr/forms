@@ -11,37 +11,61 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+import sys
+from forms import sesnotify
 
-ALLOW_BUDGET_SUBMIT = True
-CURRENT_YEAR = 2021
+def RequiredEnvironmentVariable(env):
+    envs = os.getenv(env)
+    if envs == None:
+        sys.exit("ERROR: required environment variable {} not set".format(env))
+    else: 
+        return envs
 
+FORMS_DB = RequiredEnvironmentVariable("FORMS_DB")
+FORMS_DB_PASS = RequiredEnvironmentVariable("FORMS_DB_PASS")
+FORMS_DB_USER = RequiredEnvironmentVariable("FORMS_DB_USER")
+FORMS_DB_HOST = RequiredEnvironmentVariable("FORMS_DB_HOST")
+FORMS_DB_PORT = RequiredEnvironmentVariable("FORMS_DB_PORT")
+
+ALLOW_BUDGET_SUBMIT = RequiredEnvironmentVariable("ALLOW_BUDGET") == "true"
+CURRENT_YEAR = int(RequiredEnvironmentVariable("CURRENT_YEAR"))
+
+FROM_EMAIL = RequiredEnvironmentVariable("DJANGO_FROM_EMAIL")
 
 # Global key for API
-API_KEY = "a"
+API_KEY = RequiredEnvironmentVariable("API_KEY")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+EMAIL_NAME = RequiredEnvironmentVariable("EMAIL_NAME")
+EMAIL_ADDRESS = RequiredEnvironmentVariable("EMAIL_ADDRESS")
+
+region = RequiredEnvironmentVariable("SES_AWS_REGION")
+access_key_id  = RequiredEnvironmentVariable("SES_AWS_ACCESS_KEY_ID")
+access_key_secret = RequiredEnvironmentVariable("SES_AWS_ACCESS_KEY_SECRET")
+notifier = sesnotify.SESNotifier(region=region,
+                                 access_key_id=access_key_id,
+                                 access_key_secret=access_key_secret,
+                                 email_name=EMAIL_NAME,
+                                 email_address=EMAIL_ADDRESS
+                                 )
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'b'
-ENCRYPTION_KEY = 'c'
+SECRET_KEY = RequiredEnvironmentVariable("DJANGO_SECRET_KEY")
+ENCRYPTION_KEY = RequiredEnvironmentVariable("DJANGO_ENCRYPTION_KEY")
 
-FROM_EMAIL = "DCAC <no-reply@downingjcr.co.uk>"
-
-EMAIL_HOST = "ppsw.cam.ac.uk"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = RequiredEnvironmentVariable("EMAIL_HOST")
 EMAIL_PORT = 25
 
-# Do not use in production - stops eroneous emails during testing
-EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG") == "true"
 
-ALLOWED_HOSTS = ['forms.downingjcr.co.uk', 'localhost']
+ALLOWED_HOSTS = [RequiredEnvironmentVariable("ALLOWED_HOST")]
 
 # Application definition
 
@@ -65,6 +89,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -74,7 +99,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'forms.urls'
-MEDIA_ROOT = '/var/www/forms.downingjcr.co.uk/static/media/'
+MEDIA_ROOT = '/var/forms/media'
+MEDIA_URL = '/media/'
 
 
 TEMPLATES = [
@@ -107,16 +133,15 @@ LOGIN_URL = 'accounts/login'
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'forms',
-        'OPTIONS': {
-                'read_default_file': '/var/www/my-ballot_user.cnf',
-        },
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": FORMS_DB,
+        "USER": FORMS_DB_USER,
+        "PASSWORD": FORMS_DB_PASS,
+        "HOST": FORMS_DB_HOST,
+        "PORT": FORMS_DB_PORT,
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
@@ -155,7 +180,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/var/www/forms.downingjcr.co.uk/static'
+STATIC_ROOT = '/var/forms/static'
 
 
 STATICFILES_DIRS = [
@@ -202,6 +227,5 @@ IHB1YmxpYyBrZXkgMoIBADAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBAUAA4GB
 AFciErbr6zl5i7ClrpXKA2O2lDzvHTFM8A3rumiOeauckbngNqIBiCRemYapZzGc
 W7fgOEEsI4FoLOjQbJgIrgdYR2NIJh6pKKEf+9Ts2q/fuWv2xOLw7w29PIICeFIF
 hAM+a6/30F5fdkWpE1smPyrfASyXRfWE4Ccn1RVgYX9u
------END CERTIFICATE-----
-"""}
+-----END CERTIFICATE-----"""}
 UCAMWEBAUTH_DESC = "Downing College JCR Form System"
