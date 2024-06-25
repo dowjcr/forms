@@ -8,7 +8,9 @@
 <head>
     <title>Budget {{ budget.budget_id }} | DCAC Budget</title>
     <style>
-        .form-control {background-color: white !important;}
+        .form-control {
+            background-color: white !important;
+        }
     </style>
 </head>
 
@@ -22,7 +24,7 @@
 
     });
 
-    var items = {{ existingItems|safe }}
+    var items = {{ existingItems| safe }}
 
     function generateTableRowFromItem(item, budgetType, index) {
         return "<tr><td class='col-8'><p>" + item.title + "<br><span class='small'>" + item.description + "</span></p></td>"
@@ -46,10 +48,10 @@
                     totalAmountAcg += parseFloat(item.amount);
                 }
                 total += parseFloat(item.amount);
-                
+
             });
             $('#items' + budgetType).html(itemsHtml);
-            
+
         }
         $('#totalAmountInSummaryAcg').html(totalAmountAcg.toFixed(2));
         $('#totalAmountInSummaryDep').html(totalAmountDep.toFixed(2));
@@ -70,7 +72,7 @@
                         <div class="col-12">
                             <h2 align="center">Budget - {{ budget.organization }}</h2>
                             <p style="text-transform: uppercase; font-size: 1.5em; color: grey" align="center">
-                            {{budget.year|str_academic_year}}
+                                {{budget.year|str_academic_year}}
                             </p>
                             <p align="center" class="mb-0">This is a submitted budget, and can no longer be edited</p>
                         </div>
@@ -95,7 +97,7 @@
 
                 <div class="jumbotron">
                     <h4><i class="fas fa-info-circle mr-2"></i> Society Details</h4>
-                    
+
                     <div class="row mt-3">
 
                         <div class="input-group col-md-6 col-12 pt-0">
@@ -105,14 +107,15 @@
                             <input type="text" class="form-control" readonly value="{{ budget.president }}"></input>
                         </div>
 
-                        
+
                         <div class="input-group col-md-6 col-12 pt-3 pt-md-0 pb-3 pb-md-0">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">CRSid</span>
                             </div>
-                            <input type="text" class="form-control" readonly value="{{ budget.president_crsid }}"></input>
-                        </div>                           
-                        
+                            <input type="text" class="form-control" readonly
+                                value="{{ budget.president_crsid }}"></input>
+                        </div>
+
                     </div>
 
                     <div class="row mt-3">
@@ -128,58 +131,66 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text mb-0">CRSid</span>
                             </div>
-                            <input type="text" class="form-control" readonly value="{{ budget.treasurer_crsid }}"></input>
+                            <input type="text" class="form-control" readonly
+                                value="{{ budget.treasurer_crsid }}"></input>
                         </div>
-                        
+
                     </div>
 
                     <div class="row mt-3">
-                           <div class="col-md-9 mb-3">
-                                Active Members:
-                                <input type="text" class="form-control" readonly value="{{ budget.active_members }}"></input>
-                            </div>
+                        <div class="col-md-9 mb-3">
+                            Active Members:
+                            <input type="text" class="form-control" readonly
+                                value="{{ budget.active_members }}"></input>
                         </div>
+                    </div>
 
-                        <div class="row mt-3">
-                            <div class="col-md-9 mb-3">
-                                Subcription Details:
-                                <textarea type="text" class="form-control" readonly>{{ budget.subscription_details }}</textarea>
-                            </div>
+                    <div class="row mt-3">
+                        <div class="col-md-9 mb-3">
+                            Subcription Details:
+                            <textarea type="text" class="form-control"
+                                readonly>{{ budget.subscription_details }}</textarea>
                         </div>
+                    </div>
                 </div>
 
                 <!-- Add Items -->
                 <div class="jumbotron">
                     <h4><i class="fas fa-piggy-bank mr-2"></i> General Funding</h4>
-                    <p class="mt-3">Please detail ALL expenses to be incurred in normal operation during the coming year and why (if not obvious) they are necessary. (from Annual Consumable Grant)</p>
+                    <p class="mt-3">Please detail ALL expenses to be incurred in normal operation during the coming year
+                        and why (if not obvious) they are necessary. (from Annual Consumable Grant)</p>
 
                     <table class="table table-light" id="itemsGeneral"></table>
                 </div>
 
                 <div class="jumbotron">
                     <h4><i class="fas fa-trophy mr-2"></i> Cuppers Allowance</h4>
-                    <p class="mt-3">If you are a team that will enter a cuppers competition, you will need additional funding depending on how many cuppers matches you need to play. Please detail all of the possible additional cuppers costs here. (from Annual Consumable Grant)</p>
+                    <p class="mt-3">If you are a team that will enter a cuppers competition, you will need additional
+                        funding depending on how many cuppers matches you need to play. Please detail all of the
+                        possible additional cuppers costs here. (from Annual Consumable Grant)</p>
 
                     <table class="table table-light" id="itemsCuppers"></table>
                 </div>
 
                 <div class="jumbotron">
                     <h4><i class="fas fa-file-invoice-dollar mr-2"></i> Exceptional Costs</h4>
-                    <p class="mt-3">Detail any exceptional (non-recurring) expenses you expect to incur during the forthcoming financial year (including kit/equipment) and why you want this additional level of funding. (from Depreciation Fund)</p>
+                    <p class="mt-3">Detail any exceptional (non-recurring) expenses you expect to incur during the
+                        forthcoming financial year (including kit/equipment) and why you want this additional level of
+                        funding. (from Depreciation Fund)</p>
 
                     <table class="table table-light" id="itemsExceptional"></table>
                 </div>
-                
-                
+
+
                 <div class="jumbotron">
                     <h4><i class="fas fa-wallet mr-2"></i> Bank Details</h4>
                     {% if not budget.has_bank_account %}
                     <p>Your society does not have a bank account.</p>
-                    
+
                     {% else %}
 
                     <div id="bankInfo">
-                    
+
                         <div class="row mt-4">
                             <div class="col-md-6 mb-3">
                                 <label>Sort Code:</label>
@@ -187,13 +198,15 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label>Account Number:</label>
-                                <input type="text" class="form-control" readonly value="{{ budget.account_number }}"></input>
+                                <input type="text" class="form-control" readonly
+                                    value="{{ budget.account_number }}"></input>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label>Bank Name:</label>
-                                <input type="text" class="form-control" readonly value="{{ budget.name_of_bank }}"></input>
+                                <input type="text" class="form-control" readonly
+                                    value="{{ budget.name_of_bank }}"></input>
                             </div>
                         </div>
 
@@ -204,7 +217,8 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">£</span>
                                     </div>
-                                <input type="text" class="form-control" readonly value="{{ budget.balance }}"></input>
+                                    <input type="text" class="form-control" readonly
+                                        value="{{ budget.balance }}"></input>
                                 </div>
 
                             </div>
@@ -215,7 +229,9 @@
 
                 <div class="jumbotron">
                     <h4><i class="fas fa-question mr-2"></i> Comments and Queries</h4>
-                    <p>If there is a significant change in anticipated costs expected in the forthcoming year compared to the previous year, please outline why there is going to be a change as well as justification for the change. </p>
+                    <p>If there is a significant change in anticipated costs expected in the forthcoming year compared
+                        to the previous year, please outline why there is going to be a change as well as justification
+                        for the change. </p>
                     <textarea type="text" class="form-control" readonly>{{ budget.comments }}</textarea>
                 </div>
 
@@ -232,13 +248,13 @@
                 <div class="jumbotron">
                     <h4><i class="fas fa-map-signs mr-2"></i> Summary</h4>
                     <p>
-                    Total ACG: £<span id="totalAmountInSummaryAcg">0.00</span> <br>
-                    Total Depreciation: £<span id="totalAmountInSummaryDep">0.00</span> <br>
-                    Total: £<span id="totalAmountInSummary">0.00</span>
+                        Total ACG: £<span id="totalAmountInSummaryAcg">0.00</span> <br>
+                        Total Depreciation: £<span id="totalAmountInSummaryDep">0.00</span> <br>
+                        Total: £<span id="totalAmountInSummary">0.00</span>
                     </p>
 
                 </div>
-           </div>
+            </div>
         </div>
     </form>
 </div>
