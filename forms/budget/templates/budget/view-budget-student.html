@@ -220,6 +220,16 @@
                 </div>
 
                 <div class="jumbotron">
+                    <h4><i class="fas fa-check mr-2"></i> Budget Approval</h4>
+                    {% if not budget.approved %}
+                    <p class="text-danger">
+                        Budget has not yet been approved.
+                    </p> {% else %}
+                    <p class="text-success">Budget approved.</p>
+                    {% endif %}
+                </div>
+
+                <div class="jumbotron">
                     <h4><i class="fas fa-map-signs mr-2"></i> Summary</h4>
                     <p>
                     Total ACG: £<span id="totalAmountInSummaryAcg">0.00</span> <br>

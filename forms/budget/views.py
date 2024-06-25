@@ -169,6 +169,11 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
             budget.treasurer_comments = comment
             budget.save()
 
+        if target == 'approve':
+            budget.approved = True
+            budget.save()
+            return redirect('/budget/admin/budget/' + str(budget.budget_id))
+
         else:
             item = BudgetItem.objects.get(pk=target)
             item.treasurer_comments = comment
