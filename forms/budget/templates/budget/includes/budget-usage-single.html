@@ -1,0 +1,412 @@
+{% load custom_filters %}
+{% load widget_tweaks %}
+<style>
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 4px minmax(0, 1fr);
+      justify-items: center;
+      gap: 2vw;
+      row-gap: 20px;
+      height: 100%;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+
+    @media (max-width: 700px) {
+      main {
+        display: grid;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 2vw;
+        height: 100%;
+        align-items: center;
+      }
+      #info {
+        margin-top: 20px;
+      }
+    }
+
+    .chart {
+      max-height: 50vh;
+    }
+
+    .middleLine {
+      background: #f2f2f2;
+      width: 4px;
+      /* justify-self: left; */
+      height: 80%;
+    }
+    .bottomLine {
+      background: black;
+      width: 85%;
+      /* justify-self: left; */
+      height: 2px;
+      grid-column: span 3;
+    }
+
+    .postTitle {
+      text-decoration: underline;
+      text-align: center;
+    }
+
+    #info {
+      width: 90%;
+    }
+
+    #chartSide {
+      width: 90%;
+    }
+  </style>
+<div class="container-fluid d-block bg-primary">
+
+  <div class="container">
+
+      <div class="row">
+          <div class="col-12">
+              <div class="jumbotron mt-sm-2 pt-3 pt-sm-5 pb-3 pb-sm-5" style="background: white">
+                  <div class="row mb-sm-2" id="titleDiv">
+                      <div class="col-12">
+                          <h2 align="center">Budget Usage - {{budgetdata.budget.organization.name}} - {{budgetdata.budget.year|str_academic_year}}</h2>
+                          <p style="text-transform: uppercase; font-size: 1.5em; color: grey" align="center">
+                          </p>
+                          <p align="center" class="mb-0">Below is the budget usage of {{budgetdata.budget.organization.name}} for {{budgetdata.budget.year|str_academic_year}}.<br>
+                          </p>
+                          <p align="center">'Paid' funds are those that have been reimbursed by the bursary. 'Pending' funds that are part of reimbursement requests that have not been rejected and have not been paid by the bursary. 'Spent' refers to the total amount of paid and pending funds.</p>
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+      </div>
+
+
+  </div>
+</div>
+<script>
+
+  $(document).ready(function () {
+
+      $(".clickable-row").click(function () {
+          window.location = $(this).data("href");
+      });
+
+  });
+
+</script>
+<main>
+
+  <div id="info">
+    <h3>Organisation requests</h3>
+    <table id="reqTable" class="table table-bordered table-striped table-hover mt-4">
+      <thead>
+        <th>Submitter</th>
+        <th>Date</th>
+        <th>Total amount</th>
+        <th>Status</th>
+      </thead>
+      <tbody>
+      {% for reimbursement in budgetdata.reimbursements %}
+      {% if view == "student" %}
+      <tr class="clickable-row" data-href="{% url 'view-request' reimbursement.form_id %}" style="cursor: pointer;">
+        {% elif view == "admin" %}
+        <tr class="clickable-row" data-href="{% url 'view-request-admin' reimbursement.form_id %}" style="cursor: pointer;">
+        {% endif %}
+        <td>{{reimbursement.submitter}}</td>
+        <td>{{reimbursement.date}}</td>
+        <td>£{{reimbursement.amount|floatformat:"2"}}</td>
+        {% if reimbursement.bursary_paid %}
+        <td>Paid</td>
+        {% elif reimbursement.senior_treasurer_approved %}
+        <td>Approved by Senior Treasurer</td>
+        {% elif reimbursement.jcr_treasurer_approved %}
+        <td>Approved by JCR Treasurer</td>
+        {% else %}
+        {{ reimbursement.junior_treasurer_approved }}
+        <td>Awaiting approval</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+    </table>
+    <hr>
+    <h3>Budget</h3>
+    <table class="table table-bordered mt-4">
+      <thead>
+        <tr>
+          <th></th>
+          {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+          <th style="text-align: center;">ACG</th>
+          {% endif %}
+          {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+          <th style="text-align: center;">Depreciation</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tr>
+        <th align="right">Budget</th>
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        <td align="center">£{{budgetdata.budget.amount_acg|floatformat:"2"}}</td>
+        {% endif %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        <td align="center">£{{budgetdata.budget.amount_dep|floatformat:"2"}}</td>
+        {% endif %}
+      </tr>
+      <tr>
+        <th align="left">Pending</th>
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        <td align="center">£{{budgetdata.acg_pending_total|floatformat:"2"}}</td>
+        {% endif %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        <td align="center">£{{budgetdata.dep_pending_total|floatformat:"2"}}</td>
+        {% endif %}
+      </tr>
+      <tr>
+        <th align="left">Spent</th>
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        <td align="center">£{{budgetdata.acg_total|floatformat:"2"}}</td>
+        {% endif %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        <td align="center">£{{budgetdata.dep_total|floatformat:"2"}}</td>
+        {% endif %}
+      </tr>
+      <tr>
+        <th align="left">Remaining</th>
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        <td align="center">£{{budgetdata.acg_remaining|floatformat:"2"}}</td>
+        {% endif %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        <td align="center">£{{budgetdata.dep_remaining|floatformat:"2"}}</td>
+        {% endif %}
+      </tr>
+    </table>
+    <hr>
+  </div>
+  <div class="middleLine" id="middleLine"></div>
+  <div id="chartSide" class="mt-5">
+    {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+    <h3 style="text-align: center;">ACG Funds</h3>
+    <div id="chartContainer">
+      <canvas class="chart" id="acgChart"></canvas>
+    </div>
+    {% endif %}
+    {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+    <h3 style="text-align: center;"  class="mt-5">Depreciation Funds </h3>
+    <div id="depreciationContainer">
+      <canvas class="chart" id="depreciationChart"></canvas>
+    </div>
+    {% endif %}
+    <script src=" https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js "></script>
+
+    <script>
+      Chart.register({
+        id: 'customPluginName',
+        beforeDraw: function (chart, args, options) {
+          if (chart.config.options.elements.center) {
+            // Get ctx from string
+            const { ctx } = chart;
+
+            // Get options from the center object in options
+            var centerConfig = chart.config.options.elements.center;
+            var fontStyle = centerConfig.fontStyle || 'Arial';
+            var txt = centerConfig.text;
+            var color = centerConfig.color || '#000';
+            var maxFontSize = centerConfig.maxFontSize || 75;
+            var sidePadding = centerConfig.sidePadding || 20;
+            let innerRadius = chart._metasets[0].controller.innerRadius
+            var sidePaddingCalculated = (sidePadding / 100) * (innerRadius * 2)
+            // Start with a base font of 30px
+            ctx.font = "30px " + fontStyle;
+            // Get the width of the string and also the width of the element minus 10 to give it 5px side padding
+            var stringWidth = ctx.measureText(txt).width;
+            var elementWidth = (innerRadius * 2) - sidePaddingCalculated;
+            // Find out how much the font can grow in width.
+            var widthRatio = elementWidth / stringWidth;
+            var newFontSize = Math.floor(30 * widthRatio);
+            var elementHeight = (innerRadius * 2);
+
+            // Pick a new font size so it will not be larger than the height of label.
+            var fontSizeToUse = Math.min(newFontSize, elementHeight, maxFontSize);
+            var minFontSize = centerConfig.minFontSize;
+            var lineHeight = centerConfig.lineHeight || 25;
+            var wrapText = false;
+
+            if (minFontSize === undefined) {
+              minFontSize = 20;
+            }
+
+            if (minFontSize && fontSizeToUse < minFontSize) {
+              fontSizeToUse = minFontSize;
+              wrapText = true;
+            }
+
+            // Set font settings to draw it correctly.
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            var centerX = ((chart.chartArea.left + chart.chartArea.right) / 2);
+            var centerY = ((chart.chartArea.top + chart.chartArea.bottom) / 2);
+            ctx.font = fontSizeToUse + "px " + fontStyle;
+            ctx.fillStyle = color;
+
+            if (!wrapText) {
+              ctx.fillText(txt, centerX, centerY);
+              return;
+            }
+
+            var words = txt.split(' ');
+            var line = '';
+            var lines = [];
+
+            // Break words up into multiple lines if necessary
+            for (var n = 0; n < words.length; n++) {
+              var testLine = line + words[n] + ' ';
+              var metrics = ctx.measureText(testLine);
+              var testWidth = metrics.width;
+              if (testWidth > elementWidth && n > 0) {
+                lines.push(line);
+                line = words[n] + ' ';
+              } else {
+                line = testLine;
+              }
+            }
+
+            // Move the center up depending on line height and number of lines
+            centerY -= (lines.length / 2) * lineHeight;
+
+            for (var n = 0; n < lines.length; n++) {
+              ctx.fillText(lines[n], centerX, centerY);
+              centerY += lineHeight;
+            }
+            //Draw text in center
+            ctx.fillText(line, centerX, centerY);
+          }
+        }
+      });
+
+      const acgCtx = document.getElementById('acgChart');
+      const acgData = {
+        labels: [
+          'Paid',
+          'Pending',
+          'Remaining'
+        ],
+        datasets: [{
+          label: 'My First Dataset',
+          data: [{{ budgetdata.acg_paid_total | floatformat:"2" }}, {{ budgetdata.acg_pending_total | floatformat:"2" }}, {{ budgetdata.acg_remaining| floatformat:"2" }}],
+      backgroundColor: [
+        '#ea3323',
+        '#ff8b00',
+        '#1eb253'
+      ],
+        hoverOffset: 4,
+
+        }]
+      };
+      const acgConfig = {
+        type: 'doughnut',
+        data: acgData,
+        responsive: true,
+        options: {
+          cutout: '60%',
+          circumference: 360,
+          animation: { animateRotate: false },
+          legend: {
+            display: false,
+          },
+          elements: {
+            center: {
+              text: '{{budgetdata.remaining_acg_message}}',
+              color: '{{budgetdata.acg_centre_colour}}', // Default is #000000
+              fontStyle: 'Lato', // Default is Arial
+              sidePadding: 12, // Default is 20 (as a percentage)
+              minFontSize: 16, // Default is 20 (in px), set to false and text will not wrap.
+              lineHeight: 25 // Default is 25 (in px), used for when text wraps
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return '£' + (Math.round(context.parsed * 100) / 100).toFixed(2);
+                },
+                labelColor: function (context) {
+                  return undefined
+                }
+              }
+            },
+            legend: {
+              // display: false,
+              onClick: () => { }
+            }
+          }
+        }
+      };
+      Chart.defaults.font.family = 'Lato'
+      new Chart(acgCtx,
+        acgConfig
+      );
+      const depreciationCtx = document.getElementById('depreciationChart');
+      const depreciationData = {
+        labels: [
+          'Paid',
+          'Pending',
+          'Remaining'
+        ],
+        datasets: [{
+          label: 'My First Dataset',
+          data: [{{ budgetdata.dep_paid_total | floatformat:"2" }}, {{ budgetdata.dep_pending_total | floatformat:"2"}}, {{ budgetdata.dep_remaining| floatformat:"2" }}],
+      backgroundColor: [
+        '#ea3323',
+        '#ff8b00',
+        '#1eb253'
+      ],
+        hoverOffset: 4,
+
+      }]
+      };
+      const depreciationConfig = {
+        type: 'doughnut',
+        data: depreciationData,
+        responsive: true,
+        options: {
+          cutout: '60%',
+          circumference: 360,
+          animation: { animateRotate: false },
+          legend: {
+            display: false,
+          },
+          elements: {
+            center: {
+              text: '{{budgetdata.remaining_dep_message}}',
+              color: '{{budgetdata.dep_centre_colour}}', // Default is #000000
+              fontStyle: 'Lato', // Default is Arial
+              sidePadding: 10, // Default is 20 (as a percentage)
+              minFontSize: 16, // Default is 20 (in px), set to false and text will not wrap.
+              lineHeight: 25 // Default is 25 (in px), used for when text wraps
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return '£' + (Math.round(context.parsed * 100) / 100).toFixed(2);
+                },
+                labelColor: function (context) {
+                  return undefined
+                }
+              }
+            },
+            legend: {
+              // display: false,
+              onClick: () => { }
+            }
+          }
+        }
+      };
+      new Chart(depreciationCtx,
+        depreciationConfig
+      );
+    </script>
+
+  </div>
+</main>

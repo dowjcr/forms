@@ -1,0 +1,39 @@
+{% extends 'budget/base-admin.html' %}
+
+{% load custom_filters %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+<head>
+    <title>Budget Usage | DCAC Budget</title>
+</head>
+
+<div class="container-fluid d-block bg-primary">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-12">
+                <div class="jumbotron mt-sm-2 pt-3 pt-sm-5 pb-3 pb-sm-5" style="background: white">
+                    <div class="row mb-sm-2" id="titleDiv">
+                        <div class="col-12">
+                            <h2 align="center">Budget Usage</h2>
+                            <p style="text-transform: uppercase; font-size: 1.5em; color: grey" align="center">
+                            </p>
+                            <p align="center" class="mb-0">Below are all of the budgets that are for the current year,
+                                and for which you are either the treasurer or president.<br>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+{% include 'budget/includes/budget-usage-table.html' with view="admin" %}
+
+{% endblock %}

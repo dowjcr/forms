@@ -1,0 +1,16 @@
+{% extends 'budget/base-student.html' %}
+
+{% load custom_filters %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+<head>
+  <meta charset="utf-8">
+  <title>{{budgetdata.budget.organization.name}} Budget Usage | DCAC Budget</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+{% include 'budget/includes/budget-usage-single.html' with view="student" %}
+
+{% endblock %}
