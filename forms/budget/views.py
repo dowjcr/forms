@@ -1,22 +1,24 @@
 import json
 
 from django.shortcuts import redirect
-from django.http import HttpResponse
-from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, Http404
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.urls import reverse
 
+from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, ModelFormMixin
 
 from .forms import *
 from django.conf import settings
+from forms.settings import CURRENT_YEAR
 import logging
 
 from .models import *
 from forms.models import *
 from forms.views import FormsStudentMixin, FormsAdminMixin
-
+from dcac.models import ACGReimbursementForm
 
 # --- STUDENT VIEWS ---
 
@@ -149,6 +151,99 @@ class CreateBudgetView(CreateView, SubmitBudgetMixin, FormsStudentMixin):
         
         return context
 
+class SingleBudgetUsageView(TemplateView, FormsStudentMixin):
+    template_name = 'budget/single-budget-usage-student.html'
+    pk_url_kwarg = 'budget_id'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            budget = Budget.objects.get(budget_id=kwargs["budget_id"], year=CURRENT_YEAR, approved=True)
+        except ObjectDoesNotExist:
+            raise Http404()
+        if self.student.user_id != budget.treasurer_crsid and self.student.user_id != budget.president_crsid:
+            raise PermissionDenied()
+        budgetdata = {}
+        pending_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_pending(date=budget.date, organization_id=budget.organization)
+        paid_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_paid(date=budget.date, organization_id=budget.organization)
+        all_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_all(date=budget.date, organization_id=budget.organization)
+        acg_pending_total = 0
+        dep_pending_total = 0
+        for pending_reimbursement in pending_reimbursements:
+            acg_pending_total = acg_pending_total + pending_reimbursement.amount_acg()
+            dep_pending_total = dep_pending_total + pending_reimbursement.amount_dep()
+        acg_paid_total = 0
+        dep_paid_total = 0
+        for paid_reimbursement in paid_reimbursements:
+            acg_paid_total = acg_paid_total + paid_reimbursement.amount_acg()
+            dep_paid_total = dep_paid_total + paid_reimbursement.amount_dep()
+        acg_total = acg_pending_total + acg_paid_total
+        dep_total = dep_pending_total + dep_paid_total
+        budgetdata["acg_total"] = acg_total
+        budgetdata["dep_total"] = dep_total
+        budgetdata["acg_paid_total"] = acg_paid_total
+        budgetdata["dep_paid_total"] = dep_paid_total
+        budgetdata["acg_pending_total"] = acg_pending_total
+        budgetdata["dep_pending_total"] = dep_pending_total
+        budgetdata["dep_remaining"] = float(budget.amount_dep) - float(dep_total)
+        budgetdata["acg_remaining"] = float(budget.amount_acg) - float(acg_total)
+        budgetdata["budget"] = budget
+        budgetdata["reimbursements"] = all_reimbursements
+        if budget.amount_dep != "0":
+            budgetdata["dep_centre_colour"] = '#1eb253'
+            budgetdata["remaining_dep_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_dep) - float(dep_total)), float(budget.amount_dep), ((float(budget.amount_dep) - float(dep_total)) / float(budget.amount_dep) ) * 100)
+        if budget.amount_acg != "0":
+            budgetdata["acg_centre_colour"] = '#1eb253'
+            budgetdata["remaining_acg_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_acg) - float(acg_total)), float(budget.amount_acg), ((float(budget.amount_acg) - float(acg_total)) / float(budget.amount_acg) ) * 100)
+        if float(budget.amount_dep) - float(dep_total) <= 0:
+            budgetdata["dep_remaining"] = 0
+            budgetdata["remaining_dep_message"] = "No funds remaining"
+            budgetdata["dep_centre_colour"] = '#ea3323'
+        if float(budget.amount_acg) - float(acg_total) <= 0:
+            budgetdata["acg_remaining"] = 0
+            budgetdata["remaining_acg_message"] = "No funds remaining"
+            budgetdata["acg_centre_colour"] = '#ea3323'
+
+        context["budgetdata"] = budgetdata
+        return context
+
+class BudgetUsageView(TemplateView, FormsStudentMixin):
+    template_name = 'budget/budget-usage-student.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        budgets = Budget.approved_budgets_from_year_as_official(settings.CURRENT_YEAR, self.student.user_id)
+        if len(budgets) == 0:
+            return context
+        data = []
+        for budget in budgets:
+            budgetdata = {}
+            pending_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_pending(date=budget.date, organization_id=budget.organization)
+            paid_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_paid(date=budget.date, organization_id=budget.organization)
+            acg_pending_total = 0
+            dep_pending_total = 0
+            for pending_reimbursement in pending_reimbursements:
+                acg_pending_total = acg_pending_total + pending_reimbursement.amount_acg()
+                dep_pending_total = dep_pending_total + pending_reimbursement.amount_dep()
+            acg_paid_total = 0
+            dep_paid_total = 0
+            for paid_reimbursement in paid_reimbursements:
+                acg_paid_total = acg_paid_total + paid_reimbursement.amount_acg()
+                dep_paid_total = dep_paid_total + paid_reimbursement.amount_dep()
+            acg_total = acg_pending_total + acg_paid_total
+            dep_total = dep_pending_total + dep_paid_total
+            budgetdata["acg_total"] = acg_total
+            budgetdata["dep_total"] = dep_total
+            budgetdata["acg_paid_total"] = acg_paid_total
+            budgetdata["dep_paid_total"] = dep_paid_total
+            budgetdata["acg_pending_total"] = acg_pending_total
+            budgetdata["dep_pending_total"] = dep_pending_total
+            budgetdata["dep_remaining"] = float(budget.amount_dep) - float(dep_total)
+            budgetdata["acg_remaining"] = float(budget.amount_acg) - float(acg_total)
+            budgetdata["budget"] = budget
+            budgetdata["reimbursements"] = pending_reimbursements
+
+            data.append(budgetdata)
+        context["data"] = data
+        return context
 
 # --- ADMIN VIEWS ---
 
@@ -168,6 +263,13 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
         if target == 'budget':
             budget.treasurer_comments = comment
             budget.save()
+
+        if target == 'approve':
+            if budget.submitted != True:
+                return HttpResponse(status=400, content="Cannot approve a budget that is still a draft.")
+            budget.approved = True
+            budget.save()
+            return redirect('/budget/admin/budget/' + str(budget.budget_id))
 
         else:
             item = BudgetItem.objects.get(pk=target)
@@ -210,3 +312,96 @@ class AllBudgetsAdminView(ListView, FormsAdminMixin):
         context['allow_budget_submit'] = settings.ALLOW_BUDGET_SUBMIT
 
         return context
+    
+class SingleBudgetUsageAdminView(TemplateView, FormsAdminMixin):
+    template_name = 'budget/single-budget-usage-admin.html'
+    pk_url_kwarg = 'budget_id'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            budget = Budget.objects.get(budget_id=kwargs["budget_id"], year=CURRENT_YEAR, approved=True)
+        except ObjectDoesNotExist:
+            raise Http404()
+        budgetdata = {}
+        pending_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_pending(date=budget.date, organization_id=budget.organization)
+        paid_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_paid(date=budget.date, organization_id=budget.organization)
+        all_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_all(date=budget.date, organization_id=budget.organization)
+        acg_pending_total = 0
+        dep_pending_total = 0
+        for pending_reimbursement in pending_reimbursements:
+            acg_pending_total = acg_pending_total + pending_reimbursement.amount_acg()
+            dep_pending_total = dep_pending_total + pending_reimbursement.amount_dep()
+        acg_paid_total = 0
+        dep_paid_total = 0
+        for paid_reimbursement in paid_reimbursements:
+            acg_paid_total = acg_paid_total + paid_reimbursement.amount_acg()
+            dep_paid_total = dep_paid_total + paid_reimbursement.amount_dep()
+        acg_total = acg_pending_total + acg_paid_total
+        dep_total = dep_pending_total + dep_paid_total
+        budgetdata["acg_total"] = acg_total
+        budgetdata["dep_total"] = dep_total
+        budgetdata["acg_paid_total"] = acg_paid_total
+        budgetdata["dep_paid_total"] = dep_paid_total
+        budgetdata["acg_pending_total"] = acg_pending_total
+        budgetdata["dep_pending_total"] = dep_pending_total
+        budgetdata["dep_remaining"] = float(budget.amount_dep) - float(dep_total)
+        budgetdata["acg_remaining"] = float(budget.amount_acg) - float(acg_total)
+        budgetdata["budget"] = budget
+        budgetdata["reimbursements"] = all_reimbursements
+        if budget.amount_dep != "0":
+            budgetdata["dep_centre_colour"] = '#1eb253'
+            budgetdata["remaining_dep_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_dep) - float(dep_total)), float(budget.amount_dep), ((float(budget.amount_dep) - float(dep_total)) / float(budget.amount_dep) ) * 100)
+        if budget.amount_acg != "0":
+            budgetdata["acg_centre_colour"] = '#1eb253'
+            budgetdata["remaining_acg_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_acg) - float(acg_total)), float(budget.amount_acg), ((float(budget.amount_acg) - float(acg_total)) / float(budget.amount_acg) ) * 100)
+        if float(budget.amount_dep) - float(dep_total) <= 0:
+            budgetdata["dep_remaining"] = 0
+            budgetdata["remaining_dep_message"] = "No funds remaining"
+            budgetdata["dep_centre_colour"] = '#ea3323'
+        if float(budget.amount_acg) - float(acg_total) <= 0:
+            budgetdata["acg_remaining"] = 0
+            budgetdata["remaining_acg_message"] = "No funds remaining"
+            budgetdata["acg_centre_colour"] = '#ea3323'
+
+        context["budgetdata"] = budgetdata
+        return context
+
+class BudgetUsageAdminView(TemplateView, FormsAdminMixin):
+    template_name = 'budget/budget-usage-admin.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        budgets = Budget.approved_budgets_from_year(settings.CURRENT_YEAR)
+        if len(budgets) == 0:
+            return context
+        data = []
+        for budget in budgets:
+            budgetdata = {}
+            pending_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_pending(date=budget.date, organization_id=budget.organization)
+            paid_reimbursements = ACGReimbursementForm.get_budget_associated_reimbursements_paid(date=budget.date, organization_id=budget.organization)
+            acg_pending_total = 0
+            dep_pending_total = 0
+            for pending_reimbursement in pending_reimbursements:
+                acg_pending_total = acg_pending_total + pending_reimbursement.amount_acg()
+                dep_pending_total = dep_pending_total + pending_reimbursement.amount_dep()
+            acg_paid_total = 0
+            dep_paid_total = 0
+            for paid_reimbursement in paid_reimbursements:
+                acg_paid_total = acg_paid_total + paid_reimbursement.amount_acg()
+                dep_paid_total = dep_paid_total + paid_reimbursement.amount_dep()
+            acg_total = acg_pending_total + acg_paid_total
+            dep_total = dep_pending_total + dep_paid_total
+            budgetdata["acg_total"] = acg_total
+            budgetdata["dep_total"] = dep_total
+            budgetdata["acg_paid_total"] = acg_paid_total
+            budgetdata["dep_paid_total"] = dep_paid_total
+            budgetdata["acg_pending_total"] = acg_pending_total
+            budgetdata["dep_pending_total"] = dep_pending_total
+            budgetdata["dep_remaining"] = float(budget.amount_dep) - float(dep_total)
+            budgetdata["acg_remaining"] = float(budget.amount_acg) - float(acg_total)
+            budgetdata["budget"] = budget
+            budgetdata["reimbursements"] = pending_reimbursements
+
+            data.append(budgetdata)
+        context["data"] = data
+        return context
+    

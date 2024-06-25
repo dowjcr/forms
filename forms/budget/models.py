@@ -87,6 +87,17 @@ class Budget(models.Model):
             budget_dict[org] = budget_id
         return budget_dict
 
+    @staticmethod
+    def approved_budgets_from_year_as_official(year, student_crsid):
+        """Returns the existing budgets for a given year where the given student is either the president or treasurer"""
+        budgets = Budget.objects.filter(Q(year=year), Q(approved=True), Q(president_crsid = student_crsid) | Q(treasurer_crsid = student_crsid)).order_by("organization__name")
+        return budgets
+    
+    @staticmethod
+    def approved_budgets_from_year(year):
+        """Returns the existing budgets for a given year"""
+        budgets = Budget.objects.filter(Q(year=year), Q(approved=True)).order_by("organization__name")
+        return budgets
 
     # --- INSTANCE METHODS ---
     def student_can_edit(self, user_id):

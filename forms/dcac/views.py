@@ -9,6 +9,8 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView
 from forms.views import FormsStudentMixin, FormsAdminMixin
 
+from forms.settings import CURRENT_YEAR
+
 from .models import *
 from forms.models import *
 
@@ -16,6 +18,8 @@ from .forms import *
 from .constants import *
 from django.conf import settings
 import logging
+
+from budget.models import Budget
 
 
 LOG_FILE = 'dcac.log'
@@ -46,10 +50,15 @@ class DetailRequestView(DetailView, FormsStudentMixin):
 
     def get_object(self):
         obj = super().get_object()
-        if obj.submitter != self.student.user_id:
+        if obj.submitter == self.student.user_id:
+            return obj
+        current_officials = Budget.objects.filter(year=CURRENT_YEAR, organization=obj.organization, date__lte=obj.date).values("treasurer_crsid", "president_crsid")
+        try:
+            if self.student.user_id == current_officials[0]["treasurer_crsid"] or self.student.user_id == current_officials[0]["president_crsid"]:
+                return obj
+        except: 
             raise PermissionDenied
-        
-        return obj
+        raise PermissionDenied
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

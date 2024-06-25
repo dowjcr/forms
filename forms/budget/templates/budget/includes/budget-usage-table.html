@@ -1,0 +1,61 @@
+<script>
+
+    $(document).ready(function () {
+
+        $(".clickable-row").click(function () {
+            window.location = $(this).data("href");
+        });
+
+    });
+
+</script>
+<div class="container mt-4">    
+    <div class="row">
+        <div class="col-12">
+            <table class="table table-bordered table-striped table-hover mt-4">
+                <thead>
+                    <th>Budget ID</th>
+                    <th>Organisation</th>
+                    {% if view == "student" %}
+                    <th>Your Position</th>
+                    {% endif %}
+                    <th>ACG Remaining</th>
+                    <th>Depreciation Remaining</th>
+                </thead>
+                <tbody>
+                    {% for budgetdata in data %}
+                    {% if view == "student" %}
+                    <tr class="clickable-row" data-href="{% url 'budget-usage-single-student' budgetdata.budget.budget_id %}"
+                        style="cursor: pointer;">
+                    {% elif view == "admin" %}
+                    <tr class="clickable-row" data-href="{% url 'budget-usage-single-admin' budgetdata.budget.budget_id %}"
+                    style="cursor: pointer;">
+                    {% endif %}
+                        <td>
+                            {{budgetdata.budget.budget_id}}
+                        </td>
+                        <td>
+                            {{budgetdata.budget.organization.name}}
+                        </td>
+                        {% if view == "student" %}
+                        <td>
+                            {% if student.user_id == budgetdata.budget.president_crsid %}
+                            President
+                            {% else %}
+                            Treasurer
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            £{{budgetdata.acg_remaining|floatformat:"2"}} of £{{budgetdata.budget.amount_acg|floatformat:"2"}}
+                        </td>
+                        <td>
+                            £{{budgetdata.dep_remaining|floatformat:"2"}} of £{{budgetdata.budget.amount_dep|floatformat:"2"}}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -163,6 +163,21 @@ class ACGReimbursementForm(models.Model):
         self.account_number = None
         self.name_on_account = None
 
+    @staticmethod
+    def get_budget_associated_reimbursements_pending(date, organization_id):
+        reimbursements = ACGReimbursementForm.objects.filter(date__gte=date, organization_id=organization_id, rejected=False, bursary_paid=False)
+        return reimbursements
+
+    @staticmethod
+    def get_budget_associated_reimbursements_paid(date, organization_id):
+        reimbursements = ACGReimbursementForm.objects.filter(date__gte=date, organization_id=organization_id, rejected=False, bursary_paid=True)
+        return reimbursements
+
+    @staticmethod
+    def get_budget_associated_reimbursements_all(date, organization_id):
+        reimbursements = ACGReimbursementForm.objects.filter(date__gte=date, organization_id=organization_id, rejected=False).order_by('-date', '-form_id')
+        return reimbursements
+
     def __str__(self):
         return "Request " + str(self.form_id) + ", " + str(self.organization)
 
