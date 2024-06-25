@@ -48,7 +48,7 @@ class Budget(models.Model):
     budget_id = models.AutoField(primary_key=True)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     submitted = models.BooleanField(default=False)
-    approved = models.BooleanField(default=False) # currently unused
+    approved = models.BooleanField(default=False)
     # `year` is the year that the budget was submitted
     # e.g. 2021 would be for the 2021-22 academic year 
     year = models.IntegerField()
