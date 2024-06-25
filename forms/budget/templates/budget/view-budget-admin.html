@@ -335,7 +335,7 @@
                         Total: £<span id="totalAmountInSummary">0.00</span>
                     </p>
                 </div>
-
+                {% if budget.submitted %}
                 <div class="jumbotron">
                     <h4><i class="fas fa-check mr-2"></i> Budget Approval</h4>
                     {% if not budget.approved %}
@@ -344,6 +344,7 @@
                     <p>Budget already approved.</p>
                     {% endif %}
                 </div>
+                {% endif %}
             </div>
         </div>
 

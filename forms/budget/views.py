@@ -170,6 +170,8 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
             budget.save()
 
         if target == 'approve':
+            if budget.submitted != True:
+                return HttpResponse(status=400, content="Cannot approve a budget that is still a draft.")
             budget.approved = True
             budget.save()
             return redirect('/budget/admin/budget/' + str(budget.budget_id))
