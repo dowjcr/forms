@@ -188,10 +188,10 @@ class SingleBudgetUsageView(TemplateView, FormsStudentMixin):
         budgetdata["acg_remaining"] = float(budget.amount_acg) - float(acg_total)
         budgetdata["budget"] = budget
         budgetdata["reimbursements"] = all_reimbursements
-        if budget.amount_dep != "0":
+        if float(budget.amount_dep) != 0:
             budgetdata["dep_centre_colour"] = '#1eb253'
             budgetdata["remaining_dep_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_dep) - float(dep_total)), float(budget.amount_dep), ((float(budget.amount_dep) - float(dep_total)) / float(budget.amount_dep) ) * 100)
-        if budget.amount_acg != "0":
+        if float(budget.amount_acg) != 0:
             budgetdata["acg_centre_colour"] = '#1eb253'
             budgetdata["remaining_acg_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_acg) - float(acg_total)), float(budget.amount_acg), ((float(budget.amount_acg) - float(acg_total)) / float(budget.amount_acg) ) * 100)
         if float(budget.amount_dep) - float(dep_total) <= 0:
@@ -348,10 +348,10 @@ class SingleBudgetUsageAdminView(TemplateView, FormsAdminMixin):
         budgetdata["acg_remaining"] = float(budget.amount_acg) - float(acg_total)
         budgetdata["budget"] = budget
         budgetdata["reimbursements"] = all_reimbursements
-        if budget.amount_dep != "0":
+        if float(budget.amount_dep) != 0:
             budgetdata["dep_centre_colour"] = '#1eb253'
             budgetdata["remaining_dep_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_dep) - float(dep_total)), float(budget.amount_dep), ((float(budget.amount_dep) - float(dep_total)) / float(budget.amount_dep) ) * 100)
-        if budget.amount_acg != "0":
+        if float(budget.amount_acg) != 0:
             budgetdata["acg_centre_colour"] = '#1eb253'
             budgetdata["remaining_acg_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_acg) - float(acg_total)), float(budget.amount_acg), ((float(budget.amount_acg) - float(acg_total)) / float(budget.amount_acg) ) * 100)
         if float(budget.amount_dep) - float(dep_total) <= 0:
