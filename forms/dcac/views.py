@@ -1,9 +1,10 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from datetime import datetime
 import json
 
+from django.views.generic import View
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView
@@ -155,3 +156,42 @@ class AllRequestsAdminView(ListView, FormsAdminMixin):
     paginate_by = 50
     ordering = ['-form_id']
     context_object_name = 'requests'
+
+class OrganizationsView(ListView, FormsAdminMixin):
+    template_name = 'dcac/organizations.html'
+    model = Organization
+    context_object_name = 'organizations'
+
+class EditOrganizationView(View, FormsAdminMixin):
+    pk_url_kwarg = 'id'
+    model = Organization
+    def post(self, request, *args, **kwargs):
+        target = request.POST.get('target')
+        id = request.POST.get('id')
+        organization = Organization.objects.get(organization_id=id)
+
+        if target == "editText":
+            organization.name = request.POST.get('name')
+            organization.description = request.POST.get('description')
+            organization.save()
+            return HttpResponseRedirect("/dcac/admin/organisations")
+        
+        if target == "hide":
+            organization.hidden = True
+            organization.save()
+            return HttpResponseRedirect("/dcac/admin/organisations")
+        
+        if target == "show":
+            organization.hidden = False
+            organization.save()
+            return HttpResponseRedirect("/dcac/admin/organisations")
+        
+        return HttpResponseRedirect("/dcac/admin/organisations")
+    
+class NewOrganizationView(View, FormsAdminMixin):
+    def post(self, request, *args, **kwargs):
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        neworg = Organization.objects.create(name=name, description=description)
+        neworg.save()
+        return HttpResponseRedirect("/dcac/admin/organisations")

@@ -24,7 +24,7 @@ class ACGReimbursementForm(models.Model):
     """Record of submitted form."""
     form_id = models.AutoField(primary_key=True)
     submitter = models.CharField(max_length=10)
-    organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None)
+    organization = models.ForeignKey(Organization, on_delete=models.SET_DEFAULT, default=None, limit_choices_to={'hidden':False})
     date = models.DateField()
     amount = models.CharField(max_length=20)
     reimbursement_type = models.IntegerField(choices=RequestTypes.CHOICES, default=RequestTypes.STANDARD)
