@@ -2,6 +2,5 @@
 .vscode
 *.log
 __pycache__
-migrations
 CACHE
 venv/**
