@@ -1,7 +1,7 @@
 import json
 from django.db.models.query_utils import Q
 
-from django.shortcuts import redirect, render, get_object_or_404, render_to_response
+from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.core import serializers

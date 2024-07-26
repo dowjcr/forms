@@ -1,12 +1,8 @@
 from django.test import TestCase
-from django.shortcuts import reverse
-from selenium import webdriver
 
 from forms.models import *
 from budget.models import *
 from budget.forms import *
-
-from .views import CreateBudgetView
 
 class BudgetFormTest(TestCase):
     def setUp(self):
