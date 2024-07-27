@@ -135,47 +135,47 @@
       <thead>
         <tr>
           <th></th>
-          {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+          {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
           <th style="text-align: center;">ACG</th>
           {% endif %}
-          {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+          {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
           <th style="text-align: center;">Depreciation</th>
           {% endif %}
         </tr>
       </thead>
       <tr>
         <th align="right">Budget</th>
-        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
         <td align="center">£{{budgetdata.budget.amount_acg|floatformat:"2"}}</td>
         {% endif %}
-        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
         <td align="center">£{{budgetdata.budget.amount_dep|floatformat:"2"}}</td>
         {% endif %}
       </tr>
       <tr>
         <th align="left">Pending</th>
-        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
         <td align="center">£{{budgetdata.acg_pending_total|floatformat:"2"}}</td>
         {% endif %}
-        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
         <td align="center">£{{budgetdata.dep_pending_total|floatformat:"2"}}</td>
         {% endif %}
       </tr>
       <tr>
         <th align="left">Spent</th>
-        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
         <td align="center">£{{budgetdata.acg_total|floatformat:"2"}}</td>
         {% endif %}
-        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
         <td align="center">£{{budgetdata.dep_total|floatformat:"2"}}</td>
         {% endif %}
       </tr>
       <tr>
         <th align="left">Remaining</th>
-        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
         <td align="center">£{{budgetdata.acg_remaining|floatformat:"2"}}</td>
         {% endif %}
-        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
         <td align="center">£{{budgetdata.dep_remaining|floatformat:"2"}}</td>
         {% endif %}
       </tr>
@@ -184,13 +184,13 @@
   </div>
   <div class="middleLine" id="middleLine"></div>
   <div id="chartSide" class="mt-5">
-    {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+    {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
     <h3 style="text-align: center;">ACG Funds</h3>
     <div id="chartContainer">
       <canvas class="chart" id="acgChart"></canvas>
     </div>
     {% endif %}
-    {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+    {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
     <h3 style="text-align: center;"  class="mt-5">Depreciation Funds </h3>
     <div id="depreciationContainer">
       <canvas class="chart" id="depreciationChart"></canvas>

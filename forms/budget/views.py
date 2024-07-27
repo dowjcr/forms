@@ -1,4 +1,5 @@
 import json
+import os
 
 from django.shortcuts import redirect
 from django.http import HttpResponse, Http404
@@ -188,10 +189,10 @@ class SingleBudgetUsageView(TemplateView, FormsStudentMixin):
         budgetdata["acg_remaining"] = float(budget.amount_acg) - float(acg_total)
         budgetdata["budget"] = budget
         budgetdata["reimbursements"] = all_reimbursements
-        if budget.amount_dep != "0":
+        if float(budget.amount_dep) != 0:
             budgetdata["dep_centre_colour"] = '#1eb253'
             budgetdata["remaining_dep_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_dep) - float(dep_total)), float(budget.amount_dep), ((float(budget.amount_dep) - float(dep_total)) / float(budget.amount_dep) ) * 100)
-        if budget.amount_acg != "0":
+        if float(budget.amount_acg) != 0:
             budgetdata["acg_centre_colour"] = '#1eb253'
             budgetdata["remaining_acg_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_acg) - float(acg_total)), float(budget.amount_acg), ((float(budget.amount_acg) - float(acg_total)) / float(budget.amount_acg) ) * 100)
         if float(budget.amount_dep) - float(dep_total) <= 0:
@@ -258,6 +259,8 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
         # handle comments made by Junior Treasurer
         comment = request.POST.get('comment')
         target = request.POST.get('target')
+        amount_acg = request.POST.get('amount_acg')
+        amount_dep = request.POST.get('amount_dep')
         budget = self.get_object()
 
         if target == 'budget':
@@ -267,7 +270,19 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
         if target == 'approve':
             if budget.submitted != True:
                 return HttpResponse(status=400, content="Cannot approve a budget that is still a draft.")
+            budget.old_amount_acg, budget.old_amount_dep = budget.requested_totals()
             budget.approved = True
+            budget.amount_acg = amount_acg
+            budget.amount_dep = amount_dep
+            budget.save()
+            budget.host = os.getenv("ALLOWED_HOST")
+            budget.notify_approve()
+            return redirect('/budget/admin/budget/' + str(budget.budget_id))
+        
+        if target == 'convertDraft':
+            if budget.submitted != True:
+                return HttpResponse(status=400, content="Cannot approve a budget that is still a draft.")
+            budget.submitted = False
             budget.save()
             return redirect('/budget/admin/budget/' + str(budget.budget_id))
 
@@ -348,10 +363,10 @@ class SingleBudgetUsageAdminView(TemplateView, FormsAdminMixin):
         budgetdata["acg_remaining"] = float(budget.amount_acg) - float(acg_total)
         budgetdata["budget"] = budget
         budgetdata["reimbursements"] = all_reimbursements
-        if budget.amount_dep != "0":
+        if float(budget.amount_dep) != 0:
             budgetdata["dep_centre_colour"] = '#1eb253'
             budgetdata["remaining_dep_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_dep) - float(dep_total)), float(budget.amount_dep), ((float(budget.amount_dep) - float(dep_total)) / float(budget.amount_dep) ) * 100)
-        if budget.amount_acg != "0":
+        if float(budget.amount_acg) != 0:
             budgetdata["acg_centre_colour"] = '#1eb253'
             budgetdata["remaining_acg_message"] = "£{0:.2f} remaining of £{1:.2f} ({2:.1f}%)".format((float(budget.amount_acg) - float(acg_total)), float(budget.amount_acg), ((float(budget.amount_acg) - float(acg_total)) / float(budget.amount_acg) ) * 100)
         if float(budget.amount_dep) - float(dep_total) <= 0:

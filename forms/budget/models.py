@@ -16,7 +16,7 @@ from django.db.models.query_utils import Q
 from forms.models import Organization
 from forms.constants import *
 from budget.constants import *
-from budget.email import notify_budget_submit, notify_treasurer_budget
+from budget.email import notify_budget_submit, notify_treasurer_budget, notify_budget_approved
 from fernet_fields import EncryptedCharField
 
 
@@ -122,9 +122,26 @@ class Budget(models.Model):
         self.amount_dep = budget_items.filter(budget_type=BudgetType.EXCEPTIONAL).aggregate(Sum('amount'))['amount__sum'] or 0
         self.save()
 
+    def requested_totals(self):
+        budget_items = BudgetItem.objects.filter(budget=self)
+        amount_acg = budget_items.exclude(budget_type=BudgetType.EXCEPTIONAL).aggregate(Sum('amount'))['amount__sum'] or 0
+        amount_dep = budget_items.filter(budget_type=BudgetType.EXCEPTIONAL).aggregate(Sum('amount'))['amount__sum'] or 0
+        return float(amount_acg), float(amount_dep)
+
+    def amount_acg_float(self):
+        amount_acg_float = float(self.amount_acg)
+        return amount_acg_float
+    
+    def amount_dep_float(self):
+        amount_dep_float = float(self.amount_dep)
+        return amount_dep_float
+    
     def send_email(self):
         notify_budget_submit(self)
         notify_treasurer_budget(self)
+
+    def notify_approve(self):
+        notify_budget_approved(self)
         
     
 
