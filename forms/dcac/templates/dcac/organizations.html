@@ -1,0 +1,237 @@
+{% extends 'dcac/base-admin.html' %}
+
+{% load custom_filters %}
+{% load dcac_filters %}
+
+{% block content %}
+<head><title>Organisations | DCAC</title></head>
+
+<script>
+    function editText(id) {
+        let name = $('#organization_'+ id + ' td.name:first').text();
+        let description = $('#organization_'+ id + ' td.description:first').text();
+        $('input[name="target"]').val('editText')
+        $('input[name="id"]').val(id)
+        $('input[name="readid"]').val(id)
+        $('input[name="name"]').val(name)
+        $('textarea[name="description"]').val(description)
+
+        $('#editTextModal').modal('show')
+    }
+
+    function hide(id) {
+        $('input[name="target"]').val('hide')
+        $('input[name="id"]').val(id)
+        $('#hideModal').modal('show')
+    }
+
+    function show(id) {
+        $('input[name="target"]').val('show')
+        $('input[name="id"]').val(id)
+        $('#showModal').modal('show')
+    }
+
+    function newOrganization() {
+        $('input[name="target"]').val('approve')
+        $('input[name="name"]').val("")
+        $('textarea[name="description"]').val("")
+
+        $('#newOrganizationModal').modal('show')
+    }
+
+</script>
+
+<div class="container-fluid d-block bg-primary">
+
+    <div class="container">
+
+        <div class="row">
+            <div class="col-12">
+                <div class="jumbotron mt-sm-2 pt-3 pt-sm-5 pb-3 pb-sm-5" style="background: white">
+                    <div class="row mb-sm-2" id="titleDiv">
+                        <div class="col-12">
+                            <h2 align="center">Organisations</h2>
+                            <p style="text-transform: uppercase; font-size: 1.5em; color: grey" align="center">
+                            </p>
+                            <p align="center" class="mb-0">Organisations are listed below. You are able to edit their name and descriptions. You are also able to hide them - this removes them from the list of selectable organisations on the request and budget forms. If an organisation needs to be deleted, contact the Internet Officer - note that this will also require the deletion of all reimbursements and budgets associated with the organisation.<br>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<div class="container mt-4">
+ 
+    <div class="row">
+        <div class="col-12">
+            <button type="button" class="btn btn-success" onclick=newOrganization()><i class="fa fa-plus"></i> Add New Organisation</button>
+            <table class="table table-bordered table-striped table-hover mt-4">
+                <thead>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Hidden?</th>
+                    <th>Controls</th>
+                </thead>
+                <tbody>
+                    {% for organization in organizations %}
+                    <tr id="organization_{{organization.organization_id}}">
+                        <td class="id">{{organization.organization_id}}</td>
+                        <td class="name">{{organization.name}}</td>
+                        <td class="description">{{organization.description}}</td>
+                        <td>
+                        {% if organization.hidden %}
+                         <i class="fas fa-check mr-2"></i>
+                        {% else %}
+                        {% endif %}
+                        </td>
+                        <td><i class="fas fa-edit mr-2 text-warning" onclick=editText({{organization.organization_id}})></i>
+                            {% if organization.hidden %}
+                            <i class="fas fa-eye mr-2 text-success" onclick=show({{organization.organization_id}})></i>
+                            {% else %}
+                            <i class="fas fa-eye-slash mr-2 text-danger" onclick=hide({{organization.organization_id}})></i>
+                            {% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<form id="id_editText" action="{% url 'edit-organization-admin' %}" method="POST">
+    {% csrf_token %}
+
+    <input hidden name="target"></input>
+    <div class="modal fade" id="editTextModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit name/description</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" class="form-control" name="id"></input>
+                    <div class="form-group">
+                        <label for="readid">Organisation ID</label>
+                    <input type="text" class="form-control" readonly name="readid">
+                </div>
+                    <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" name="name"></input>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" name="description" rows=5></textarea>
+                </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel
+                    </button>
+                    <button type="submit" id="addItemButton" class="btn btn-success">Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form id="id_newOrganization" action="{% url 'new-organization-admin' %}" method="POST">
+    {% csrf_token %}
+
+    <input hidden name="target"></input>
+    <div class="modal fade" id="newOrganizationModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Organisation</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" name="name"></input>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" name="description" rows=5></textarea>
+                </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel
+                    </button>
+                    <button type="submit" id="addItemButton" class="btn btn-success">Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form id="id_hide" action="{% url 'edit-organization-admin' %}" method="POST">
+    {% csrf_token %}
+
+    <input hidden name="target"></input>
+    <div class="modal fade" id="hideModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Hide Organisation?</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                   <input type="hidden" name="id"/>
+                   <p>This will hide the organisation on the request and budget forms.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal">Cancel
+                    </button>
+                    <button type="submit" id="addItemButton" class="btn btn-danger">Hide
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form id="id_show" action="{% url 'edit-organization-admin' %}" method="POST">
+    {% csrf_token %}
+
+    <input hidden name="target"></input>
+    <div class="modal fade" id="showModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Show Organisation?</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                   <input type="hidden" name="id"/>
+                   <p>This will unhide the organisation on the request and budget forms.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">Show
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

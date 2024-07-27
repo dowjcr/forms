@@ -35,4 +35,7 @@ urlpatterns = [
 
     path('admin/requests/', AllRequestsAdminView.as_view(), name='all-requests-admin'),
     path('admin/request/<int:form_id>/', DetailRequestAdminView.as_view(), name='view-request-admin'),
+    path('admin/organisations/', OrganizationsView.as_view(),name='organizations-admin'),
+    path('admin/organisations/edit/', EditOrganizationView.as_view(), name="edit-organization-admin"),
+    path('admin/organisations/new/', NewOrganizationView.as_view(), name="new-organization-admin")
 ] + compatibility_urls

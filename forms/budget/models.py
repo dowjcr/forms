@@ -46,7 +46,7 @@ class CRSidField(models.CharField):
 class Budget(models.Model):
     """A budget submitted for a given `organization` for a single `year`"""
     budget_id = models.AutoField(primary_key=True)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, limit_choices_to={'hidden':False})
     submitted = models.BooleanField(default=False)
     approved = models.BooleanField(default=False)
     # `year` is the year that the budget was submitted
