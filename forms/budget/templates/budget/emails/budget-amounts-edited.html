@@ -1,0 +1,17 @@
+{% extends 'budget/emails/template.html' %}
+{% load custom_filters %}
+
+{% block content %}
+Hi, 
+
+<p>Your budget for {{budget.organization}} for the year {{budget.year|str_academic_year}} has been edited.</p>
+<p>The JCR Treasurer will be in touch to explain the edit, if they have not already.</p>
+
+<p>The ACG amount has been set to <strong>£{{budget.amount_acg|floatformat:2}}</strong>.</p>
+
+<p>The depreciation fund amount has been set to <strong>£{{budget.amount_dep|floatformat:2}}</strong>.</p>
+
+<p>You can monitor the usage of your budget <a href="{{budget.host}}{% url 'budget-usage-single-student' budget.budget_id %}">here</a>.</p>
+
+<p>If you have any queries about this, please email the JCR Treasurer at <a href="mailto:treasurer@jcr.dow.cam.ac.uk">treasurer@jcr.dow.cam.ac.uk</a>.</p>
+{% endblock %}

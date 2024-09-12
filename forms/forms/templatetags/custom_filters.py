@@ -48,3 +48,9 @@ def paginate_years(year):
     START_YEAR = 2020 # first year that budgets were submitted using this system
     y = int(year)
     return (START_YEAR, False, y-1, y, y+1, False, settings.CURRENT_YEAR)
+
+
+@register.filter()
+def to_float(value):
+    """Convert to float as a tag"""
+    return float(value)

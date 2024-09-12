@@ -1,0 +1,51 @@
+{% extends 'budget/emails/template.html' %}
+{% load custom_filters %}
+
+{% block content %}
+Hi, 
+
+<p>Your budget for {{budget.organization}} for the year {{budget.year|str_academic_year}} has been approved. </p>
+<p>
+{% if budget.requested_amount_acg|to_float == 0 %}
+
+You did not request ACG funding.
+
+{% else %}
+
+You requested £{{budget.requested_amount_acg|floatformat:2}} in ACG funding. 
+{% endif %}
+<br>
+{% if budget.amount_acg|to_float != 0 %}
+
+You received <strong>£{{budget.amount_acg|floatformat:2}}</strong>.
+
+{% else %}
+
+You received <strong>no</strong> ACG funding.
+{% endif %}
+</p>
+
+<p>
+    {% if budget.requested_amount_dep|to_float == 0 %}
+    
+    You did not request depreciation funding.
+    
+    {% else %}
+    
+    You requested £{{budget.requested_amount_dep|floatformat:2}} in depreciation funding. 
+    {% endif %}
+    <br>
+    {% if budget.amount_dep|to_float != 0 %}
+    
+    You received <strong>£{{budget.amount_dep|floatformat:2}}</strong>.
+    
+    {% else %}
+    
+    You received <strong>no</strong> depreciation funding.
+    {% endif %}
+    </p>
+
+<p>You can monitor the usage of your budget <a href="{{budget.host}}{% url 'budget-usage-single-student' budget.budget_id %}">here</a>.</p>
+
+<p>If you have any queries about this, please email the JCR Treasurer at <a href="mailto:treasurer@jcr.dow.cam.ac.uk">treasurer@jcr.dow.cam.ac.uk</a>.</p>
+{% endblock %}

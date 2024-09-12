@@ -1,9 +1,19 @@
 {% load custom_filters %}
+{% load budget_filters %}
 {% load widget_tweaks %}
+<script>
+  function addManualCost() {
+        $('#addManualCostModal').modal('show')
+  }
+  function deleteManualCost(id) {
+    $('input[name="manual_adjustment_id"]').val(id)
+    $('#deleteManualCostModal').modal('show')
+  }
+</script>
 <style>
     main {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 4px minmax(0, 1fr);
+      grid-template-columns: minmax(0, 3fr) 4px minmax(0, 2fr);
       justify-items: center;
       gap: 2vw;
       row-gap: 20px;
@@ -73,6 +83,7 @@
                           <p align="center" class="mb-0">Below is the budget usage of {{budgetdata.budget.organization.name}} for {{budgetdata.budget.year|str_academic_year}}.<br>
                           </p>
                           <p align="center">'Paid' funds are those that have been reimbursed by the bursary. 'Pending' funds that are part of reimbursement requests that have not been rejected and have not been paid by the bursary. 'Spent' refers to the total amount of paid and pending funds.</p>
+                          <p align="center">Please note, while these amounts should be accurate in 99.9% of cases, in the event of a discrepancy the Bursary records are final. Please direct any queries to <a href="mailto:treasurer@jcr.dow.cam.ac.uk">treasurer@jcr.dow.cam.ac.uk</a>.</p>
                       </div>
                   </div>
 
@@ -97,7 +108,10 @@
 <main>
 
   <div id="info">
-    <h3>Organisation requests</h3>
+    <h3>Reimbursement requests</h3>
+    {% if budgetdata.reimbursements|length == 0 %}
+    <p>No reimbursement requests to show. </p>
+    {% else %}
     <table id="reqTable" class="table table-bordered table-striped table-hover mt-4">
       <thead>
         <th>Submitter</th>
@@ -106,6 +120,7 @@
         <th>Status</th>
       </thead>
       <tbody>
+        
       {% for reimbursement in budgetdata.reimbursements %}
       {% if view == "student" %}
       <tr class="clickable-row" data-href="{% url 'view-request' reimbursement.form_id %}" style="cursor: pointer;">
@@ -129,53 +144,123 @@
       {% endfor %}
     </tbody>
     </table>
+    {% endif %}
+    {% if view == "admin" %}
+    <hr>
+    <h3>Manual adjustments</h3>
+    <button type="button" class="btn btn-danger" onclick=addManualCost()><i class="fa fa-plus"></i> Add manual adjustment</button>
+    {% if budgetdata.manual_adjustments|length == 0 %}
+    <p class="pt-3">No manual adjustments to display at this time.</p>
+    {% else %}
+    <table id="manCostTable" class="table table-bordered table-striped table-hover mt-4">
+      <thead>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Source</th>
+        <th>Reason</th>
+        <th></th>
+      </thead>
+      <tbody>
+      {% for manual_adjustment in budgetdata.manual_adjustments %}
+        <td>{{manual_adjustment.date}}</td>
+        {% if manual_adjustment.amount < 0 %}
+        <td><i class="fa fa-minus text-danger"></i> £{{manual_adjustment.amount|remove_minus|floatformat:"2"}}</td>
+        {% else %}
+        <td><i class="fa fa-plus text-success"></i> £{{manual_adjustment.amount|floatformat:"2"}}</td>
+        {% endif %}
+        <td>{{manual_adjustment.fund_source|fund_source_as_text}}</td>
+        <td>{{manual_adjustment.reason}}</td>
+        <td><i class="fa fa-trash text-danger" onclick="deleteManualCost({{manual_adjustment.id}})"></i></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    </table>
+        {% endif %}
+    {% else %}
+    {% if budgetdata.manual_adjustments|length > 0 %}
+    <hr>
+    <h3>Manual adjustments</h3>
+    <table id="manCostTable" class="table table-bordered table-striped table-hover mt-4">
+      <thead>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Source</th>
+        <th>Reason</th>
+      </thead>
+      <tbody>
+      {% for manual_adjustment in budgetdata.manual_adjustments %}
+        <td>{{manual_adjustment.date}}</td>
+        {% if manual_adjustment.amount < 0 %}
+        <td><i class="fa fa-minus text-danger"></i> £{{manual_adjustment.amount|remove_minus|floatformat:"2"}}</td>
+        {% else %}
+        <td><i class="fa fa-plus text-success"></i> £{{manual_adjustment.amount|floatformat:"2"}}</td>
+        {% endif %}
+        <td>{{manual_adjustment.fund_source|fund_source_as_text}}</td>
+        <td>{{manual_adjustment.reason}}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    </table>
+    {% endif %}
+    {% endif %}
     <hr>
     <h3>Budget</h3>
     <table class="table table-bordered mt-4">
       <thead>
         <tr>
           <th></th>
-          {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+          {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
           <th style="text-align: center;">ACG</th>
           {% endif %}
-          {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+          {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
           <th style="text-align: center;">Depreciation</th>
           {% endif %}
         </tr>
       </thead>
       <tr>
         <th align="right">Budget</th>
-        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
-        <td align="center">£{{budgetdata.budget.amount_acg|floatformat:"2"}}</td>
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
+        <td align="center">£{{budgetdata.acg_budget|floatformat:"2"}}</td>
         {% endif %}
-        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
-        <td align="center">£{{budgetdata.budget.amount_dep|floatformat:"2"}}</td>
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
+        <td align="center">£{{budgetdata.dep_budget|floatformat:"2"}}</td>
         {% endif %}
       </tr>
       <tr>
         <th align="left">Pending</th>
-        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
         <td align="center">£{{budgetdata.acg_pending_total|floatformat:"2"}}</td>
         {% endif %}
-        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
         <td align="center">£{{budgetdata.dep_pending_total|floatformat:"2"}}</td>
         {% endif %}
       </tr>
+      {% if budgetdata.manual_acg_cost != 0 or budgetdata.manual_dep_cost != 0 %}
+      <tr>
+        <th>Manual</th>
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
+        <td align="center">£{{budgetdata.manual_acg_cost|floatformat:"2"}}</td>
+        {% endif %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
+        <td align="center">£{{budgetdata.manual_dep_cost|floatformat:"2"}}</td>
+        {% endif %}
+      </tr>
+      {% endif %}
       <tr>
         <th align="left">Spent</th>
-        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
         <td align="center">£{{budgetdata.acg_total|floatformat:"2"}}</td>
         {% endif %}
-        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
         <td align="center">£{{budgetdata.dep_total|floatformat:"2"}}</td>
         {% endif %}
       </tr>
       <tr>
         <th align="left">Remaining</th>
-        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
+        {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
         <td align="center">£{{budgetdata.acg_remaining|floatformat:"2"}}</td>
         {% endif %}
-        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
+        {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
         <td align="center">£{{budgetdata.dep_remaining|floatformat:"2"}}</td>
         {% endif %}
       </tr>
@@ -184,14 +269,14 @@
   </div>
   <div class="middleLine" id="middleLine"></div>
   <div id="chartSide" class="mt-5">
-    {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg != "0" %}
-    <h3 style="text-align: center;">ACG Funds</h3>
+    {% if budgetdata.budget.amount_acg and budgetdata.budget.amount_acg_float != 0 %}
+    <h3 style="text-align: center;">ACG</h3>
     <div id="chartContainer">
       <canvas class="chart" id="acgChart"></canvas>
     </div>
     {% endif %}
-    {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep != "0" %}
-    <h3 style="text-align: center;"  class="mt-5">Depreciation Funds </h3>
+    {% if budgetdata.budget.amount_dep and budgetdata.budget.amount_dep_float != 0 %}
+    <h3 style="text-align: center;"  class="mt-5">Depreciation Fund</h3>
     <div id="depreciationContainer">
       <canvas class="chart" id="depreciationChart"></canvas>
     </div>
@@ -410,3 +495,91 @@
 
   </div>
 </main>
+
+{% if view == "admin" %}
+<form id="id_addManualCost" action="{% url 'add-manual-cost-admin' %}" method="POST">
+  {% csrf_token %}
+
+  <input hidden name="target"></input>
+  <div class="modal fade" id="addManualCostModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title">Add manual cost</h5>
+                  <button type="button" class="close" data-dismiss="modal">
+                      <span>&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" value="{{budgetdata.budget.budget_id}}" name="budget">
+                <div class="form-group">
+                  <label for="source">Fund source</label><br>
+                  <select name="source" class="custom-select">
+                    <option selected>Choose...</option>
+                    {% if budgetdata.budget.amount_acg_float != 0 %}
+                    <option value="1">Annual Consumable Grant</option>
+                    {% endif %}
+                    {% if budgetdata.budget.amount_dep_float != 0 %}
+                    <option value="2">Depreciation Fund</option>
+                    {% endif %}
+                  </select>
+            </div>
+            <div class="form-group">
+              <label for="amount">Amount and Type</label><br>
+              {% if view == "admin" %}
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">£</span>
+                  </div>
+                  <input type="number" class="form-control" name="amount" placeholder="0.00" value="0.00" min="0" step="0.01"></input>
+                   <select name="type" class="form-control">
+                  <option>Choose...</option>
+                  <option value="0">Deduction</option>  
+                  <option value="1">Credit</option>
+                  </select>
+                </div>
+                {% else %}
+                <input name="type" type="hidden" value="0"/>
+                {% endif %}
+        </div>
+            <div class="form-group">
+                <label for="reason">Reason</label>
+                <textarea class="form-control" name="reason" rows=5></textarea>
+            </div>
+            </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-success" data-dismiss="modal">Cancel
+                  </button>
+                  <button type="submit" class="btn btn-danger">Add
+                  </button>
+              </div>
+          </div>
+      </div>
+  </div>
+</form>
+
+<form id="id_deleteManualCost" action="{% url 'delete-manual-cost-admin' %}" method="POST">
+  {% csrf_token %}
+
+  <div class="modal fade" id="deleteManualCostModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title">Delete manual cost</h5>
+                  <button type="button" class="close" data-dismiss="modal">
+                      <span>&times;</span>
+                  </button>
+              </div>
+              <div class="modal-footer">
+                <input type="hidden" name="manual_adjustment_id">
+                <input type="hidden" value="{{budgetdata.budget.budget_id}}" name="budget">
+                  <button type="button" class="btn btn-success" data-dismiss="modal">Cancel
+                  </button>
+                  <button type="submit" class="btn btn-danger">Delete
+                  </button>
+              </div>
+          </div>
+      </div>
+  </div>
+</form>
+{% endif %}

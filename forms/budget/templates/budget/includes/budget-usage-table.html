@@ -47,10 +47,18 @@
                         </td>
                         {% endif %}
                         <td>
-                            £{{budgetdata.acg_remaining|floatformat:"2"}} of £{{budgetdata.budget.amount_acg|floatformat:"2"}}
+                            {% if budgetdata.budget.amount_acg_float == 0 %}
+                            No ACG funding given.
+                            {% else %}
+                            £{{budgetdata.acg_remaining|floatformat:"2"}} of £{{budgetdata.acg_budget|floatformat:"2"}}
+                            {% endif %}
                         </td>
                         <td>
-                            £{{budgetdata.dep_remaining|floatformat:"2"}} of £{{budgetdata.budget.amount_dep|floatformat:"2"}}
+                            {% if budgetdata.budget.amount_dep_float == 0 %}
+                            No depreciation funding given.
+                            {% else %}
+                            £{{budgetdata.dep_remaining|floatformat:"2"}} of £{{budgetdata.dep_budget|floatformat:"2"}}
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
