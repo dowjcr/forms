@@ -247,12 +247,18 @@
 
                 <div class="jumbotron">
                     <h4><i class="fas fa-map-signs mr-2"></i> Summary</h4>
+                    <h5>Requested amounts:</h5>
                     <p>
                         Total ACG: £<span id="totalAmountInSummaryAcg">0.00</span> <br>
                         Total Depreciation: £<span id="totalAmountInSummaryDep">0.00</span> <br>
                         Total: £<span id="totalAmountInSummary">0.00</span>
                     </p>
-
+                    <h5>Approved amounts:</h5>
+                    <p>
+                        ACG: £<span>{{budget.amount_acg}}</span> <br>
+                        Depreciation: £<span>{{budget.amount_dep}}</span> <br>
+                        Total: £<span>{{budget.amount_total|floatformat:"2"}}</span> <br>
+                    </p>
                 </div>
             </div>
         </div>

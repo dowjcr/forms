@@ -35,4 +35,9 @@ def notify_budget_approved(budget):
     message = "Your budget has been approved."
     notifier.SendEmail(recipients=recipient_list, subject=subject, bodyhtml=html_message, bodytext=message)
 
-    
+def notify_budget_amounts_edited(budget):
+    subject = "Budget Amounts Edited"
+    recipient_list = [user + "@cam.ac.uk" for user in (budget.submitter, budget.president_crsid, budget.treasurer_crsid)]
+    html_message = render_to_string("budget/emails/budget-amounts-edited.html", {'budget': budget})
+    message = "Your budget amounts have been edited."
+    notifier.SendEmail(recipients=recipient_list, subject=subject, bodyhtml=html_message, bodytext=message)

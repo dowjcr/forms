@@ -15,4 +15,6 @@ urlpatterns = [
     path('admin/budget/<int:budget_id>/', DetailBudgetAdminView.as_view(), name='view-budget-admin'),
     path('admin/usage/', BudgetUsageAdminView.as_view(), name="budget-usage-admin"),
     path('admin/usage/<int:budget_id>/', SingleBudgetUsageAdminView.as_view(), name="budget-usage-single-admin"),
+    path('admin/add-manual-cost/', AddManualCostAdminView.as_view(), name="add-manual-cost-admin"),
+    path('admin/delete-manual-cost/', DeleteManualCostAdminView.as_view(), name="delete-manual-cost-admin"),
 ]

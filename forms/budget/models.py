@@ -16,8 +16,9 @@ from django.db.models.query_utils import Q
 from forms.models import Organization
 from forms.constants import *
 from budget.constants import *
-from budget.email import notify_budget_submit, notify_treasurer_budget, notify_budget_approved
+from budget.email import notify_budget_submit, notify_treasurer_budget, notify_budget_approved, notify_budget_amounts_edited
 from fernet_fields import EncryptedCharField
+from dcac.models import FundSources
 
 
 def all_budgets_for_student(user_id):
@@ -135,6 +136,10 @@ class Budget(models.Model):
     def amount_dep_float(self):
         amount_dep_float = float(self.amount_dep)
         return amount_dep_float
+
+    def amount_total(self):
+        amount_total = float(self.amount_acg) + float(self.amount_dep)
+        return amount_total
     
     def send_email(self):
         notify_budget_submit(self)
@@ -142,7 +147,25 @@ class Budget(models.Model):
 
     def notify_approve(self):
         notify_budget_approved(self)
-        
+    
+    def notify_budget_amounts_edited(self):
+        notify_budget_amounts_edited(self)
+
+    def get_total_manual_deductions(self):
+        manual_deductions = ManualAdjustment.objects.filter(budget=self, amount__lt=0)
+        manual_acg_deductions = manual_deductions.filter(fund_source=FundSources.ACG).aggregate(Sum('amount'))['amount__sum'] or 0
+        manual_dep_deductions = manual_deductions.filter(fund_source=FundSources.DEPRECIATION).aggregate(Sum('amount'))['amount__sum'] or 0
+        if manual_dep_deductions < 0:
+            manual_dep_deductions = float(manual_dep_deductions) * -1
+        if manual_acg_deductions < 0:
+            manual_acg_deductions = float(manual_acg_deductions) * -1
+        return float(manual_acg_deductions), float(manual_dep_deductions)
+    
+    def get_total_manual_credits(self):
+        manual_credits = ManualAdjustment.objects.filter(budget=self, amount__gt=0)
+        manual_acg_credits = manual_credits.filter(fund_source=FundSources.ACG).aggregate(Sum('amount'))['amount__sum'] or 0
+        manual_dep_credits = manual_credits.filter(fund_source=FundSources.DEPRECIATION).aggregate(Sum('amount'))['amount__sum'] or 0
+        return float(manual_acg_credits), float(manual_dep_credits)
     
 
 
@@ -160,3 +183,14 @@ class BudgetItem(models.Model):
     budget_type = models.IntegerField(choices=BudgetType.CHOICES)
 
     treasurer_comments = models.TextField('Treasurer Comments', blank=True)
+
+class ManualAdjustment(models.Model):
+    """A cost added outside of the normal DCAC routes"""
+    id = models.AutoField(primary_key=True)
+    budget = models.ForeignKey(Budget, on_delete=models.CASCADE, default=None)
+
+    reason = models.TextField()
+    amount = models.DecimalField(decimal_places=2, max_digits=8)
+    fund_source = models.IntegerField(choices=FundSources.CHOICES, default=FundSources.ACG)
+    date = models.DateField()
+    added_by = models.CharField(max_length=8)
