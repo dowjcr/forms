@@ -1,6 +1,6 @@
 {% extends 'budget/emails/template.html' %}
 {% load custom_filters %}
-
+{% load custom_tags %}
 {% block content %}
 Hi, 
 
@@ -45,7 +45,7 @@ You received no ACG funding.
     {% endif %}
     </p>
 
-<p>You can monitor the usage of your budget <a href="{{budget.host}}{% url 'budget-usage-single-student' budget.budget_id %}">here</a>.</p>
+<p>You can monitor the usage of your budget <a href="{% external_link_prefix %}{% url 'budget-usage-single-student' budget.budget_id %}">here</a>.</p>
 
 <p>If you have any queries about this, please email the JCR Treasurer at <a href="mailto:treasurer@jcr.dow.cam.ac.uk">treasurer@jcr.dow.cam.ac.uk</a>.</p>
 {% endblock %}

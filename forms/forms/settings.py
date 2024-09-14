@@ -66,6 +66,7 @@ EMAIL_PORT = 25
 DEBUG = os.getenv("DJANGO_DEBUG") == "true"
 
 ALLOWED_HOSTS = [RequiredEnvironmentVariable("ALLOWED_HOST")]
+EXTERNAL_LINK_PREFIX = RequiredEnvironmentVariable("EXTERNAL_LINK_PREFIX")
 
 # Application definition
 

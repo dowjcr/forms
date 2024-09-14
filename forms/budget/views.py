@@ -313,7 +313,6 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
             budget.amount_acg = amount_acg
             budget.amount_dep = amount_dep
             budget.save()
-            budget.host = os.getenv("ALLOWED_HOST")
             budget.notify_approve()
             return redirect('/budget/admin/budget/' + str(budget.budget_id))
         

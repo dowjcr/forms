@@ -1,10 +1,10 @@
 {% extends 'dcac/emails/template.html' %}
-
+{% load custom_tags %}
 {% block content %}
 Hi,<br><br>
 
 Just to let you know, a new DCAC Reimbursement form has been submitted and is awaiting your approval.<br><br>
 
-<a href="https://forms.downingjcr.co.uk/dcac/admin/request/{{ form.form_id }}">Review Request</a>
+<a href="{% external_link_prefix %}{% url 'view-request-admin' form.form_id %}">Review Request</a>
 
 {% endblock %}

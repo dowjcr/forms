@@ -1,11 +1,11 @@
 {% extends 'dcac/emails/template.html' %}
-
+{% load custom_tags %}
 {% block content %}
 Hi,<br><br>
 
 Your DCAC Reimbursement request has been paid by the Bursary. Please note it may take a few working days
 for the payment to clear.<br><br>
 
-<a href="https://forms.downingjcr.co.uk/dcac/request/{{ form.form_id }}">View Request</a>
+<a href="{% external_link_prefix %}{% url 'view-request' form.form_id %}">View Request</a>
 
 {% endblock %}
