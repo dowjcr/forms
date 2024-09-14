@@ -1,17 +1,72 @@
 {% extends 'budget/emails/template.html' %}
 {% load custom_filters %}
-
+{% load custom_tags %}
 {% block content %}
 Hi, 
 
-<p>Your budget for {{budget.organization}} for the year {{budget.year|str_academic_year}} has been edited.</p>
-<p>The JCR Treasurer will be in touch to explain the edit, if they have not already.</p>
+<p>Your approved funding amounts for {{budget.organization}} for the year {{budget.year|str_academic_year}} have been changed.</p>
+<p>The JCR Treasurer will be in touch to explain the change, if they have not already.</p>
+<p>
+{% if budget.amount_acg != budget.old_amount_acg %}
+{% if budget.requested_amount_acg|to_float == 0 %}
 
-<p>The ACG amount has been set to <strong>£{{budget.amount_acg|floatformat:2}}</strong>.</p>
+Originally, you did not request ACG funding.
 
-<p>The depreciation fund amount has been set to <strong>£{{budget.amount_dep|floatformat:2}}</strong>.</p>
+{% else %}
 
-<p>You can monitor the usage of your budget <a href="{{budget.host}}{% url 'budget-usage-single-student' budget.budget_id %}">here</a>.</p>
+Originally, you requested £{{budget.requested_amount_acg|floatformat:2}} in ACG funding. 
+{% endif %}
+<br>
+{% if budget.old_amount_acg|to_float != 0 %}
+
+Prior to the change, you received £{{budget.old_amount_acg|floatformat:2}}.
+
+{% else %}
+
+Prior to the change, you received no ACG funding.
+
+{% endif %}    
+<br>
+{% if budget.amount_acg|to_float != 0 %}
+This has been changed to <strong>£{{budget.amount_acg|floatformat:2}}</strong>.
+{% else %}
+This has been changed to no ACG funding.
+{% endif %}
+{% else %}
+There was no change to your ACG funding.
+{% endif %}
+</p>
+
+<p>
+    {% if budget.amount_dep != budget.old_amount_dep %}
+    {% if budget.requested_amount_dep|to_float == 0 %}
+    
+    Originally, you did not request depreciation funding.
+    
+    {% else %}
+    
+    Originally, you requested £{{budget.requested_amount_dep|floatformat:2}} in depreciation funding. 
+    {% endif %}
+    <br>
+    {% if budget.old_amount_dep|to_float != 0 %}
+    
+    Prior to the change, you received £{{budget.old_amount_dep|floatformat:2}}.
+    
+    {% else %}
+    
+    Prior to the change, you received no depreciation funding.
+    {% endif %}
+    <br>
+    {% if budget.amount_dep|to_float != 0 %}
+    This has been changed to <strong>£{{budget.amount_dep|floatformat:2}}</strong>.
+    {% else %}
+    This has been changed to no depreciation funding.
+    {% endif %}
+    {% else %}
+    There was no change to your depreciation funding.
+    {% endif %}
+    </p>
+<p>You can monitor the usage of your budget <a href="{% external_link_prefix %}{% url 'budget-usage-single-student' budget.budget_id %}">here</a>.</p>
 
 <p>If you have any queries about this, please email the JCR Treasurer at <a href="mailto:treasurer@jcr.dow.cam.ac.uk">treasurer@jcr.dow.cam.ac.uk</a>.</p>
 {% endblock %}
