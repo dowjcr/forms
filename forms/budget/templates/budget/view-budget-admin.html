@@ -347,11 +347,13 @@
                         Total Depreciation: £<span id="totalAmountInSummaryDep">0.00</span> <br>
                         Total: £<span id="totalAmountInSummary">0.00</span>
                     </p>
+                    {% if budget.approved %}
                     <h5>Approved amounts:</h5>
                     <p>
                         Total ACG: £<span>{{budget.amount_acg}}</span> <br>
                         Total Depreciation: £<span>{{budget.amount_dep}}</span> <br>
                     </p>
+                    {% endif %}
                 </div>
                 {% if budget.submitted %}
                 <div class="jumbotron">
