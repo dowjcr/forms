@@ -325,6 +325,10 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
             return redirect('/budget/admin/budget/' + str(budget.budget_id))
         
         if target == "editAmounts":
+            if budget.amount_dep == amount_dep and budget.amount_acg == amount_acg:
+                return HttpResponse(status=400, content="Amounts are the same as previously")
+            budget.old_amount_acg = budget.amount_acg
+            budget.old_amount_dep = budget.amount_dep
             budget.amount_acg = amount_acg
             budget.amount_dep = amount_dep
             budget.requested_amount_acg, budget.requested_amount_dep = budget.requested_totals()
