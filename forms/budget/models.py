@@ -7,8 +7,10 @@ from django.db import models
 from django.conf import settings
 from django.core import serializers
 from django.forms import TextInput
+from django.core.exceptions import ValidationError
 
 import json
+import re
 
 from django.db.models import Sum
 from django.db.models.query_utils import Q
@@ -20,6 +22,8 @@ from budget.email import notify_budget_submit, notify_treasurer_budget, notify_b
 from fernet_fields import EncryptedCharField
 from dcac.models import FundSources
 
+
+multicrsid_regex = re.compile(r"^[A-Za-z0-9,]{1,30}$")
 
 def all_budgets_for_student(user_id):
     """Returns a queryset for all budgets that a student can view/edit
@@ -43,6 +47,25 @@ class CRSidField(models.CharField):
         """Convert to lowercase"""
         return str(value).lower()
 
+class MultiCRSidField(models.CharField):
+    """Text field for multi CRSid - automatic lowercase"""
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = 30
+        if not args:
+            # arg[0] is the verbose name, if it exists
+            kwargs.setdefault('verbose_name', 'CRSid')
+        super().__init__(*args, **kwargs)
+
+    def get_prep_value(self, value):
+        """Convert to lowercase"""
+        lower = str(value).lower().strip(",")
+        return lower
+
+    def validate(self, value, *args, **kwargs):
+        if multicrsid_regex.fullmatch(value) == None:
+            raise ValidationError("Invalid input for multiple CRSIDs")
+
+
 
 class Budget(models.Model):
     """A budget submitted for a given `organization` for a single `year`"""
@@ -60,9 +83,9 @@ class Budget(models.Model):
     amount_dep = models.CharField(max_length=20, default='0')
 
     president = models.CharField('President', max_length=100)
-    president_crsid = CRSidField()
+    president_crsid = MultiCRSidField()
     treasurer = models.CharField('Treasurer', max_length=100)
-    treasurer_crsid = CRSidField()
+    treasurer_crsid = MultiCRSidField()
     active_members = models.PositiveIntegerField('Number of Active Members', default=0)
     subscription_details = models.TextField('Details of subscriptions received from members (if any)', blank=True)
 

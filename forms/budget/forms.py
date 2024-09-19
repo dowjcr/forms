@@ -41,8 +41,8 @@ class BudgetForm(forms.ModelForm):
             'account_number': TextInput(attrs={'placeholder': '12345678'}),
             'balance': NumberInput(attrs={"min": "0", "step": "0.01", "placeholder": "0.00"}),
 
-            'president_crsid': TextInput(attrs={'pattern': '[a-zA-Z0-9]+'}),
-            'treasurer_crsid': TextInput(attrs={'pattern': '[a-zA-Z0-9]+'})
+            'president_crsid': TextInput(attrs={'pattern': '^[A-Za-z0-9,]{1,30}$'}),
+            'treasurer_crsid': TextInput(attrs={'pattern': '^[A-Za-z0-9,]{1,30}$'})
         }
 
 
