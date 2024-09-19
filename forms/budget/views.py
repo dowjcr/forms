@@ -363,7 +363,7 @@ class AllBudgetsAdminView(ListView, FormsAdminMixin):
 
     def get_queryset(self):
         self.kwargs.setdefault('year', settings.CURRENT_YEAR)
-        return Budget.objects.filter(year=self.kwargs['year'])
+        return Budget.objects.filter(year=self.kwargs['year']).order_by("-approved", "-submitted", "organization__name")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
