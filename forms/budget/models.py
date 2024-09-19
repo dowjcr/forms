@@ -53,7 +53,7 @@ class MultiCRSidField(models.CharField):
         kwargs['max_length'] = 30
         if not args:
             # arg[0] is the verbose name, if it exists
-            kwargs.setdefault('verbose_name', 'CRSid')
+            kwargs.setdefault('verbose_name', 'CRSid(s)')
         super().__init__(*args, **kwargs)
 
     def get_prep_value(self, value):
@@ -82,9 +82,9 @@ class Budget(models.Model):
     amount_acg = models.CharField(max_length=20, default='0')
     amount_dep = models.CharField(max_length=20, default='0')
 
-    president = models.CharField('President', max_length=100)
+    president = models.CharField('President(s)', max_length=100)
     president_crsid = MultiCRSidField()
-    treasurer = models.CharField('Treasurer', max_length=100)
+    treasurer = models.CharField('Treasurer(s)', max_length=100)
     treasurer_crsid = MultiCRSidField()
     active_members = models.PositiveIntegerField('Number of Active Members', default=0)
     subscription_details = models.TextField('Details of subscriptions received from members (if any)', blank=True)
