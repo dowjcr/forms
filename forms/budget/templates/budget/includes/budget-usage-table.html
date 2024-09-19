@@ -39,7 +39,7 @@
                         </td>
                         {% if view == "student" %}
                         <td>
-                            {% if student.user_id == budgetdata.budget.president_crsid %}
+                            {% if student.user_id in budgetdata.budget.president_crsid %}
                             President
                             {% else %}
                             Treasurer
