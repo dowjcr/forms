@@ -321,6 +321,7 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
                 return HttpResponse(status=400, content="Cannot convert a draft to a draft!")
             budget.submitted = False
             budget.save()
+            budget.notify_budget_convert_draft()
             return redirect('/budget/admin/budget/' + str(budget.budget_id))
         
         if target == "editAmounts":

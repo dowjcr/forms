@@ -37,6 +37,13 @@ def notify_treasurer_budget(budget):
     message = "A budget has been submitted for a society. Please go to the DCAC Reimbursement site."
     notifier.SendEmail(recipients=recipient_list, subject=subject, bodyhtml=html_message, bodytext=message)
 
+def notify_budget_convert_draft(budget):
+    subject = "{0} - {1} Budget Converted To Draft".format(budget.organization.name, str_academic_year(budget.year))
+    recipient_list = [user + "@cam.ac.uk" for user in budget_recipient_crsid_list(budget)]
+    html_message = render_to_string("budget/emails/budget-convert-draft.html", {'budget': budget})
+    message = "Your budget has been converted to a draft."
+    notifier.SendEmail(recipients=recipient_list, subject=subject, bodyhtml=html_message, bodytext=message)
+
 def notify_budget_approved(budget):
     subject = "{0} - {1} Budget Approved".format(budget.organization.name, str_academic_year(budget.year))
     recipient_list = [user + "@cam.ac.uk" for user in budget_recipient_crsid_list(budget)]

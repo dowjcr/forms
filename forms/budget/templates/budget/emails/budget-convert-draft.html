@@ -1,0 +1,12 @@
+{% extends 'budget/emails/template.html' %}
+{% load custom_filters %}
+{% load custom_tags %}
+{% block content %}
+Hi, 
+
+<p>Your budget for {{budget.organization}} for the year {{budget.year|str_academic_year}} has been converted back to a draft - this means you can edit and resubmit. </p>
+<p>The JCR Treasurer will be in touch to explain why, if they have not already.</p>
+
+<p>If you have any queries about this, please email the JCR Treasurer at <a href="mailto:treasurer@jcr.dow.cam.ac.uk">treasurer@jcr.dow.cam.ac.uk</a>.</p>
+
+{% endblock %}

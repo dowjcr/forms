@@ -18,7 +18,7 @@ from django.db.models.query_utils import Q
 from forms.models import Organization
 from forms.constants import *
 from budget.constants import *
-from budget.email import notify_budget_submit, notify_treasurer_budget, notify_budget_approved, notify_budget_amounts_edited
+from budget.email import notify_budget_submit, notify_treasurer_budget, notify_budget_approved, notify_budget_amounts_edited, notify_budget_convert_draft
 from fernet_fields import EncryptedCharField
 from dcac.models import FundSources
 
@@ -173,6 +173,9 @@ class Budget(models.Model):
     
     def notify_budget_amounts_edited(self):
         notify_budget_amounts_edited(self)
+
+    def notify_budget_convert_draft(self):
+        notify_budget_convert_draft(self)
 
     def get_total_manual_deductions(self):
         manual_deductions = ManualAdjustment.objects.filter(budget=self, amount__lt=0)
