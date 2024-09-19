@@ -263,7 +263,7 @@ class SingleBudgetUsageView(TemplateView, FormsStudentMixin):
             budget = Budget.objects.get(budget_id=kwargs["budget_id"], year=CURRENT_YEAR, approved=True)
         except ObjectDoesNotExist:
             raise Http404()
-        if self.student.user_id != budget.treasurer_crsid and self.student.user_id != budget.president_crsid:
+        if self.student.user_id.lower() not in budget.treasurer_crsid and self.student.user_id.lower() not in budget.president_crsid:
             raise PermissionDenied()
         budgetdata = SingleBudgetUsageContext(budget)
 

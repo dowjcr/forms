@@ -55,7 +55,7 @@ class DetailRequestView(DetailView, FormsStudentMixin):
             return obj
         current_officials = Budget.objects.filter(year=CURRENT_YEAR, organization=obj.organization, date__lte=obj.date).values("treasurer_crsid", "president_crsid")
         try:
-            if self.student.user_id == current_officials[0]["treasurer_crsid"] or self.student.user_id == current_officials[0]["president_crsid"]:
+            if self.student.user_id in current_officials[0]["treasurer_crsid"] or self.student.user_id in current_officials[0]["president_crsid"]:
                 return obj
         except: 
             raise PermissionDenied

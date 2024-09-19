@@ -28,7 +28,7 @@ multicrsid_regex = re.compile(r"^[A-Za-z0-9,]{1,30}$")
 def all_budgets_for_student(user_id):
     """Returns a queryset for all budgets that a student can view/edit
     i.e. is the submitter, president, or treasurer for any of the organization's budgets"""
-    query = Q(budget__submitter=user_id) | Q(budget__president_crsid=user_id) | Q(budget__treasurer_crsid=user_id)
+    query = Q(budget__submitter=user_id) | Q(budget__president_crsid__icontains=user_id) | Q(budget__treasurer_crsid__icontains=user_id)
     orgs = Organization.objects.filter(query)
     budgets = Budget.objects.filter(organization__in=orgs)
     return budgets
@@ -114,7 +114,7 @@ class Budget(models.Model):
     @staticmethod
     def approved_budgets_from_year_as_official(year, student_crsid):
         """Returns the existing budgets for a given year where the given student is either the president or treasurer"""
-        budgets = Budget.objects.filter(Q(year=year), Q(approved=True), Q(president_crsid = student_crsid) | Q(treasurer_crsid = student_crsid)).order_by("organization__name")
+        budgets = Budget.objects.filter(Q(year=year), Q(approved=True), Q(president_crsid__icontains = student_crsid) | Q(treasurer_crsid__icontains = student_crsid)).order_by("organization__name")
         return budgets
     
     @staticmethod
