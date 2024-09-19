@@ -300,10 +300,10 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
         amount_acg = request.POST.get('amount_acg')
         amount_dep = request.POST.get('amount_dep')
         budget = self.get_object()
-
         if target == 'budget':
             budget.treasurer_comments = comment
             budget.save()
+            return HttpResponse(json.dumps({'target': target,'comment': comment}), content_type='application/json')
 
         if target == 'approve':
             if budget.submitted != True:
@@ -339,8 +339,7 @@ class DetailBudgetAdminView(DetailView, FormsAdminMixin):
             item = BudgetItem.objects.get(pk=target)
             item.treasurer_comments = comment
             item.save()
-
-        return HttpResponse(json.dumps({'target': target,'comment': comment}), content_type='application/json')
+            return HttpResponse(json.dumps({'target': target,'comment': comment}), content_type='application/json')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -51,7 +51,7 @@
         data = {
             'csrfmiddlewaretoken': '{{ csrf_token }}',
             'comment': $('textarea[name="comment"]').val(),
-            'target': $('input[name="target"]').val()
+            'target': $('form#id_addComment input[name="target"]').val()
         }
 
 
@@ -86,7 +86,7 @@
     function addItemComment(item_id) {
         let item = getItemById(item_id)
 
-        $('input[name="target"]').val(item_id)
+        $('form#id_addComment input[name="target"]').val(item_id)
         $('textarea[name="comment"]').val(item.treasurer_comments)
 
         $('#addCommentModal').modal('show')
@@ -95,7 +95,7 @@
     function addBudgetComment() {
         let currentComments = $('textarea[name="budgetComments"]').val()
 
-        $('input[name="target"]').val('budget')
+        $('form#id_addComment input[name="target"]').val('budget')
         $('textarea[name="comment"]').val(currentComments)
 
         $('#addCommentModal').modal('show')
@@ -103,19 +103,15 @@
     }
 
     function approveBudget() {
-        $('input[name="target"]').val('approve')
         $('#approveBudgetModal').modal('show')
-
     }
 
     function convertDraft() {
-        $('input[name="target"]').val('convertDraft')
         $('#convertDraftModal').modal('show')
 
     }
 
     function editAmounts() {
-        $('input[name="target"]').val('editAmounts')
         $('#editAmountsModal').modal('show')
 
     }
@@ -405,7 +401,7 @@
 <form id="id_approveBudget" action="{% url 'view-budget-admin' budget.budget_id %}" method="POST">
     {% csrf_token %}
 
-    <input hidden name="target"></input>
+    <input hidden name="target" value="approve"></input>
     <div class="modal fade" id="approveBudgetModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -439,7 +435,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel
                     </button>
-                    <button type="submit" id="editAmountsButton" class="btn btn-success">Approve
+                    <button type="submit" id="approveButton" class="btn btn-success">Approve
                     </button>
                 </div>
             </div>
@@ -450,7 +446,7 @@
 <form id="id_editAmounts" action="{% url 'view-budget-admin' budget.budget_id %}" method="POST">
     {% csrf_token %}
 
-    <input hidden name="target"></input>
+    <input hidden name="target" value="editAmounts"></input>
     <div class="modal fade" id="editAmountsModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -495,7 +491,7 @@
 <form id="id_convertDraft" action="{% url 'view-budget-admin' budget.budget_id %}" method="POST">
     {% csrf_token %}
 
-    <input hidden name="target"></input>
+    <input hidden name="target" value="convertDraft"></input>
     <div class="modal fade" id="convertDraftModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -508,7 +504,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success" data-dismiss="modal">Cancel
                     </button>
-                    <button type="submit" id="editAmountsButton" class="btn btn-danger">Convert
+                    <button type="submit" id="convertDraftButton" class="btn btn-danger">Convert
                     </button>
                 </div>
             </div>
