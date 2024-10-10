@@ -1,3 +1,4 @@
+{% load custom_tags %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <!--[if !mso]><!--><meta http-equiv="X-UA-Compatible" content="IE=edge" /><!--<![endif]-->
@@ -230,7 +231,7 @@ body,.wrapper{background-color:#7F0056}.wrapper h1{color:#557187;font-size:26px;
         <tbody><tr>
           <td style="padding: 0;width: 600px;">
             <div class="header__logo emb-logo-margin-box" style="font-size: 26px;line-height: 32px;Margin-top: 8px;Margin-bottom: 8px;color: #ffffff;font-family: Roboto,Tahoma,sans-serif;">
-              <div class="logo-center" style="font-size:0px !important;line-height:0 !important;" align="center" id="emb-email-header"><img style="height: auto;width: 100%;border: 0;max-width: 80px;padding-bottom: 20px" src="https://www.jcr.dow.cam.ac.uk/storage/app/media/dcac_logo.png" alt="DCAC" width="70" height="80" /></div>
+              <div class="logo-center" style="font-size:0px !important;line-height:0 !important;" align="center" id="emb-email-header"><img style="height: auto;width: 100%;border: 0;max-width: 80px;padding-bottom: 20px" src="{% external_link_prefix %}{% static 'logos/dcac_logo.png' %}" alt="DCAC" width="70" height="80" /></div>
             </div>
           </td>
         </tr>
