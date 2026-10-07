@@ -10,6 +10,8 @@ Over summer, you'll need to manually update the current academic year the forms 
 
 Both of these variables are configured using environment variables. To change them, use the following instructions.
 
+Warning: Never manually change or regenerate the DJANGO_SECRET_KEY in Doppler. The database uses this key to encrypt student bank details (via Fernet). Changing the key will instantly permanently lock all historical bank details and cause crashes for users.
+
 ## Prerequisites
 Navigate to the Forms project directory on the server (you may need to do `cd ..` first to get to `/home`):
 
@@ -19,6 +21,10 @@ cd /home/web/forms/forms
 
 *(Note: You must use `sudo` for the following commands).*
 
+## 0. Backup the database before making changes
+```bash
+sudo docker exec -t forms-forms-1 python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.Permission --indent 4 > /home/web/forms_backup_$(date +%F).json
+```
 ## 1. Update the Variables
 Use the Doppler CLI to update the specific variables. The project context is `-p forms` and the config environment is `-c prd`.
 
